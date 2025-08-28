@@ -17,9 +17,19 @@ extra-source-files:  README.md
 
 library
   hs-source-dirs:      src
-  exposed-modules:     TodoistSDK.Types
+  exposed-modules:     TodoistSDK.Types,
+                       TodoistSDK.Capabilities,
+                       TodoistSDK.Interpreter.Runner,
+                       TodoistSDK.Internal.HTTP,
+                       TodoistSDK.Interpreter.TodoistIO
+                       TodoistSDK.Interpreter.Types
   default-language:    Haskell2010
-  build-depends:       base >= 4.7 && < 5
+  build-depends:       base >= 4.7 && < 5,
+                       text >= 2.1.2,
+                       transformers >= 0.6.1.1,
+                       wreq >= 0.5.4.3,
+                       lens >= 5.3.5,
+                       aeson >=1.5
   ghc-options:         -Wall
                        -Wcompat
                        -Widentities
@@ -29,3 +39,5 @@ library
                        -Wmissing-home-modules
                        -Wpartial-fields
                        -Wredundant-constraints
+  default-extensions: InstanceSigs,
+                      OverloadedStrings

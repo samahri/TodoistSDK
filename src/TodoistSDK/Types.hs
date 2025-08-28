@@ -1,6 +1,6 @@
 module TodoistSDK.Types (
-  func
+  ProjectId (..)
 ) where
 
-func :: String
-func = "hello world"
+-- TODO: use Text
+newtype ProjectId = ProjectId String deriving (Show)
