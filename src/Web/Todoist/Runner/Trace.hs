@@ -1,12 +1,11 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DerivingStrategies #-}
-module TodoistSDK.Interpreter.Trace (
+module Web.Todoist.Runner.Trace (
   Op(..),
   Trace(..)
 ) where
 
-import TodoistSDK.Capabilities
-import TodoistSDK.Types ( ProjectId )  
+import Web.Todoist.Project
 
 import Control.Monad.Trans.Writer
 

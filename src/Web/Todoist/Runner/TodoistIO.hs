@@ -3,16 +3,13 @@
 {-# LANGUAGE NamedFieldPuns #-}
 
 -- everything related to the interface between the function and low http request code
-module TodoistSDK.Interpreter.TodoistIO (
+module Web.Todoist.Runner.TodoistIO (
   TodoistEnv(..),
-  Token(..),
   TodoistIO(..)
 ) where
 
-import TodoistSDK.Capabilities
-import TodoistSDK.Types
-import TodoistSDK.Interpreter.Types
-import TodoistSDK.Internal.HTTP
+import Web.Todoist.Project
+import Web.Todoist.Runner.HttpClient
 
 import Control.Monad.Trans.Reader
 import Control.Monad.Trans.Except
@@ -28,5 +25,7 @@ instance TodoistProjectM TodoistIO where
     TodoistEnv{authToken, baseUrl} <- ask
     let endpoint = Endpoint { path = [baseUrl, "api", "v1", "projects"], query = [] }
     lift $ getRequest endpoint authToken
+
+  
 
 

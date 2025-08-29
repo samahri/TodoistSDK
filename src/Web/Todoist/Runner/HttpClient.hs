@@ -3,14 +3,18 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveAnyClass #-}
-module TodoistSDK.Internal.HTTP (
+module Web.Todoist.Runner.HttpClient (
   getRequest,
-  Endpoint(..)
+  TodoistEnv(..),
+  Endpoint(..),
+  Token(..), -- make it opaque
+  TodoistError(..)
 ) where
 
-import TodoistSDK.Interpreter.Types
-import TodoistSDK.Types
+-- import Web.Todoist.Runner
+import Web.Todoist.Project
 
+import Data.Text hiding (map)
 import Data.Text.Encoding ( encodeUtf8 )
 import Network.Wreq.Types (Options)
 import Control.Monad.Trans.Except
@@ -21,6 +25,15 @@ import GHC.Generics         (Generic)
 import Data.Aeson hiding (Options)
 import Network.Wreq (defaults, getWith, header, responseBody, responseStatus, statusCode)
 import Control.Monad
+
+newtype Token = Token Text deriving Show
+
+data TodoistEnv = TodoistEnv {
+  authToken :: Token,
+  baseUrl   :: String
+} deriving Show
+
+data TodoistError = NotTwoHunderd deriving Show
 
 data Endpoint = Endpoint { path :: [String], query :: [(String, String)] }
 

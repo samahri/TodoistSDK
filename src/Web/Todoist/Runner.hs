@@ -2,25 +2,23 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE KindSignatures #-}
 
-module TodoistSDK.Interpreter.Runner (
+module Web.Todoist.Runner (
   todoistIORunner,
   newTodoistEnv,
   todoistTraceRunner,
   runTodoistWith,
-  TodoistEnv,
-  Token
 ) where
 
-import TodoistSDK.Interpreter.TodoistIO
-import TodoistSDK.Interpreter.Types
-import TodoistSDK.Interpreter.Trace
+import Web.Todoist.Runner.TodoistIO
+import Web.Todoist.Runner.Trace
+import Web.Todoist.Runner.HttpClient
 
 import Data.Text
 import Control.Monad.Trans.Reader
 import Control.Monad.Trans.Except
 import Control.Monad.Trans.Writer (execWriter)
 import Data.Kind
-import TodoistSDK.Capabilities ( TodoistProjectM(..) )
+import Web.Todoist.Project ( TodoistProjectM(..) )
 
 newTodoistEnv :: Text -> TodoistEnv
 newTodoistEnv token = TodoistEnv {authToken = Token token, baseUrl = "https://api.todoist.com"}
