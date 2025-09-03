@@ -18,6 +18,8 @@ extra-source-files:  README.md
 library
   hs-source-dirs:      src
   exposed-modules:     Web.Todoist.Project
+                       Web.Todoist.Task
+                       Web.Todoist.Patch
                        Web.Todoist.Runner
                        Web.Todoist.Runner.HttpClient
                        Web.Todoist.Runner.TodoistIO
@@ -27,7 +29,8 @@ library
                        text >= 2.1.2,
                        transformers >= 0.6.1.1,
                        wreq >= 0.5.4.3,
-                       lens >= 5.3.5,
+                       req >= 3.13.4,
+                       bytestring >= 0.12.2.0,
                        aeson >=1.5
   ghc-options:         -Wall
                        -Wcompat
@@ -39,4 +42,5 @@ library
                        -Wpartial-fields
                        -Wredundant-constraints
   default-extensions: InstanceSigs,
-                      OverloadedStrings
+                      OverloadedStrings,
+                      NoImplicitPrelude
