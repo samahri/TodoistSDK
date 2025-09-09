@@ -11,13 +11,15 @@ module Web.Todoist.Project (
   -- defaultProject
 ) where
 
-import Prelude
+import Data.String (String)
+import Data.Int (Int)
 import Text.Show (Show)
 import Control.Monad (Monad)
 import Data.Text ( Text )
 import GHC.Generics (Generic)
-import Data.Aeson
-import Data.Maybe
+import Data.Aeson ( FromJSON, ToJSON )
+
+import Web.Todoist.Patch
 
 newtype ProjectId = ProjectId {
   id :: Text
@@ -31,12 +33,7 @@ data Collaborator = Collaborator {
 
 data ParentId = ParentIdStr String | ParentIdInt Int deriving (Show, Generic, FromJSON, ToJSON)
 
--- defaultProject :: Name -> Project
--- defaultProject name = Project {
---   _name = name,
---   _desc = Nothing,
---   _parentId = Nothing
--- }
+
 
 class Monad m => TodoistProjectM m where
   -- todo write algebraic laws
@@ -46,4 +43,4 @@ class Monad m => TodoistProjectM m where
   getProjectCollaborators :: ProjectId -> m [Collaborator]
 
   -- todo: separate domain types from api types
-  -- createProject :: Project -> m Project
+  addProject :: ProjectCreate -> m ProjectId

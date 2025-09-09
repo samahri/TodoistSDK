@@ -7,16 +7,30 @@ module Web.Todoist.Runner.Trace (
 
 import Web.Todoist.Project
 import Web.Todoist.Task
+import Web.Todoist.Patch
+
 import Control.Applicative (Applicative, pure)
 import Control.Monad (Functor, Monad)
 import Control.Monad.Trans.Writer (Writer, tell)
 import Text.Show (Show)
 import Data.Function (($))
-import Web.Todoist.Project (Collaborator, ProjectId)
 
-data Op = GetAllProjects
-          | GetProjectCollaborators
-          | GetTasks deriving (Show)
+data Op = ProjectOp ProjectOp
+        | TaskOp TaskOp deriving (Show)
+
+data ProjectOp = GetAllProjects 
+                | GetProjectCollaborators
+                | AddProject 
+                deriving Show
+
+data TaskOp = GetTasks 
+            | GetTask 
+            | AddTask 
+            | UpdateTask
+            | CloseTask
+            | DeleteTask
+            | UncloseTask
+            deriving Show
 
 newtype Trace a = Trace { runTrace :: Writer [Op] a }
   deriving (Functor, Applicative, Monad)
@@ -24,17 +38,52 @@ newtype Trace a = Trace { runTrace :: Writer [Op] a }
 instance TodoistProjectM Trace where
   getAllProjects :: Trace [ProjectId]
   getAllProjects = Trace $ do
-    tell [GetAllProjects]
+    tell [ProjectOp GetAllProjects]
     pure [ProjectId ""]
 
   getProjectCollaborators :: ProjectId -> Trace [Collaborator]
   getProjectCollaborators _ = Trace $ do
-    tell [GetProjectCollaborators]
+    tell [ProjectOp GetProjectCollaborators]
     pure [Collaborator "" "" ""]
+  
+  addProject :: ProjectCreate -> Trace ProjectId
+  addProject _ = Trace $ do
+    tell [ProjectOp AddProject]
+    pure $ ProjectId ""
 
 instance TodoistTaskM Trace where
-  -- todo write algebraic laws
-  getTasks :: Trace [TaskId]
-  getTasks = Trace $ do
-    tell [GetTasks]
+
+  getTasks :: TaskParam -> Trace [TaskId]
+  getTasks _ = Trace $ do
+    tell [TaskOp GetTasks]
     pure [TaskId ""]
+
+  getTask :: TaskId -> Trace Task
+  getTask tid = Trace $ do
+    tell [TaskOp GetTasks]
+    pure $ Task tid ""  
+  
+  addTask :: TaskCreate -> Trace NewTask
+  addTask _ =  Trace $ do
+    tell [TaskOp AddTask]
+    pure emptyTask
+
+  updateTask :: TaskId -> TaskPatch -> Trace NewTask
+  updateTask _ _ = Trace $ do
+    tell [TaskOp UpdateTask]
+    pure emptyTask
+  
+  closeTask :: TaskId -> Trace ()
+  closeTask _ = Trace $ do
+    tell [TaskOp CloseTask]
+    pure ()
+
+  uncloseTask :: TaskId -> Trace ()
+  uncloseTask _ = Trace $ do
+    tell [TaskOp UncloseTask]
+    pure ()
+
+  deleteTask :: TaskId -> Trace ()
+  deleteTask _ = Trace $ do
+    tell [TaskOp DeleteTask]
+    pure ()

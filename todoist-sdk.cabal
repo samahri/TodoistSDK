@@ -20,6 +20,7 @@ library
   exposed-modules:     Web.Todoist.Project
                        Web.Todoist.Task
                        Web.Todoist.Patch
+                       Web.Todoist.Param
                        Web.Todoist.Runner
                        Web.Todoist.Runner.HttpClient
                        Web.Todoist.Runner.TodoistIO
