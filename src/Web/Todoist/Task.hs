@@ -1,6 +1,7 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE NamedFieldPuns #-}
 
 module Web.Todoist.Task (
   TodoistTaskM(..),
@@ -8,11 +9,16 @@ module Web.Todoist.Task (
   TaskParam,
   Task(..),
   NewTask,
-  emptyTask
+  MoveTask,
+  AddTaskQuick,
+  emptyTask,
+  emptyMoveTask,
+  addTaskQuickText,
+  CompletedTasksQueryParamAPI(..)
 ) where
 
 import Web.Todoist.Patch 
-import Web.Todoist.Param ( TaskParam )
+import Web.Todoist.Param 
 
 import Data.Maybe
 import Data.Text
@@ -105,6 +111,48 @@ instance ToJSON NewTask where
   toJSON :: NewTask -> Value
   toJSON = genericToJSON jsonOpts
 
+data MoveTask = MoveTask {
+    p_project_id      :: Maybe Text
+  , p_section_id      :: Maybe Text
+  , p_parent_id       :: Maybe Text
+} deriving (Show, Generic)
+
+instance ToJSON MoveTask where
+  toJSON :: MoveTask -> Value
+  toJSON = genericToJSON jsonOpts
+
+instance FromJSON MoveTask where
+  parseJSON :: Value -> Parser MoveTask
+  parseJSON = genericParseJSON jsonOpts
+
+emptyMoveTask :: MoveTask
+emptyMoveTask = MoveTask {
+    p_project_id      = Nothing
+  , p_section_id      = Nothing
+  , p_parent_id       = Nothing
+} 
+
+data AddTaskQuick = AddTaskQuick {
+  text :: Text,
+  note :: Maybe Text,
+  reminder :: Maybe Text,
+  auto_reminder :: Bool,
+  meta :: Bool
+} deriving (Show, Generic, FromJSON, ToJSON)
+
+addTaskQuickText :: Text -> AddTaskQuick
+addTaskQuickText text = AddTaskQuick {
+  text,
+  note = Nothing,
+  reminder = Nothing,
+  auto_reminder = False,
+  meta = False
+}
+
+newtype CompletedTasksQueryParamAPI = CompletedTasksQueryParam {
+  items :: [TaskId]
+} deriving (Show, Generic, FromJSON)
+
 class Monad m => TodoistTaskM m where
   -- todo write algebraic laws
   getTasks :: TaskParam -> m [TaskId]
@@ -120,6 +168,14 @@ class Monad m => TodoistTaskM m where
   uncloseTask :: TaskId -> m ()
 
   deleteTask :: TaskId -> m ()
+
+  getTasksByFilter :: TaskFilter -> m [TaskId]
+
+  moveTask :: TaskId -> MoveTask -> m TaskId
+
+  addTaskQuick :: AddTaskQuick -> m ()
+
+  getCompletedTasksByDueDate :: CompletedTasksQueryParam -> m [TaskId]
 
 jsonOpts :: Options
 jsonOpts = defaultOptions { fieldLabelModifier = L.drop 2, omitNothingFields = True }

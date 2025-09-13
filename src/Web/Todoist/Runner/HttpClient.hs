@@ -19,6 +19,7 @@ module Web.Todoist.Runner.HttpClient (
   apiGet',
   apiPost,
   apiPost',
+  apiPost'',
   apiDelete,
   mkTodoistRequest
 ) where
@@ -35,7 +36,6 @@ import Data.Maybe
 import GHC.Generics (Generic)
 import Data.Aeson hiding (Options)
 import qualified Network.HTTP.Req as Http
--- import qualified Network.HTTP.Client as H
 import Network.HTTP.Req 
 
 
@@ -83,8 +83,8 @@ apiGet' _ config request = do
 
   case responseEither of
     Right r -> (pure . pure) $ Http.responseBody r
-    Left l -> let sce = fromJust (Http.isStatusCodeException l) in 
-        pure $ case Http.responseStatusCode sce of
+    Left l -> print l >> let sce = fromJust (Http.isStatusCodeException l) in 
+          pure $ case Http.responseStatusCode sce of
           404 -> Left NotFound
           400 -> Left BadRequest
           _ -> error ""
@@ -126,6 +126,23 @@ apiPost' config request = do
     scheme = getScheme request
     header' = getAuthHeader config
 
+apiPost'' :: forall b. ToJSON b => TodoistConfig -> TodoistRequest b -> IO (Either TodoistError ())
+apiPost'' config request = do
+  let reqfn = Http.req Http.POST scheme (Http.ReqBodyJson body) Http.ignoreResponse header'
+  responseEither <- try @Http.HttpException $ Http.runReq Http.defaultHttpConfig reqfn
+
+  case responseEither of
+    Right response -> (pure . pure) $ Http.responseBody response
+    Left l -> let sce = fromJust (Http.isStatusCodeException l) in 
+        pure $ case Http.responseStatusCode sce of
+          404 -> Left NotFound
+          400 -> Left BadRequest
+          _ -> error ""
+    where
+    scheme = getScheme request
+    body = fromJust (_requestBody request)
+    header' = getAuthHeader config
+
 apiDelete :: forall b. TodoistConfig -> TodoistRequest b -> IO (Either TodoistError ())
 apiDelete config request = do
   let reqfn = Http.req Http.DELETE scheme Http.NoReqBody Http.ignoreResponse header'
@@ -155,7 +172,7 @@ data TodoistRequest body = TodoistRequest {
 mkTodoistRequest :: forall body. Endpoint -> Maybe Params -> Maybe body -> TodoistRequest body
 mkTodoistRequest endpoint params body = TodoistRequest {
     _domain = "api.todoist.com",
-    _endpoint = endpoint,
+    _endpoint = ["api", "v1"] <> endpoint,
     _queryParams = fromMaybe [] params,
     _requestBody = body
   }
