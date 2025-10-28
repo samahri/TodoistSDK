@@ -1,0 +1,36 @@
+# Fourmolu configuration for TodoistSDK
+# See https://fourmolu.github.io/config/ for all options
+
+# Indentation: 4 spaces (Fourmolu default, matches your current style)
+indentation: 4
+
+# Column limit: maximum line length
+column-limit: 100
+
+# Comma style in lists/records
+comma-style: leading
+
+# Record formatting
+record-brace-space: true
+
+# Where clause indentation
+indent-wheres: true
+
+# Function arrows in type signatures
+function-arrows: trailing
+
+# Import/export formatting
+import-export-style: leading
+
+# Import grouping (preserve existing grouping)
+import-grouping: preserve
+
+# Haddock documentation style
+haddock-style: multi-line
+haddock-style-module: multi-line
+
+# Be respectful of intentional line breaks in some cases
+respectful: true
+
+# Newlines between top-level declarations
+newlines-between-decls: 1

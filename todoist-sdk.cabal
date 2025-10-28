@@ -2,6 +2,7 @@ cabal-version:       2.2
 
 name:                todoist-sdk
 version:             0.1.0.0
+-- TODO: PROJECT_SETUP - Add synopsis and description
 -- synopsis:
 -- description:
 homepage:            https://github.com/samahri/TodoistSDK
@@ -17,15 +18,21 @@ extra-source-files:  README.md
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Web.Todoist.Project
-                       Web.Todoist.Task
+  exposed-modules:     Web.Todoist.Domain.Project
+                       Web.Todoist.Domain.Task
                        Web.Todoist.Patch
-                       Web.Todoist.Param
+                       Web.Todoist.QueryParam
                        Web.Todoist.Runner
-                       Web.Todoist.Runner.HttpClient
                        Web.Todoist.Runner.TodoistIO
                        Web.Todoist.Runner.Trace
+                       Web.Todoist.Internal.Config
+                       Web.Todoist.Internal.Error
+                       Web.Todoist.Internal.HTTP
+                       Web.Todoist.Internal.Request
+                       Web.Todoist.Internal.Types
+                       Web.Todoist.Internal.Json
   default-language:    Haskell2010
+  -- TODO: BUILD_CONFIG - Tighten dependency version constraints for better stability
   build-depends:       base >= 4.7 && < 5,
                        text >= 2.1.2,
                        transformers >= 0.6.1.1,
@@ -45,3 +52,9 @@ library
   default-extensions: InstanceSigs,
                       OverloadedStrings,
                       NoImplicitPrelude
+
+-- TODO: TESTING - Add test-suite stanza for unit tests
+-- TODO: PROJECT_STRUCTURE - Add test/ directory with comprehensive tests
+-- TODO: CI_CD - Add .github/workflows/ for automated testing
+-- TODO: EXAMPLES - Move tutorials to examples/ and add more comprehensive examples
+-- TODO: CONFIG - Add config/ directory for environment-specific settings
