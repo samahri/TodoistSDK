@@ -6,9 +6,19 @@ module Web.Todoist.Runner.Trace
     , Trace (..)
     ) where
 
-import Web.Todoist.Patch
 import Web.Todoist.Domain.Project
+    ( TodoistProjectM(..),
+      Collaborator(Collaborator),
+      Project,
+      ProjectId(ProjectId) )
 import Web.Todoist.Domain.Task
+    ( TaskParam,
+      TodoistTaskM(..),
+      NewTask,
+      Task(Task),
+      TaskId(TaskId),
+      emptyTask )
+import Web.Todoist.Patch ( TaskPatch, TaskCreate, ProjectCreate )
 
 import Control.Applicative (Applicative, pure)
 import Control.Monad (Functor, Monad)
@@ -41,10 +51,10 @@ newtype Trace a = Trace {runTrace :: Writer [Op] a}
     deriving (Functor, Applicative, Monad)
 
 instance TodoistProjectM Trace where
-    getAllProjects :: Trace [ProjectId]
+    getAllProjects :: Trace [Project]
     getAllProjects = Trace $ do
         tell [ProjectOp GetAllProjects]
-        pure [ProjectId ""]
+        pure []
 
     getProjectCollaborators :: ProjectId -> Trace [Collaborator]
     getProjectCollaborators _ = Trace $ do

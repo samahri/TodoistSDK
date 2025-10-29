@@ -7,39 +7,51 @@
 module Web.Todoist.Runner.TodoistIO
     ( TodoistConfig (..)
     , TodoistIO (..)
+    , projectResponseToProject
     ) where
 
-import Web.Todoist.Patch ( TaskPatch, TaskCreate, ProjectCreate )
 import Web.Todoist.Domain.Project
-    ( TodoistProjectM(..), Collaborator, ProjectId(..) )
+    ( Collaborator
+    , Project (..)
+    , ProjectId (..)
+    , TodoistProjectM (..)
+    , parseViewStyle
+    )
+import Web.Todoist.Domain.Task
+    ( AddTaskQuick
+    , CompletedTasksQueryParam
+    , CompletedTasksQueryParamAPI (items)
+    , MoveTask
+    , NewTask
+    , Task
+    , TaskFilter
+    , TaskId (..)
+    , TaskParam
+    , TodoistTaskM (..)
+    )
 import Web.Todoist.Internal.Config (TodoistConfig (..))
 import Web.Todoist.Internal.Error (TodoistError)
-import Web.Todoist.Internal.HTTP (apiDelete, apiGet, apiPost, apiPost', apiPost'')
+import Web.Todoist.Internal.HTTP (PostResponse (..), apiDelete, apiGet, apiPost)
 import Web.Todoist.Internal.Request (mkTodoistRequest)
-import Web.Todoist.Internal.Types (TodoistReturn (results))
-import Web.Todoist.Domain.Task
-    ( CompletedTasksQueryParam,
-      TaskFilter,
-      TaskParam,
-      TodoistTaskM(..),
-      CompletedTasksQueryParamAPI(items),
-      AddTaskQuick,
-      MoveTask,
-      NewTask,
-      Task,
-      TaskId(..) )
-import Web.Todoist.QueryParam ( QueryParam(toQueryParam) )
+import Web.Todoist.Internal.Types
+    ( CreatedAt (..)
+    , ProjectResponse (..)
+    , TodoistReturn (results)
+    , UpdatedAt (..)
+    )
+import Web.Todoist.Patch (ProjectCreate, TaskCreate, TaskPatch)
+import Web.Todoist.QueryParam (QueryParam (toQueryParam))
 
-import Control.Applicative (Applicative, pure)
+import Control.Applicative (Applicative, pure, (<$>))
 import Control.Monad (Functor, Monad)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Class (lift)
-import Control.Monad.Trans.Except ( ExceptT, except )
-import Control.Monad.Trans.Reader ( ReaderT(ReaderT), ask )
-import Data.Either ( Either(Left, Right) )
+import Control.Monad.Trans.Except (ExceptT, except)
+import Control.Monad.Trans.Reader (ReaderT (ReaderT), ask)
+import Data.Either (Either (Left, Right))
 import Data.Function (($))
 import Data.Maybe (Maybe (..))
-import Data.Proxy ( Proxy(Proxy) )
+import Data.Proxy (Proxy (Proxy))
 import Data.Void (Void)
 import System.IO (IO)
 
@@ -48,23 +60,23 @@ newtype TodoistIO a
     deriving newtype (Functor, Applicative, Monad)
 
 instance TodoistProjectM TodoistIO where
-    getProject :: ProjectId -> TodoistIO ProjectId
+    getProject :: ProjectId -> TodoistIO Project
     getProject ProjectId {..} = TodoistIO $ do
         config <- ask
         let apiRequest = mkTodoistRequest @Void ["projects", _id] Nothing Nothing
-        resp <- liftIO $ apiGet (Proxy @ProjectId) config apiRequest
+        resp <- liftIO $ apiGet (Proxy @ProjectResponse) config apiRequest
         case resp of
-            Right res -> pure res
+            Right res -> pure $ projectResponseToProject res
             Left err -> lift $ except (Left err)
 
-    getAllProjects :: TodoistIO [ProjectId]
+    getAllProjects :: TodoistIO [Project]
     getAllProjects = TodoistIO $ do
         config <- ask
         let apiRequest = mkTodoistRequest @Void ["projects"] Nothing Nothing
-        resp <- liftIO $ apiGet (Proxy @(TodoistReturn ProjectId)) config apiRequest
+        resp <- liftIO $ apiGet (Proxy @(TodoistReturn ProjectResponse)) config apiRequest
 
         case resp of
-            Right res -> pure $ results res
+            Right res -> pure $ projectResponseToProject <$> results res
             Left err -> lift $ except (Left err)
 
     getProjectCollaborators :: ProjectId -> TodoistIO [Collaborator]
@@ -88,8 +100,8 @@ instance TodoistProjectM TodoistIO where
     addProject :: ProjectCreate -> TodoistIO ProjectId
     addProject project = TodoistIO $ do
         config <- ask
-        let apiRequest = mkTodoistRequest @ProjectCreate ["projects"] Nothing (Just project)
-        resp <- liftIO $ apiPost (Proxy @ProjectId) config apiRequest
+        let apiRequest = mkTodoistRequest @ProjectCreate ["projects"] Nothing Nothing
+        resp <- liftIO $ apiPost (Just project) (JsonResponse (Proxy @ProjectId)) config apiRequest
         case resp of
             Right res -> pure res
             Left err -> lift $ except (Left err)
@@ -98,7 +110,7 @@ instance TodoistProjectM TodoistIO where
     archiveProject ProjectId {..} = TodoistIO $ do
         config <- ask
         let apiRequest = mkTodoistRequest @Void ["projects", _id, "archive"] Nothing Nothing
-        resp <- liftIO $ apiPost (Proxy @ProjectId) config apiRequest
+        resp <- liftIO $ apiPost (Nothing @Void) (JsonResponse (Proxy @ProjectId)) config apiRequest
         case resp of
             Right res -> pure res
             Left err -> lift $ except (Left err)
@@ -107,7 +119,7 @@ instance TodoistProjectM TodoistIO where
     unarchiveProject ProjectId {..} = TodoistIO $ do
         config <- ask
         let apiRequest = mkTodoistRequest @Void ["projects", _id, "unarchive"] Nothing Nothing
-        resp <- liftIO $ apiPost (Proxy @ProjectId) config apiRequest
+        resp <- liftIO $ apiPost (Nothing @Void) (JsonResponse (Proxy @ProjectId)) config apiRequest
         case resp of
             Right res -> pure res
             Left err -> lift $ except (Left err)
@@ -134,8 +146,8 @@ instance TodoistTaskM TodoistIO where
     addTask :: TaskCreate -> TodoistIO NewTask
     addTask taskCreate = TodoistIO $ do
         config <- ask
-        let apiRequest = mkTodoistRequest @TaskCreate ["tasks"] Nothing (Just taskCreate)
-        resp <- liftIO $ apiPost (Proxy @NewTask) config apiRequest
+        let apiRequest = mkTodoistRequest @TaskCreate ["tasks"] Nothing Nothing
+        resp <- liftIO $ apiPost (Just taskCreate) (JsonResponse (Proxy @NewTask)) config apiRequest
         case resp of
             Right res -> pure res
             Left err -> lift $ except (Left err)
@@ -143,8 +155,8 @@ instance TodoistTaskM TodoistIO where
     updateTask :: TaskId -> TaskPatch -> TodoistIO NewTask
     updateTask TaskId {..} taskPatch = TodoistIO $ do
         config <- ask
-        let apiRequest = mkTodoistRequest @TaskPatch ["tasks", _id] Nothing (Just taskPatch)
-        resp <- liftIO $ apiPost (Proxy @NewTask) config apiRequest
+        let apiRequest = mkTodoistRequest @TaskPatch ["tasks", _id] Nothing Nothing
+        resp <- liftIO $ apiPost (Just taskPatch) (JsonResponse (Proxy @NewTask)) config apiRequest
         case resp of
             Right res -> pure res
             Left err -> lift $ except (Left err)
@@ -153,7 +165,7 @@ instance TodoistTaskM TodoistIO where
     closeTask TaskId {..} = TodoistIO $ do
         config <- ask
         let apiRequest = mkTodoistRequest @Void ["tasks", _id, "close"] Nothing Nothing
-        resp <- liftIO $ apiPost' config apiRequest
+        resp <- liftIO $ apiPost (Nothing @Void) IgnoreResponse config apiRequest
         case resp of
             Right _ -> pure ()
             Left err -> lift $ except (Left err)
@@ -162,7 +174,7 @@ instance TodoistTaskM TodoistIO where
     uncloseTask TaskId {..} = TodoistIO $ do
         config <- ask
         let apiRequest = mkTodoistRequest @Void ["tasks", _id, "reopen"] Nothing Nothing
-        resp <- liftIO $ apiPost' config apiRequest
+        resp <- liftIO $ apiPost (Nothing @Void) IgnoreResponse config apiRequest
         case resp of
             Right _ -> pure ()
             Left err -> lift $ except (Left err)
@@ -188,8 +200,8 @@ instance TodoistTaskM TodoistIO where
     moveTask :: TaskId -> MoveTask -> TodoistIO TaskId
     moveTask TaskId {..} moveTaskBody = TodoistIO $ do
         config <- ask
-        let apiRequest = mkTodoistRequest @MoveTask ["tasks", _id, "move"] Nothing (Just moveTaskBody)
-        resp <- liftIO $ apiPost (Proxy @TaskId) config apiRequest
+        let apiRequest = mkTodoistRequest @MoveTask ["tasks", _id, "move"] Nothing Nothing
+        resp <- liftIO $ apiPost (Just moveTaskBody) (JsonResponse (Proxy @TaskId)) config apiRequest
         case resp of
             Right res -> pure res
             Left err -> lift $ except (Left err)
@@ -197,8 +209,8 @@ instance TodoistTaskM TodoistIO where
     addTaskQuick :: AddTaskQuick -> TodoistIO ()
     addTaskQuick atqBody = TodoistIO $ do
         config <- ask
-        let apiRequest = mkTodoistRequest @AddTaskQuick ["tasks", "quick"] Nothing (Just atqBody)
-        resp <- liftIO $ apiPost'' config apiRequest
+        let apiRequest = mkTodoistRequest @AddTaskQuick ["tasks", "quick"] Nothing Nothing
+        resp <- liftIO $ apiPost (Just atqBody) IgnoreResponse config apiRequest
         case resp of
             Right _ -> pure ()
             Left err -> lift $ except (Left err)
@@ -228,3 +240,24 @@ instance TodoistTaskM TodoistIO where
         case resp of
             Right res -> pure $ items res
             Left err -> lift $ except (Left err)
+
+-- | Convert a ProjectResponse (HTTP API type) to a Project (domain type)
+projectResponseToProject :: ProjectResponse -> Project
+projectResponseToProject ProjectResponse {..} =
+    let (CreatedAt createdAt) = p_created_at
+        (UpdatedAt updatedAt) = p_updated_at
+     in Project
+            { _id = p_id
+            , _name = p_name
+            , _description = p_description
+            , _order = p_child_order
+            , _color = p_color
+            , _is_collapsed = p_is_collapsed
+            , _is_shared = p_is_shared
+            , _is_favorite = p_is_favorite
+            , _is_archived = p_is_archived
+            , _can_assign_tasks = p_can_assign_tasks
+            , _view_style = parseViewStyle p_view_style
+            , _created_at = createdAt
+            , _updated_at = updatedAt
+            }

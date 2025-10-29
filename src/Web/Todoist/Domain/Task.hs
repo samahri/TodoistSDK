@@ -24,26 +24,27 @@ module Web.Todoist.Domain.Task
     , addTaskQuickWithQuery
     ) where
 
-import Web.Todoist.Internal.Types (Params)
 import Web.Todoist.Internal.Json (jsonOpts)
-import Web.Todoist.QueryParam ( QueryParam(..) )
-import Web.Todoist.Patch ( TaskPatch, TaskCreate )
+import Web.Todoist.Internal.Types (Params)
+import Web.Todoist.Patch (TaskCreate, TaskPatch)
+import Web.Todoist.QueryParam (QueryParam (..))
 
 import Control.Monad (Monad)
 import Data.Aeson
-    ( FromJSON(parseJSON),
-      Value,
-      ToJSON(toJSON),
-      genericParseJSON,
-      genericToJSON )
-import Data.Aeson.Types ( Parser )
-import Data.Bool ( Bool(False) )
+    ( FromJSON (parseJSON)
+    , ToJSON (toJSON)
+    , Value
+    , genericParseJSON
+    , genericToJSON
+    )
+import Data.Aeson.Types (Parser)
+import Data.Bool (Bool (False))
 import Data.Int (Int)
 import qualified Data.List as L
-import Data.Maybe ( Maybe(..), maybe )
+import Data.Maybe (Maybe (..), maybe)
 import Data.Monoid ((<>))
 import Data.String (String)
-import Data.Text ( Text, show )
+import Data.Text (Text, show)
 import GHC.Generics (Generic)
 import Text.Show (Show)
 

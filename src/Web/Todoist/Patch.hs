@@ -16,12 +16,13 @@ module Web.Todoist.Patch
 
 import Web.Todoist.Internal.Json (jsonOpts)
 
-import Data.Aeson ( Value, ToJSON(toJSON), genericToJSON )
-import Data.Maybe ( Maybe(..) )
-import Data.String ( String )
-import Data.Text ( Text )
+import Data.Aeson (FromJSON (parseJSON), ToJSON (toJSON), Value, genericParseJSON, genericToJSON)
+import Data.Aeson.Types (Parser)
+import Data.Maybe (Maybe (..))
+import Data.String (String)
+import Data.Text (Text)
 import GHC.Generics (Generic)
-import GHC.Show ( Show )
+import GHC.Show (Show)
 
 class HasDescription p where
     setDescription :: Description -> p -> p
@@ -35,6 +36,10 @@ data ProjectCreate = ProjectCreate
     -- , _parentId :: Maybe ParentId
     }
     deriving (Show, Generic)
+
+instance FromJSON ProjectCreate where
+    parseJSON :: Value -> Parser ProjectCreate
+    parseJSON = genericParseJSON jsonOpts
 
 instance ToJSON ProjectCreate where
     toJSON :: ProjectCreate -> Value
