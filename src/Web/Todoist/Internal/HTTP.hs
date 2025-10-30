@@ -20,11 +20,12 @@ import Control.Exception (try)
 import Data.Either (Either (..))
 import Data.Function (($), (.))
 import qualified Data.List as L
-import Data.Maybe (Maybe (..), fromJust)
+import Data.Maybe (Maybe (..))
 import Data.Monoid (mconcat, (<>))
 import Data.Proxy (Proxy (..))
 import System.IO (IO)
-import Prelude (error, print, pure, (>>))
+import Text.Show (show)
+import Prelude (pure)
 
 import Data.Aeson (FromJSON, ToJSON)
 import Network.HTTP.Req ((=:))
@@ -50,13 +51,7 @@ apiGet _ config request = do
 
     case responseEither of
         Right r -> (pure . pure) $ Http.responseBody r
-        Left l ->
-            print l
-                >> let sce = fromJust (Http.isStatusCodeException l)
-                    in pure $ case Http.responseStatusCode sce of
-                        404 -> Left NotFound
-                        400 -> Left BadRequest
-                        _ -> error ""
+        Left l -> pure $ handleException l
     where
         scheme = getScheme request
         params = mconcat $ L.map (\(key, val) -> (key =: val) :: Http.Option Http.Https) (_queryParams request)
@@ -96,12 +91,7 @@ apiPost maybeBody responseSpec config request =
             responseEither <- try @Http.HttpException $ Http.runReq Http.defaultHttpConfig reqfn
             case responseEither of
                 Right response -> (pure . pure) $ Http.responseBody response
-                Left l ->
-                    let sce = fromJust (Http.isStatusCodeException l)
-                     in pure $ case Http.responseStatusCode sce of
-                            404 -> Left NotFound
-                            400 -> Left BadRequest
-                            _ -> error ""
+                Left l -> pure $ handleException l
 
 -- | Perform a DELETE request to the Todoist API
 apiDelete :: forall b. TodoistConfig -> TodoistRequest b -> IO (Either TodoistError ())
@@ -111,12 +101,7 @@ apiDelete config request = do
 
     case responseEither of
         Right response -> (pure . pure) $ Http.responseBody response
-        Left l ->
-            let sce = fromJust (Http.isStatusCodeException l)
-             in pure $ case Http.responseStatusCode sce of
-                    404 -> Left NotFound
-                    400 -> Left BadRequest
-                    _ -> error ""
+        Left l -> pure $ handleException l
     where
         scheme = getScheme request
         header' = getAuthHeader config
@@ -127,3 +112,14 @@ getAuthHeader config =
     Http.headerRedacted "Authorization" ("Bearer " <> getAuthToken (authToken config))
         <> Http.header "Content-Type" "application/json"
         <> Http.header "Accept" "application/json"
+
+handleException :: Http.HttpException -> Either TodoistError responseBody
+handleException e =
+    case Http.isStatusCodeException e of
+        Just sce -> case Http.responseStatusCode sce of
+            400 -> Left BadRequest
+            401 -> Left Unauthorized
+            403 -> Left Forbidden
+            404 -> Left NotFound
+            code -> Left $ HttpError ("HTTP status code: " <> show code)
+        Nothing -> Left $ HttpError ("HTTP error: " <> show e)

@@ -18,6 +18,20 @@ packages:
       size: 10977
   original:
     hackage: Cabal-syntax-3.14.2.0@sha256:16766e2cd18f98bf259d2caf2b507764ebdfff0b16c2fb5b293fc57c1137af6f,7380
+- completed:
+    hackage: dotenv-0.12.0.0@sha256:2f25615cec37ff9a66a48ef0ebf2ac96ae989911d0c26c6796fc2f5247bdd665,4702
+    pantry-tree:
+      sha256: 31c08eb6dbd41eda9f0141dcb4cf8071e7650c6d97e4163d04f760e5a6fb4f79
+      size: 1303
+  original:
+    hackage: dotenv-0.12.0.0@sha256:2f25615cec37ff9a66a48ef0ebf2ac96ae989911d0c26c6796fc2f5247bdd665,4702
+- completed:
+    hackage: data-default-class-0.2.0.0@sha256:788dc5c0be3981ca83ad11206e300a77ae8a1c8b9bc4f9630f563d37f540ccbd,728
+    pantry-tree:
+      sha256: 2ddcb2ed7288849c7c46c7b3ae4fd0df016069a125f5803740974ea59700df19
+      size: 224
+  original:
+    hackage: data-default-class-0.2.0.0@sha256:788dc5c0be3981ca83ad11206e300a77ae8a1c8b9bc4f9630f563d37f540ccbd,728
 snapshots:
 - completed:
     sha256: b63fde5242c7a5d20e9c8070190038c5589424dabb8f8c7f02ec4b2be743ad23

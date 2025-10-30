@@ -34,7 +34,7 @@ import Data.Aeson.Types (Parser)
 import Data.Bool (Bool)
 import Data.Function (($))
 import Data.Int (Int)
-import Data.Maybe (Maybe)
+import Data.Maybe (Maybe (Just, Nothing))
 import Data.String (String)
 import Data.Text (Text)
 import GHC.Generics (Generic)
@@ -98,11 +98,14 @@ newtype CreatorUid = CreatorUid
 
 instance FromJSON CreatorUid where
     parseJSON :: Value -> Parser CreatorUid
-    parseJSON = genericParseJSON jsonOpts
+    parseJSON = \case
+        String txt -> pure $ CreatorUid (Just txt)
+        _ -> pure $ CreatorUid Nothing
 
 instance ToJSON CreatorUid where
     toJSON :: CreatorUid -> Value
-    toJSON = genericToJSON jsonOpts
+    toJSON (CreatorUid Nothing) = String ""
+    toJSON (CreatorUid (Just txt)) = String txt
 
 newtype CreatedAt = CreatedAt
     { p_created_at :: Maybe Text
@@ -111,11 +114,14 @@ newtype CreatedAt = CreatedAt
 
 instance FromJSON CreatedAt where
     parseJSON :: Value -> Parser CreatedAt
-    parseJSON = genericParseJSON jsonOpts
+    parseJSON = \case
+        String txt -> pure $ CreatedAt (Just txt)
+        _ -> pure $ CreatedAt Nothing
 
 instance ToJSON CreatedAt where
     toJSON :: CreatedAt -> Value
-    toJSON = genericToJSON jsonOpts
+    toJSON (CreatedAt Nothing) = String ""
+    toJSON (CreatedAt (Just txt)) = String txt
 
 newtype UpdatedAt = UpdatedAt
     { p_updated_at :: Maybe Text
@@ -124,11 +130,14 @@ newtype UpdatedAt = UpdatedAt
 
 instance FromJSON UpdatedAt where
     parseJSON :: Value -> Parser UpdatedAt
-    parseJSON = genericParseJSON jsonOpts
+    parseJSON = \case
+        String txt -> pure $ UpdatedAt (Just txt)
+        _ -> pure $ UpdatedAt Nothing
 
 instance ToJSON UpdatedAt where
     toJSON :: UpdatedAt -> Value
-    toJSON = genericToJSON jsonOpts
+    toJSON (UpdatedAt Nothing) = String ""
+    toJSON (UpdatedAt (Just txt)) = String txt
 
 newtype Role = Role
     { p_role :: Maybe Text
@@ -137,11 +146,14 @@ newtype Role = Role
 
 instance FromJSON Role where
     parseJSON :: Value -> Parser Role
-    parseJSON = genericParseJSON jsonOpts
+    parseJSON = \case
+        String txt -> pure $ Role (Just txt)
+        _ -> pure $ Role Nothing
 
 instance ToJSON Role where
     toJSON :: Role -> Value
-    toJSON = genericToJSON jsonOpts
+    toJSON (Role Nothing) = String ""
+    toJSON (Role (Just txt)) = String txt
 
 newtype ParentId = ParentId
     { p_parent_id :: Maybe Text
@@ -150,11 +162,14 @@ newtype ParentId = ParentId
 
 instance FromJSON ParentId where
     parseJSON :: Value -> Parser ParentId
-    parseJSON = genericParseJSON jsonOpts
+    parseJSON = \case
+        String txt -> pure $ ParentId (Just txt)
+        _ -> pure $ ParentId Nothing
 
 instance ToJSON ParentId where
     toJSON :: ParentId -> Value
-    toJSON = genericToJSON jsonOpts
+    toJSON (ParentId Nothing) = String ""
+    toJSON (ParentId (Just txt)) = String txt
 
 data ProjectAccessView = ProjectAccessView
     { p_visibility :: ProjectVisibility

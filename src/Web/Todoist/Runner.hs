@@ -10,13 +10,15 @@ module Web.Todoist.Runner
     , runTodoistWith
     ) where
 
-import Web.Todoist.Domain.Project ( TodoistProjectM )
-import Web.Todoist.Domain.Task ( TodoistTaskM )
-import Web.Todoist.Internal.Config ( Token (..))
+import Web.Todoist.Domain.Project (TodoistProjectM)
+import Web.Todoist.Domain.Task (TodoistTaskM)
+import Web.Todoist.Internal.Config (Token (..))
 import Web.Todoist.Internal.Error (TodoistError)
 import Web.Todoist.Runner.TodoistIO
-    ( TodoistConfig(..), TodoistIO(unTodoist) )
-import Web.Todoist.Runner.Trace ( Trace(runTrace), Op )
+    ( TodoistConfig (..)
+    , TodoistIO (unTodoist)
+    )
+import Web.Todoist.Runner.Trace (Op, Trace (runTrace))
 
 import Control.Applicative (Applicative (pure))
 import Control.Monad.Trans.Except (runExceptT)

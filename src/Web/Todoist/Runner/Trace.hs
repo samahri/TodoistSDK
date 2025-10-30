@@ -7,18 +7,20 @@ module Web.Todoist.Runner.Trace
     ) where
 
 import Web.Todoist.Domain.Project
-    ( TodoistProjectM(..),
-      Collaborator(Collaborator),
-      Project,
-      ProjectId(ProjectId) )
+    ( Collaborator (Collaborator)
+    , Project
+    , ProjectId (ProjectId)
+    , TodoistProjectM (..)
+    )
 import Web.Todoist.Domain.Task
-    ( TaskParam,
-      TodoistTaskM(..),
-      NewTask,
-      Task(Task),
-      TaskId(TaskId),
-      emptyTask )
-import Web.Todoist.Patch ( TaskPatch, TaskCreate, ProjectCreate )
+    ( NewTask
+    , Task (Task)
+    , TaskId (TaskId)
+    , TaskParam
+    , TodoistTaskM (..)
+    , emptyTask
+    )
+import Web.Todoist.Patch (ProjectCreate, TaskCreate, TaskPatch)
 
 import Control.Applicative (Applicative, pure)
 import Control.Monad (Functor, Monad)

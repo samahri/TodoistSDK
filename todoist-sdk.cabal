@@ -77,6 +77,33 @@ test-suite todoist-sdk-test
                       OverloadedStrings,
                       NoImplicitPrelude
 
+test-suite integration-tests
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      ProjectIntegrationSpec
+      Helpers
+  hs-source-dirs:
+      integration-test
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , todoist-sdk
+    , hspec >=2.11
+    , hspec-discover >=2.11
+    , aeson >=1.5
+    , bytestring >=0.12.2.0
+    , text >=2.1.2
+    , random >=1.2
+    , transformers >=0.6.1.1
+    , dotenv >=0.11
+  build-tool-depends:
+      hspec-discover:hspec-discover
+  default-language: Haskell2010
+  default-extensions: InstanceSigs,
+                      OverloadedStrings,
+                      NoImplicitPrelude
+
 -- TODO: CI_CD - Add .github/workflows/ for automated testing
 -- TODO: EXAMPLES - Move tutorials to examples/ and add more comprehensive examples
 -- TODO: CONFIG - Add config/ directory for environment-specific settings

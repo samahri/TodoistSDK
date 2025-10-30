@@ -15,7 +15,6 @@ module Web.Todoist.Domain.Project
     -- defaultProject
     ) where
 
-import Web.Todoist.Internal.Json (jsonOpts)
 import Web.Todoist.Patch (ProjectCreate)
 
 import Control.Monad (Monad)
@@ -23,6 +22,8 @@ import Data.Aeson
     ( FromJSON (parseJSON)
     , ToJSON (toJSON)
     , Value
+    , defaultOptions
+    , fieldLabelModifier
     , genericParseJSON
     , genericToJSON
     )
@@ -30,6 +31,7 @@ import Data.Aeson.Types (Parser)
 import Data.Bool (Bool)
 import Data.Eq (Eq)
 import Data.Int (Int)
+import qualified Data.List as L
 import Data.Maybe (Maybe)
 import Data.String (String)
 import Data.Text (Text)
@@ -38,20 +40,20 @@ import GHC.Base (undefined)
 import GHC.Generics (Generic)
 import Text.Show (Show)
 
--- TODO: NAMING - Remove p_ prefix from record fields
 -- TODO: DOCUMENTATION - Add Haddock documentation for all exported types
 newtype ProjectId = ProjectId
     { _id :: Text
     }
     deriving (Show, Eq, Generic)
 
+-- Custom JSON instances for ProjectId to use "id" field directly
 instance FromJSON ProjectId where
     parseJSON :: Value -> Parser ProjectId
-    parseJSON = genericParseJSON jsonOpts
+    parseJSON = genericParseJSON defaultOptions {fieldLabelModifier = L.drop 1}
 
 instance ToJSON ProjectId where
     toJSON :: ProjectId -> Value
-    toJSON = genericToJSON jsonOpts
+    toJSON = genericToJSON defaultOptions {fieldLabelModifier = L.drop 1}
 
 data Project = Project
     { _id :: Text
