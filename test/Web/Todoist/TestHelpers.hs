@@ -21,9 +21,9 @@ import Web.Todoist.Domain.Project
     , Project (..)
     , ProjectCreate
     , ProjectId (..)
-    , ViewStyle (..)
     , newProject
     )
+import Web.Todoist.Domain.Types (ViewStyle (..))
 import Web.Todoist.Internal.Types
     ( CreatedAt (..)
     , CreatorUid (..)

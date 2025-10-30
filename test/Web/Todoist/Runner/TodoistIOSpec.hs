@@ -7,9 +7,8 @@ import Web.Todoist.Domain.Project
     , Project (..)
     , ProjectCreate
     , ProjectId (..)
-    , ViewStyle (..)
-    , parseViewStyle
     )
+import Web.Todoist.Domain.Types (ViewStyle (..), parseViewStyle)
 import Web.Todoist.Internal.Types (ProjectResponse (..), TodoistReturn (..))
 import Web.Todoist.Runner.TodoistIO (projectResponseToProject)
 import Web.Todoist.TestHelpers

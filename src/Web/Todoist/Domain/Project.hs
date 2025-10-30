@@ -11,16 +11,20 @@ module Web.Todoist.Domain.Project
     , Project (..)
     , ProjectId (..)
     , Collaborator (..)
-    , ViewStyle (..)
-    , ProjectCreate
-    , parseViewStyle
+    , ProjectCreate (..)
     , newProject
     -- defaultProject
     ) where
 
-import Web.Todoist.Builder.Has ( HasDescription(..) )
+import Web.Todoist.Builder.Has
+    ( HasDescription (..)
+    , HasParentId (..)
+    , HasViewStyle (..)
+    , HasWorkspaceId (..)
+    )
+import Web.Todoist.Domain.Types (ViewStyle (..))
 
-import Control.Monad (Monad, return)
+import Control.Monad (Monad)
 import Data.Aeson
     ( FromJSON (parseJSON)
     , ToJSON (toJSON)
@@ -33,14 +37,11 @@ import Data.Aeson
 import Data.Aeson.Types (Parser)
 import Data.Bool (Bool (False))
 import Data.Eq (Eq)
-import Data.Function (($))
 import Data.Int (Int)
 import qualified Data.List as L
-import Data.Maybe (Maybe (Nothing, Just))
+import Data.Maybe (Maybe (Just, Nothing))
 import Data.String (String)
 import Data.Text (Text)
-import qualified Data.Text as T
-import GHC.Base (undefined)
 import GHC.Generics (Generic)
 import Text.Show (Show)
 
@@ -76,20 +77,6 @@ data Project = Project
     }
     deriving (Show, Eq)
 
-data ViewStyle = List | Board | Calendar deriving (Show, Eq)
-
-instance ToJSON ViewStyle where
-    toJSON :: ViewStyle -> Value
-    toJSON List = toJSON ("list" :: Text)
-    toJSON Board = toJSON ("board" :: Text)
-    toJSON Calendar = toJSON ("calendar" :: Text)
-
-instance FromJSON ViewStyle where
-    parseJSON :: Value -> Parser ViewStyle
-    parseJSON v = do
-        str <- parseJSON v
-        return $ parseViewStyle str
-
 data ProjectCreate = ProjectCreate
     { _name :: Text
     , _description :: Maybe Text
@@ -113,6 +100,18 @@ instance HasDescription ProjectCreate where
     hasDescription :: Text -> ProjectCreate -> ProjectCreate
     hasDescription desc ProjectCreate {..} = ProjectCreate {_description = Just desc, ..}
 
+instance HasParentId ProjectCreate where
+    hasParentId :: Text -> ProjectCreate -> ProjectCreate
+    hasParentId pid ProjectCreate {..} = ProjectCreate {_parentId = Just pid, ..}
+
+instance HasViewStyle ProjectCreate where
+    hasViewStyle :: ViewStyle -> ProjectCreate -> ProjectCreate
+    hasViewStyle style ProjectCreate {..} = ProjectCreate {_view_style = Just style, ..}
+
+instance HasWorkspaceId ProjectCreate where
+    hasWorkspaceId :: Int -> ProjectCreate -> ProjectCreate
+    hasWorkspaceId wid ProjectCreate {..} = ProjectCreate {_workspace_id = Just wid, ..}
+
 -- projects
 newProject :: Text -> ProjectCreate
 newProject name =
@@ -124,14 +123,6 @@ newProject name =
         , _view_style = Nothing
         , _workspace_id = Nothing
         }
-
--- | Parse a Text string into ViewStyle, defaulting to List for unrecognized values
-parseViewStyle :: Text -> ViewStyle
-parseViewStyle txt = case T.toLower txt of
-    "list" -> List
-    "board" -> Board
-    "calendar" -> Calendar
-    _ -> undefined -- Default to undefined for unrecognized values
 
 data Collaborator = Collaborator
     { _id :: Text
@@ -152,7 +143,6 @@ data ParentId = ParentIdStr String | ParentIdInt Int deriving (Show, Generic, Fr
 
 -- TODO: API_DESIGN - Separate domain types from API response types (as noted below)
 class (Monad m) => TodoistProjectM m where
-
     getAllProjects :: m [Project]
 
     getProject :: ProjectId -> m Project

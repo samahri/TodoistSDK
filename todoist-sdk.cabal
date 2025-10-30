@@ -20,6 +20,7 @@ library
   hs-source-dirs:      src
   exposed-modules:     Web.Todoist.Domain.Project
                        Web.Todoist.Domain.Task
+                       Web.Todoist.Domain.Types
                        Web.Todoist.Builder.Has
                        Web.Todoist.Builder
                        Web.Todoist.QueryParam

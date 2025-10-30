@@ -13,8 +13,8 @@ import Web.Todoist.Domain.Project
     , ProjectCreate
     , ProjectId (..)
     , TodoistProjectM (..)
-    , parseViewStyle
     )
+import Web.Todoist.Domain.Types (parseViewStyle)
 import Web.Todoist.Internal.HTTP (PostResponse (..), apiDelete, apiGet, apiPost)
 import Web.Todoist.Internal.Request (mkTodoistRequest)
 import Web.Todoist.Internal.Types

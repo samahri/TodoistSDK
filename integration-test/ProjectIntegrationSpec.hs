@@ -4,31 +4,34 @@
 
 module ProjectIntegrationSpec (spec) where
 
-import Helpers (generateUniqueName, getTestConfig, withTestProject, withTestProjects, liftTodoist)
+import Helpers (assertSucceeds, buildTestProject, generateUniqueName, getTestConfig, liftTodoist)
 
-import Web.Todoist.Domain.Project (TodoistProjectM (..), newProject)
+import Web.Todoist.Domain.Project (ProjectCreate, TodoistProjectM (..), newProject)
 import qualified Web.Todoist.Domain.Project as P
+import Web.Todoist.Internal.Config (TodoistConfig)
+import Web.Todoist.Internal.Error (TodoistError)
 import Web.Todoist.Runner (todoist)
 
-import Control.Monad (void, return, mapM_)
+import Control.Exception (bracket)
+import Control.Monad (mapM, mapM_, void)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Except (ExceptT)
 import Data.Bool (Bool (..))
 import Data.Either (Either (..))
 import Data.Eq ((==))
-import Data.Function (($))
+import Data.Function (($), (.))
 import Data.Functor ((<$>))
 import Data.Int (Int)
 import qualified Data.List as L
 import Data.Maybe (Maybe (..))
 import Data.Semigroup ((<>))
-import Data.Text (pack, isInfixOf)
+import Data.Text (Text, isInfixOf, pack)
 import qualified Data.Text as T
-import System.IO (putStrLn)
+import System.IO (IO, putStrLn)
 import Test.Hspec (Spec, describe, it, pendingWith, runIO, shouldBe, shouldSatisfy)
 import Text.Show (show)
 
-import Web.Todoist.Internal.Config (TodoistConfig)
+import GHC.Base (undefined)
 
 spec :: Spec
 spec = do
@@ -38,29 +41,56 @@ spec = do
             it "requires TODOIST_TEST_API_TOKEN" $
                 pendingWith "TODOIST_TEST_API_TOKEN not set"
         Just config -> do
-            describe "Project Integration Tests" $ do
-                projectLifecycleSpec config
-                archiveUnarchiveSpec config
-                getAllProjectsSpec config
-                getProjectCollaboratorsSpec config
+            projectLifecycleSpec config
+            archiveUnarchiveSpec config
+            getAllProjectsSpec config
+            getProjectCollaboratorsSpec config
 
 projectLifecycleSpec :: TodoistConfig -> Spec
 projectLifecycleSpec config = describe "Project lifecycle (create, get, delete)" $ do
-    it "creates, retrieves, and deletes a project successfully" $ do
+    it "creates, retrieves, and deletes a project with all fields set" $ do
         -- Generate unique project name
-        projectName <- pack <$> generateUniqueName "IntegTest-ProjectLifecycle"
+        newProjectName <- pack <$> generateUniqueName "IntegTest-ProjectLifecycle"
 
-        -- Use withTestProject to handle creation and cleanup
-        withTestProject config projectName $ \projectId -> do
-            -- Get the project by ID
-            P.Project {_id = projId, _name = projName} <- liftTodoist config (getProject projectId)
+        -- Build a complete project with all fields using the Builder pattern
+        let testProject = buildTestProject newProjectName
 
-            -- Verify the project details
+        -- Extract expected values from testProject for verification
+        let P.ProjectCreate
+                { _name = expectedName
+                , _description = expectedDescription
+                , _view_style = expectedViewStyle
+                , _is_favorite = expectedIsFavorite
+                } = testProject
+
+        -- Use withTestProjectCreate to handle creation and cleanup
+        withTestProjectCreate config testProject $ \projectId -> do
+            -- Get the project by ID and verify all fields
+            project <- liftTodoist config (getProject projectId)
+
+            let P.Project
+                    { _id = projId
+                    , _name = projName
+                    , _description = projDescription
+                    , _view_style = projViewStyle
+                    , _is_favorite = projIsFavorite
+                    } = project
+
+            -- Verify the project details match expected values
             let P.ProjectId {_id = pidId} = projectId
             liftIO $ projId `shouldBe` pidId
-            liftIO $ projName `shouldBe` projectName
+            liftIO $ projName `shouldBe` expectedName
 
-            -- Delete the project
+            -- Verify description field matches testProject
+            liftIO $ Just projDescription `shouldBe` expectedDescription
+
+            -- Verify view_style field matches testProject
+            liftIO $ Just projViewStyle `shouldBe` expectedViewStyle
+
+            -- Verify is_favorite field matches testProject
+            liftIO $ projIsFavorite `shouldBe` expectedIsFavorite
+
+            -- Test deletion within the action
             liftTodoist config (deleteProject projectId)
 
             -- Verify project no longer exists (should get an error)
@@ -100,63 +130,68 @@ archiveUnarchiveSpec config = describe "Project archive/unarchive lifecycle" $ d
 
 getAllProjectsSpec :: TodoistConfig -> Spec
 getAllProjectsSpec config = describe "Get all projects" $ do
-    it "creates 3 projects, retrieves them via getAllProjects, validates count and properties, then deletes them" $ do
-        -- Generate unique base name for this test run
-        baseName <- generateUniqueName "IntegTest-GetAll"
+    it
+        "creates 3 projects, retrieves them via getAllProjects, validates count and properties, then deletes them"
+        $ do
+            -- Generate unique base name for this test run
+            baseName <- generateUniqueName "IntegTest-GetAll"
 
-        -- Create 3 projects with unique names
-        let projectName1 = pack $ baseName <> "-Project1"
-        let projectName2 = pack $ baseName <> "-Project2"
-        let projectName3 = pack $ baseName <> "-Project3"
-        let projectNames = [projectName1, projectName2, projectName3]
+            -- Create 3 projects with unique names
+            let projectName1 = pack $ baseName <> "-Project1"
+            let projectName2 = pack $ baseName <> "-Project2"
+            let projectName3 = pack $ baseName <> "-Project3"
+            let projectNames = [projectName1, projectName2, projectName3]
 
-        -- Use withTestProjects to handle creation and cleanup
-        withTestProjects config projectNames $ \[projectId1, projectId2, projectId3] -> do
-            -- Get all projects
-            allProjects <- liftTodoist config getAllProjects
+            -- Use withTestProjects to handle creation and cleanup
+            withTestProjects config projectNames $ \case
+                [projectId1, projectId2, projectId3] -> do
+                    -- Get all projects
+                    allProjects <- liftTodoist config getAllProjects
 
-            -- Filter to only our test projects
-            let testPrefix = pack baseName
-            let ourProjects = L.filter (\(P.Project {_name = n}) -> testPrefix `isInfixOf` n) allProjects
+                    -- Filter to only our test projects
+                    let testPrefix = pack baseName
+                    let ourProjects = L.filter (\(P.Project {_name = n}) -> testPrefix `isInfixOf` n) allProjects
 
-            -- Verify we got exactly 3 projects
-            let projectCount = L.length ourProjects
-            liftIO $ projectCount `shouldBe` (3 :: Int)
+                    -- Verify we got exactly 3 projects
+                    let projectCount = L.length ourProjects
+                    liftIO $ projectCount `shouldBe` (3 :: Int)
 
-            -- Extract the project names from our filtered list
-            let projectNamesResult = L.map (\(P.Project {_name = n}) -> n) ourProjects
+                    -- Extract the project names from our filtered list
+                    let projectNamesResult = L.map (\(P.Project {_name = n}) -> n) ourProjects
 
-            -- Verify all 3 project names are present
-            liftIO $ (projectName1 `L.elem` projectNamesResult) `shouldBe` True
-            liftIO $ (projectName2 `L.elem` projectNamesResult) `shouldBe` True
-            liftIO $ (projectName3 `L.elem` projectNamesResult) `shouldBe` True
+                    -- Verify all 3 project names are present
+                    liftIO $ (projectName1 `L.elem` projectNamesResult) `shouldBe` True
+                    liftIO $ (projectName2 `L.elem` projectNamesResult) `shouldBe` True
+                    liftIO $ (projectName3 `L.elem` projectNamesResult) `shouldBe` True
 
-            -- Verify each project has the expected properties
-            let project1Maybe = L.find (\(P.Project {_name = n}) -> n == projectName1) ourProjects
-            let project2Maybe = L.find (\(P.Project {_name = n}) -> n == projectName2) ourProjects
-            let project3Maybe = L.find (\(P.Project {_name = n}) -> n == projectName3) ourProjects
+                    -- Verify each project has the expected properties
+                    let project1Maybe = L.find (\(P.Project {_name = n}) -> n == projectName1) ourProjects
+                    let project2Maybe = L.find (\(P.Project {_name = n}) -> n == projectName2) ourProjects
+                    let project3Maybe = L.find (\(P.Project {_name = n}) -> n == projectName3) ourProjects
 
-            -- Verify all projects were found
-            case (project1Maybe, project2Maybe, project3Maybe) of
-                (Just (P.Project {_id = id1, _name = name1}), 
-                  Just (P.Project {_id = id2, _name = name2}), 
-                  Just (P.Project {_id = id3, _name = name3})) -> do
-                    -- Verify project IDs match
-                    let P.ProjectId {_id = pid1} = projectId1
-                    let P.ProjectId {_id = pid2} = projectId2
-                    let P.ProjectId {_id = pid3} = projectId3
+                    -- Verify all projects were found
+                    case (project1Maybe, project2Maybe, project3Maybe) of
+                        ( Just (P.Project {_id = id1, _name = name1})
+                            , Just (P.Project {_id = id2, _name = name2})
+                            , Just (P.Project {_id = id3, _name = name3})
+                            ) -> do
+                                -- Verify project IDs match
+                                let P.ProjectId {_id = pid1} = projectId1
+                                let P.ProjectId {_id = pid2} = projectId2
+                                let P.ProjectId {_id = pid3} = projectId3
 
-                    liftIO $ id1 `shouldBe` pid1
-                    liftIO $ id2 `shouldBe` pid2
-                    liftIO $ id3 `shouldBe` pid3
+                                liftIO $ id1 `shouldBe` pid1
+                                liftIO $ id2 `shouldBe` pid2
+                                liftIO $ id3 `shouldBe` pid3
 
-                    -- Verify project names match
-                    liftIO $ name1 `shouldBe` projectName1
-                    liftIO $ name2 `shouldBe` projectName2
-                    liftIO $ name3 `shouldBe` projectName3
-                _ -> do
-                    liftIO $ putStrLn "Failed to find all 3 projects in the filtered list"
-                    liftIO $ False `shouldBe` True
+                                -- Verify project names match
+                                liftIO $ name1 `shouldBe` projectName1
+                                liftIO $ name2 `shouldBe` projectName2
+                                liftIO $ name3 `shouldBe` projectName3
+                        _ -> do
+                            liftIO $ putStrLn "Failed to find all 3 projects in the filtered list"
+                            liftIO $ False `shouldBe` True
+                _ -> undefined -- impossible case
 
 getProjectCollaboratorsSpec :: TodoistConfig -> Spec
 getProjectCollaboratorsSpec config = describe "Get project collaborators" $ do
@@ -184,3 +219,56 @@ getProjectCollaboratorsSpec config = describe "Get project collaborators" $ do
 
             -- Validate each collaborator's structure
             liftIO $ mapM_ validateCollaborator collaborators
+
+{- | Create a test project from a ProjectCreate, run an action with its ID, then delete it
+Uses bracket to ensure cleanup happens even if the action fails
+The action runs in ExceptT for clean error handling
+-}
+withTestProjectCreate ::
+    TodoistConfig -> ProjectCreate -> (P.ProjectId -> ExceptT TodoistError IO a) -> IO ()
+withTestProjectCreate config projectCreate action = do
+    let createProject = do
+            liftTodoist config (addProject projectCreate)
+
+    let deleteProject' projectId = do
+            void $ todoist config (Web.Todoist.Domain.Project.deleteProject projectId)
+
+    let runAction projectId = void $ assertSucceeds $ action projectId
+
+    bracket (assertSucceeds createProject) deleteProject' runAction
+
+{- | Create a test project, run an action with its ID, then delete it
+Uses bracket to ensure cleanup happens even if the action fails
+The action runs in ExceptT for clean error handling
+-}
+withTestProject :: TodoistConfig -> Text -> (P.ProjectId -> ExceptT TodoistError IO a) -> IO ()
+withTestProject config projectName action = do
+    let createProject = do
+            liftIO $ putStrLn $ "Creating test project: " <> show projectName
+            liftTodoist config (addProject $ newProject projectName)
+
+    let deleteProject' projectId = do
+            liftIO $ putStrLn $ "Cleaning up test project: " <> show projectName
+            void $ todoist config (Web.Todoist.Domain.Project.deleteProject projectId)
+
+    let runAction projectId = void $ assertSucceeds $ action projectId
+
+    bracket (assertSucceeds createProject) deleteProject' runAction
+
+{- | Create multiple test projects, run an action with their IDs, then delete all
+Uses bracket to ensure cleanup of all projects even if the action fails
+The action runs in ExceptT for clean error handling
+-}
+withTestProjects :: TodoistConfig -> [Text] -> ([P.ProjectId] -> ExceptT TodoistError IO a) -> IO ()
+withTestProjects config projectNames action = do
+    let createProjects = do
+            liftIO $ putStrLn $ "Creating " <> show (L.length projectNames) <> " test projects"
+            mapM (\name -> liftTodoist config (addProject $ newProject name)) projectNames
+
+    let deleteProjects projectIds = do
+            liftIO $ putStrLn $ "Cleaning up " <> show (L.length projectIds) <> " test projects"
+            mapM_ (todoist config . Web.Todoist.Domain.Project.deleteProject) projectIds
+
+    let runAction projectIds = void $ assertSucceeds $ action projectIds
+
+    bracket (assertSucceeds createProjects) deleteProjects runAction

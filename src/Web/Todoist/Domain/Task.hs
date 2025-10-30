@@ -29,7 +29,7 @@ module Web.Todoist.Domain.Task
     , emptyTaskPatch
     ) where
 
-import Web.Todoist.Builder.Has ( HasDescription(..) )
+import Web.Todoist.Builder.Has (HasDescription (..))
 import Web.Todoist.Internal.Json (jsonOpts)
 import Web.Todoist.Internal.Types (Params)
 import Web.Todoist.QueryParam (QueryParam (..))
@@ -203,7 +203,7 @@ newTask content =
 
 instance HasDescription TaskCreate where
     hasDescription :: Text -> TaskCreate -> TaskCreate
-    hasDescription desc TaskCreate {..} = TaskCreate {p_description = Just desc, .. }
+    hasDescription desc TaskCreate {..} = TaskCreate {p_description = Just desc, ..}
 
 data TaskPatch = TaskPatch
     { p_content :: Maybe Text
@@ -246,7 +246,7 @@ instance ToJSON TaskPatch where
 
 instance HasDescription TaskPatch where
     hasDescription :: Text -> TaskPatch -> TaskPatch
-    hasDescription desc TaskPatch {..} = TaskPatch { p_description = Just desc, .. }
+    hasDescription desc TaskPatch {..} = TaskPatch {p_description = Just desc, ..}
 
 newtype CompletedTasksQueryParamAPI = CompletedTasksQueryParamAPI
     { items :: [TaskId]
