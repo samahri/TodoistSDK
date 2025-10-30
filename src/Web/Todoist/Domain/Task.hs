@@ -22,11 +22,16 @@ module Web.Todoist.Domain.Task
     , TaskFilter (..)
     , CompletedTasksQueryParam (..)
     , addTaskQuickWithQuery
+    , TaskCreate
+    , TaskPatch
+    , newTask
+    -- , setDescription
+    , emptyTaskPatch
     ) where
 
+import Web.Todoist.Builder.Has ( HasDescription(..) )
 import Web.Todoist.Internal.Json (jsonOpts)
 import Web.Todoist.Internal.Types (Params)
-import Web.Todoist.Patch (TaskCreate, TaskPatch)
 import Web.Todoist.QueryParam (QueryParam (..))
 
 import Control.Monad (Monad)
@@ -176,6 +181,72 @@ addTaskQuickText text =
         , auto_reminder = False
         , meta = False
         }
+
+data TaskCreate = TaskCreate
+    { p_content :: String
+    , p_description :: Maybe Text
+    , p_project_id :: Maybe String
+    }
+    deriving (Show, Generic)
+
+instance ToJSON TaskCreate where
+    toJSON :: TaskCreate -> Value
+    toJSON = genericToJSON jsonOpts
+
+newTask :: String -> TaskCreate
+newTask content =
+    TaskCreate
+        { p_content = content
+        , p_description = Nothing
+        , p_project_id = Nothing
+        }
+
+instance HasDescription TaskCreate where
+    hasDescription :: Text -> TaskCreate -> TaskCreate
+    hasDescription desc TaskCreate {..} = TaskCreate {p_description = Just desc, .. }
+
+data TaskPatch = TaskPatch
+    { p_content :: Maybe Text
+    , p_description :: Maybe Text
+    , p_labels :: Maybe Text
+    , p_priority :: Maybe Text
+    , p_due_string :: Maybe Text
+    , p_due_date :: Maybe Text
+    , p_due_datetime :: Maybe Text
+    , p_due_lang :: Maybe Text
+    , p_assignee_id :: Maybe Text
+    , p_duration :: Maybe Text
+    , p_duration_unit :: Maybe Text
+    , p_deadline_date :: Maybe Text
+    , p_deadline_lang :: Maybe Text
+    }
+    deriving (Show, Generic)
+
+emptyTaskPatch :: TaskPatch
+emptyTaskPatch =
+    TaskPatch
+        { p_content = Nothing
+        , p_description = Nothing
+        , p_labels = Nothing
+        , p_priority = Nothing
+        , p_due_string = Nothing
+        , p_due_date = Nothing
+        , p_due_datetime = Nothing
+        , p_due_lang = Nothing
+        , p_assignee_id = Nothing
+        , p_duration = Nothing
+        , p_duration_unit = Nothing
+        , p_deadline_date = Nothing
+        , p_deadline_lang = Nothing
+        }
+
+instance ToJSON TaskPatch where
+    toJSON :: TaskPatch -> Value
+    toJSON = genericToJSON jsonOpts
+
+instance HasDescription TaskPatch where
+    hasDescription :: Text -> TaskPatch -> TaskPatch
+    hasDescription desc TaskPatch {..} = TaskPatch { p_description = Just desc, .. }
 
 newtype CompletedTasksQueryParamAPI = CompletedTasksQueryParamAPI
     { items :: [TaskId]

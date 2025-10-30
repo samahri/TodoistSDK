@@ -20,10 +20,14 @@ library
   hs-source-dirs:      src
   exposed-modules:     Web.Todoist.Domain.Project
                        Web.Todoist.Domain.Task
-                       Web.Todoist.Patch
+                       Web.Todoist.Builder.Has
+                       Web.Todoist.Builder
                        Web.Todoist.QueryParam
                        Web.Todoist.Runner
                        Web.Todoist.Runner.TodoistIO
+                       Web.Todoist.Runner.TodoistIO.Core
+                       Web.Todoist.Runner.TodoistIO.Project
+                       Web.Todoist.Runner.TodoistIO.Task
                        Web.Todoist.Runner.Trace
                        Web.Todoist.Internal.Config
                        Web.Todoist.Internal.Error

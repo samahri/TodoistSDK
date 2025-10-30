@@ -15,7 +15,15 @@ module Web.Todoist.TestHelpers
     , sampleProjectCreateJson
     ) where
 
-import Web.Todoist.Domain.Project (Collaborator (..), Project (..), ProjectId (..), ViewStyle (..))
+import Web.Todoist.Builder.Has (HasDescription (hasDescription))
+import Web.Todoist.Domain.Project
+    ( Collaborator (..)
+    , Project (..)
+    , ProjectCreate
+    , ProjectId (..)
+    , ViewStyle (..)
+    , newProject
+    )
 import Web.Todoist.Internal.Types
     ( CreatedAt (..)
     , CreatorUid (..)
@@ -24,15 +32,12 @@ import Web.Todoist.Internal.Types
     , Role (..)
     , UpdatedAt (..)
     )
-import qualified Web.Todoist.Patch as Patch
 
 import Data.Bool (Bool (..))
 import Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import Data.Function (($))
-import Data.Int (Int)
 import Data.Maybe (Maybe (..))
-import Data.Text (Text)
 
 -- | Sample ProjectId for testing
 sampleProjectId :: ProjectId
@@ -114,9 +119,9 @@ sampleProjectResponseJson =
         \\"is_shared\":false\
         \}"
 
--- | Sample ProjectId JSON response (jsonOpts drops first 2 chars from _id -> d)
+-- | Sample ProjectId JSON response (fieldLabelModifier drops 1 char from _id -> id)
 sampleProjectIdJson :: ByteString
-sampleProjectIdJson = BSL.pack "{\"d\":\"2203306141\"}"
+sampleProjectIdJson = BSL.pack "{\"id\":\"2203306141\"}"
 
 -- | Sample list of projects for getAllProjects
 sampleProjects :: [Project]
@@ -129,16 +134,16 @@ sampleProjectsJson =
         "{\
         \\"results\":[\
         \{\"id\":\"2203306141\",\"can_assign_tasks\":false,\"child_order\":1,\"color\":\"blue\",\
-        \\"creator_uid\":{\"creator_uid\":\"12345678\"},\"created_at\":{\"created_at\":\"2023-06-15T10:30:00Z\"},\
+        \\"creator_uid\":{\"creator_uid\":\"12345678\"},\"created_at\":\"2023-06-15T10:30:00Z\",\
         \\"is_archived\":false,\"is_deleted\":false,\"is_favorite\":true,\"is_frozen\":false,\
-        \\"name\":\"Test Project\",\"updated_at\":{\"updated_at\":\"2023-06-20T14:45:00Z\"},\
+        \\"name\":\"Test Project\",\"updated_at\":\"2023-06-20T14:45:00Z\",\
         \\"view_style\":\"list\",\"default_order\":0,\"description\":\"A test project for unit testing\",\
         \\"public_key\":\"test-public-key\",\"access\":null,\"role\":{\"role\":null},\
         \\"parent_id\":{\"parent_id\":null},\"inbox_project\":false,\"is_collapsed\":false,\"is_shared\":false},\
         \{\"id\":\"2203306142\",\"can_assign_tasks\":false,\"child_order\":2,\"color\":\"blue\",\
-        \\"creator_uid\":{\"creator_uid\":\"12345678\"},\"created_at\":{\"created_at\":\"2023-06-15T10:30:00Z\"},\
+        \\"creator_uid\":{\"creator_uid\":\"12345678\"},\"created_at\":\"2023-06-15T10:30:00Z\",\
         \\"is_archived\":false,\"is_deleted\":false,\"is_favorite\":true,\"is_frozen\":false,\
-        \\"name\":\"Second Project\",\"updated_at\":{\"updated_at\":\"2023-06-20T14:45:00Z\"},\
+        \\"name\":\"Second Project\",\"updated_at\":\"2023-06-20T14:45:00Z\",\
         \\"view_style\":\"list\",\"default_order\":0,\"description\":\"A test project for unit testing\",\
         \\"public_key\":\"test-public-key\",\"access\":null,\"role\":{\"role\":null},\
         \\"parent_id\":{\"parent_id\":null},\"inbox_project\":false,\"is_collapsed\":false,\"is_shared\":false}\
@@ -175,8 +180,8 @@ sampleCollaboratorsJson =
         \}"
 
 -- | Sample ProjectCreate
-sampleProjectCreate :: Patch.ProjectCreate
-sampleProjectCreate = Patch.setDescription "A new project to be created" $ Patch.newProject "New Project"
+sampleProjectCreate :: ProjectCreate
+sampleProjectCreate = hasDescription (Just "A new project to be created") $ newProject "New Project"
 
 -- | JSON representation of ProjectCreate (for serialization test)
 sampleProjectCreateJson :: ByteString

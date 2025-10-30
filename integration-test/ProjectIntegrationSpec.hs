@@ -6,12 +6,10 @@ module ProjectIntegrationSpec (spec) where
 
 import Helpers (generateUniqueName, getTestConfig)
 
-import Web.Todoist.Domain.Project (TodoistProjectM (..))
+import Web.Todoist.Domain.Project (TodoistProjectM (..), newProject)
 import qualified Web.Todoist.Domain.Project as P
-import Web.Todoist.Patch (newProject)
 import Web.Todoist.Runner (todoist)
 
-import Control.Applicative (pure)
 import Control.Monad (void)
 import Data.Bool (Bool (..))
 import Data.Either (Either (..))

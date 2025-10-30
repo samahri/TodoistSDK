@@ -2,6 +2,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 -- TODO: Create Web.Todoist.Types module for shared data types (ProjectId, TaskId, etc.)
@@ -11,13 +12,15 @@ module Web.Todoist.Domain.Project
     , ProjectId (..)
     , Collaborator (..)
     , ViewStyle (..)
+    , ProjectCreate
     , parseViewStyle
+    , newProject
     -- defaultProject
     ) where
 
-import Web.Todoist.Patch (ProjectCreate)
+import Web.Todoist.Builder.Has ( HasDescription(..) )
 
-import Control.Monad (Monad)
+import Control.Monad (Monad, return)
 import Data.Aeson
     ( FromJSON (parseJSON)
     , ToJSON (toJSON)
@@ -28,11 +31,12 @@ import Data.Aeson
     , genericToJSON
     )
 import Data.Aeson.Types (Parser)
-import Data.Bool (Bool)
+import Data.Bool (Bool (False))
 import Data.Eq (Eq)
+import Data.Function (($))
 import Data.Int (Int)
 import qualified Data.List as L
-import Data.Maybe (Maybe)
+import Data.Maybe (Maybe (Nothing, Just))
 import Data.String (String)
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -73,6 +77,53 @@ data Project = Project
     deriving (Show, Eq)
 
 data ViewStyle = List | Board | Calendar deriving (Show, Eq)
+
+instance ToJSON ViewStyle where
+    toJSON :: ViewStyle -> Value
+    toJSON List = toJSON ("list" :: Text)
+    toJSON Board = toJSON ("board" :: Text)
+    toJSON Calendar = toJSON ("calendar" :: Text)
+
+instance FromJSON ViewStyle where
+    parseJSON :: Value -> Parser ViewStyle
+    parseJSON v = do
+        str <- parseJSON v
+        return $ parseViewStyle str
+
+data ProjectCreate = ProjectCreate
+    { _name :: Text
+    , _description :: Maybe Text
+    , _parentId :: Maybe Text
+    , -- , _color :: Text or Int Default: {"name":"charcoal","hex":"#808080","database_index":47}
+      _is_favorite :: Bool
+    , _view_style :: Maybe ViewStyle
+    , _workspace_id :: Maybe Int
+    }
+    deriving (Show, Generic)
+
+instance ToJSON ProjectCreate where
+    toJSON :: ProjectCreate -> Value
+    toJSON = genericToJSON defaultOptions {fieldLabelModifier = L.drop 1}
+
+instance FromJSON ProjectCreate where
+    parseJSON :: Value -> Parser ProjectCreate
+    parseJSON = genericParseJSON defaultOptions {fieldLabelModifier = L.drop 1}
+
+instance HasDescription ProjectCreate where
+    hasDescription :: Text -> ProjectCreate -> ProjectCreate
+    hasDescription desc ProjectCreate {..} = ProjectCreate {_description = Just desc, ..}
+
+-- projects
+newProject :: Text -> ProjectCreate
+newProject name =
+    ProjectCreate
+        { _name = name
+        , _description = Nothing
+        , _parentId = Nothing
+        , _is_favorite = False
+        , _view_style = Nothing
+        , _workspace_id = Nothing
+        }
 
 -- | Parse a Text string into ViewStyle, defaulting to List for unrecognized values
 parseViewStyle :: Text -> ViewStyle

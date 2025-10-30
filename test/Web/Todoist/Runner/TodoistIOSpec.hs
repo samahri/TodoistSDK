@@ -5,12 +5,12 @@ module Web.Todoist.Runner.TodoistIOSpec (spec) where
 import Web.Todoist.Domain.Project
     ( Collaborator (..)
     , Project (..)
+    , ProjectCreate
     , ProjectId (..)
     , ViewStyle (..)
     , parseViewStyle
     )
 import Web.Todoist.Internal.Types (ProjectResponse (..), TodoistReturn (..))
-import qualified Web.Todoist.Patch as Patch
 import Web.Todoist.Runner.TodoistIO (projectResponseToProject)
 import Web.Todoist.TestHelpers
     ( sampleCollaborator
@@ -168,7 +168,7 @@ addProjectSpec :: Spec
 addProjectSpec = describe "addProject" $ do
     it "serializes ProjectCreate to JSON correctly" $ do
         let encoded = encode sampleProjectCreate
-        let decoded = decode encoded :: Maybe Patch.ProjectCreate
+        let decoded = decode encoded :: Maybe ProjectCreate
         decoded `shouldSatisfy` isJust
 
     it "parses ProjectId response JSON" $ do
