@@ -173,15 +173,15 @@ sampleCollaboratorsJson =
     BSL.pack
         "{\
         \\"results\":[\
-        \{\"_id\":\"user123\",\"_name\":\"John Doe\",\"_email\":\"john@example.com\"},\
-        \{\"_id\":\"user456\",\"_name\":\"Jane Smith\",\"_email\":\"jane@example.com\"}\
+        \{\"id\":\"user123\",\"name\":\"John Doe\",\"email\":\"john@example.com\"},\
+        \{\"id\":\"user456\",\"name\":\"Jane Smith\",\"email\":\"jane@example.com\"}\
         \],\
         \\"next_cursor\":null\
         \}"
 
 -- | Sample ProjectCreate
 sampleProjectCreate :: ProjectCreate
-sampleProjectCreate = hasDescription (Just "A new project to be created") $ newProject "New Project"
+sampleProjectCreate = hasDescription "A new project to be created" $ newProject "New Project"
 
 -- | JSON representation of ProjectCreate (for serialization test)
 sampleProjectCreateJson :: ByteString

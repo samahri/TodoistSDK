@@ -138,13 +138,21 @@ data Collaborator = Collaborator
     , _name :: Text
     , _email :: Text
     }
-    deriving (Show, Eq, Generic, FromJSON, ToJSON)
+    deriving (Show, Eq, Generic)
+
+instance ToJSON Collaborator where
+    toJSON :: Collaborator -> Value
+    toJSON = genericToJSON defaultOptions {fieldLabelModifier = L.drop 1}
+
+instance FromJSON Collaborator where
+    parseJSON :: Value -> Parser Collaborator
+    parseJSON = genericParseJSON defaultOptions {fieldLabelModifier = L.drop 1}
 
 data ParentId = ParentIdStr String | ParentIdInt Int deriving (Show, Generic, FromJSON, ToJSON)
 
 -- TODO: API_DESIGN - Separate domain types from API response types (as noted below)
 class (Monad m) => TodoistProjectM m where
-    -- TODO: DOCUMENTATION - Write algebraic laws
+
     getAllProjects :: m [Project]
 
     getProject :: ProjectId -> m Project
