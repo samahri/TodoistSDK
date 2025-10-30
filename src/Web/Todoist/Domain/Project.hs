@@ -16,6 +16,7 @@ module Web.Todoist.Domain.Project
     -- defaultProject
     ) where
 
+import Web.Todoist.Builder (Builder, seed)
 import Web.Todoist.Builder.Has
     ( HasDescription (..)
     , HasParentId (..)
@@ -113,16 +114,17 @@ instance HasWorkspaceId ProjectCreate where
     hasWorkspaceId wid ProjectCreate {..} = ProjectCreate {_workspace_id = Just wid, ..}
 
 -- projects
-newProject :: Text -> ProjectCreate
+newProject :: Text -> Builder ProjectCreate
 newProject name =
-    ProjectCreate
-        { _name = name
-        , _description = Nothing
-        , _parentId = Nothing
-        , _is_favorite = False
-        , _view_style = Nothing
-        , _workspace_id = Nothing
-        }
+    seed
+        ProjectCreate
+            { _name = name
+            , _description = Nothing
+            , _parentId = Nothing
+            , _is_favorite = False
+            , _view_style = Nothing
+            , _workspace_id = Nothing
+            }
 
 data Collaborator = Collaborator
     { _id :: Text

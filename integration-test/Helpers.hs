@@ -22,10 +22,10 @@ import Data.Function (($), (.))
 import Data.Functor (fmap, (<&>))
 import Data.Int (Int)
 import Data.Maybe (Maybe (..))
-import Data.Monoid (Endo (..), appEndo)
 import Data.Semigroup ((<>))
 import Data.String (String)
 import Data.Text (Text, pack)
+import GHC.Err (error)
 import System.Environment (lookupEnv)
 import System.IO (IO, putStrLn)
 import System.Random (randomRIO)
@@ -41,7 +41,6 @@ import Web.Todoist.Domain.Types (ViewStyle (..))
 import Web.Todoist.Internal.Config (TodoistConfig)
 import Web.Todoist.Internal.Error (TodoistError)
 import Web.Todoist.Runner (newTodoistConfig, todoist)
-import Prelude (error)
 
 -- | Load .env file, ignoring errors if file doesn't exist
 loadEnvFile :: IO ()
@@ -99,10 +98,8 @@ Creates a ProjectCreate with all possible fields populated for testing
 -}
 buildTestProject :: Text -> ProjectCreate
 buildTestProject projectName =
-    appEndo
-        ( runBuilder
-            ( setDescription "Test project description for integration testing"
-                <> setViewStyle Board
-            )
+    runBuilder
+        ( newProject projectName
+            <> setDescription "Test project description for integration testing"
+            <> setViewStyle Board
         )
-        (newProject projectName)

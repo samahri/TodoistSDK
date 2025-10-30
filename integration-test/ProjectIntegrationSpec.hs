@@ -6,6 +6,7 @@ module ProjectIntegrationSpec (spec) where
 
 import Helpers (assertSucceeds, buildTestProject, generateUniqueName, getTestConfig, liftTodoist)
 
+import Web.Todoist.Builder (runBuilder)
 import Web.Todoist.Domain.Project (ProjectCreate, TodoistProjectM (..), newProject)
 import qualified Web.Todoist.Domain.Project as P
 import Web.Todoist.Internal.Config (TodoistConfig)
@@ -245,7 +246,7 @@ withTestProject :: TodoistConfig -> Text -> (P.ProjectId -> ExceptT TodoistError
 withTestProject config projectName action = do
     let createProject = do
             liftIO $ putStrLn $ "Creating test project: " <> show projectName
-            liftTodoist config (addProject $ newProject projectName)
+            liftTodoist config (addProject $ runBuilder $ newProject projectName)
 
     let deleteProject' projectId = do
             liftIO $ putStrLn $ "Cleaning up test project: " <> show projectName
@@ -263,7 +264,7 @@ withTestProjects :: TodoistConfig -> [Text] -> ([P.ProjectId] -> ExceptT Todoist
 withTestProjects config projectNames action = do
     let createProjects = do
             liftIO $ putStrLn $ "Creating " <> show (L.length projectNames) <> " test projects"
-            mapM (\name -> liftTodoist config (addProject $ newProject name)) projectNames
+            mapM (\name -> liftTodoist config (addProject $ runBuilder $ newProject name)) projectNames
 
     let deleteProjects projectIds = do
             liftIO $ putStrLn $ "Cleaning up " <> show (L.length projectIds) <> " test projects"

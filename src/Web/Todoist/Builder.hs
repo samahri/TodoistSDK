@@ -3,11 +3,14 @@ module Web.Todoist.Builder
     , setParentId
     , setViewStyle
     , setWorkspaceId
+    , seed
     , runBuilder
+    , Builder
     ) where
 
 import Web.Todoist.Builder.Has
-    ( HasDescription (..)
+    ( Has
+    , HasDescription (..)
     , HasParentId (..)
     , HasViewStyle (..)
     , HasWorkspaceId (..)
@@ -15,28 +18,40 @@ import Web.Todoist.Builder.Has
 import Web.Todoist.Domain.Types (ViewStyle)
 
 import Data.Int (Int)
-import Data.Monoid (Endo (..), Monoid (..))
+import Data.Monoid (Dual (..), Endo (..), Monoid (..))
 import Data.Semigroup (Semigroup (..))
 import Data.Text (Text)
+import GHC.Err (error)
 
-newtype Builder s = Builder {runBuilder :: Endo s}
+data Builder s = Builder
+    { bSeed :: s
+    , bMods :: Dual (Endo s) -- Dual for left-to-right application order
+    }
 
 instance Semigroup (Builder s) where
     (<>) :: Builder s -> Builder s -> Builder s
-    Builder f <> Builder g = Builder (f <> g)
+    Builder sd md <> Builder _ n = Builder sd (md <> n)
 
-instance Monoid (Builder s) where
-    mempty :: Builder s
-    mempty = Builder mempty
+runBuilder :: Builder s -> s
+runBuilder (Builder sd (Dual (Endo f))) = f sd
+
+seed :: (Has s) => s -> Builder s
+seed s = Builder s mempty
+
+modB :: (s -> s) -> Builder s
+modB f =
+    Builder
+        (error "modifier used without seed; ensure seed function is leftmost")
+        (Dual (Endo f))
 
 setDescription :: (HasDescription s) => Text -> Builder s
-setDescription desc = Builder (Endo (hasDescription desc))
+setDescription desc = modB (hasDescription desc)
 
 setParentId :: (HasParentId s) => Text -> Builder s
-setParentId pid = Builder (Endo (hasParentId pid))
+setParentId pid = modB (hasParentId pid)
 
 setViewStyle :: (HasViewStyle s) => ViewStyle -> Builder s
-setViewStyle style = Builder (Endo (hasViewStyle style))
+setViewStyle style = modB (hasViewStyle style)
 
 setWorkspaceId :: (HasWorkspaceId s) => Int -> Builder s
-setWorkspaceId wid = Builder (Endo (hasWorkspaceId wid))
+setWorkspaceId wid = modB (hasWorkspaceId wid)

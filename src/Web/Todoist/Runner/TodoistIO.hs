@@ -1,5 +1,4 @@
 {-# LANGUAGE DerivingStrategies #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 -- | Main TodoistIO module - re-exports the TodoistIO type and brings instances into scope
 module Web.Todoist.Runner.TodoistIO
