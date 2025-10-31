@@ -9,7 +9,14 @@ import Web.Todoist.Domain.Project
     , ProjectId (..)
     )
 import Web.Todoist.Domain.Types (ViewStyle (..), parseViewStyle)
-import Web.Todoist.Internal.Types (ProjectResponse (..), TodoistReturn (..))
+import Web.Todoist.Internal.Types
+    ( Action (..)
+    , CollaboratorRole (..)
+    , ProjectPermissions (..)
+    , ProjectResponse (..)
+    , RoleActions (..)
+    , TodoistReturn (..)
+    )
 import Web.Todoist.Runner.TodoistIO (projectResponseToProject)
 import Web.Todoist.TestHelpers
     ( sampleCollaborator
@@ -18,6 +25,7 @@ import Web.Todoist.TestHelpers
     , sampleProjectCreate
     , sampleProjectId
     , sampleProjectIdJson
+    , sampleProjectPermissionsJson
     , sampleProjectResponse
     , sampleProjectResponseJson
     , sampleProjectsJson
@@ -28,7 +36,7 @@ import Data.Bool (Bool (..))
 import Data.Either (Either (..), isRight)
 import Data.Function (($))
 import Data.Functor ((<$>))
-import Data.List (length)
+import Data.List (length, (!!))
 import Data.Maybe (Maybe (..), fromJust, isJust)
 import Data.String (String)
 import Test.Hspec (Spec, describe, it, shouldBe, shouldSatisfy)
@@ -43,6 +51,7 @@ spec = do
         addProjectSpec
         deleteProjectSpec
         archiveUnarchiveProjectSpec
+        getProjectPermissionsSpec
 
 getProjectSpec :: Spec
 getProjectSpec = describe "getProject" $ do
@@ -60,18 +69,30 @@ jsonParsingSpec = describe "ProjectResponse JSON parsing" $ do
         let decoded = decode sampleProjectResponseJson :: Maybe ProjectResponse
         decoded `shouldSatisfy` isJust
 
-        let projectResponse = fromJust decoded
-        p_id projectResponse `shouldBe` "2203306141"
-        p_name projectResponse `shouldBe` "Test Project"
-        p_description projectResponse `shouldBe` "A test project for unit testing"
-        p_child_order projectResponse `shouldBe` 1
-        p_color projectResponse `shouldBe` "blue"
-        p_is_favorite projectResponse `shouldBe` True
-        p_is_archived projectResponse `shouldBe` False
-        p_is_collapsed projectResponse `shouldBe` False
-        p_is_shared projectResponse `shouldBe` False
-        p_can_assign_tasks projectResponse `shouldBe` False
-        p_view_style projectResponse `shouldBe` "list"
+        let ProjectResponse
+                { p_id = projId
+                , p_name = projName
+                , p_description = projDescription
+                , p_child_order = projChildOrder
+                , p_color = projColor
+                , p_is_favorite = projIsFavorite
+                , p_is_archived = projIsArchived
+                , p_is_collapsed = projIsCollapsed
+                , p_is_shared = projIsShared
+                , p_can_assign_tasks = projCanAssignTasks
+                , p_view_style = projViewStyle
+                } = fromJust decoded
+        projId `shouldBe` "2203306141"
+        projName `shouldBe` "Test Project"
+        projDescription `shouldBe` "A test project for unit testing"
+        projChildOrder `shouldBe` 1
+        projColor `shouldBe` "blue"
+        projIsFavorite `shouldBe` True
+        projIsArchived `shouldBe` False
+        projIsCollapsed `shouldBe` False
+        projIsShared `shouldBe` False
+        projCanAssignTasks `shouldBe` False
+        projViewStyle `shouldBe` "list"
 
 conversionSpec :: Spec
 conversionSpec = describe "projectResponseToProject" $ do
@@ -211,3 +232,38 @@ archiveUnarchiveProjectSpec = describe "archiveProject and unarchiveProject" $ d
         let decoded = decode sampleProjectIdJson :: Maybe ProjectId
         decoded `shouldSatisfy` isJust
         decoded `shouldBe` Just sampleProjectId
+
+getProjectPermissionsSpec :: Spec
+getProjectPermissionsSpec = describe "getProjectPermissions" $ do
+    jsonParsingPermissionsSpec
+
+jsonParsingPermissionsSpec :: Spec
+jsonParsingPermissionsSpec = describe "ProjectPermissions JSON parsing" $ do
+    it "parses valid ProjectPermissions JSON" $ do
+        let result = eitherDecode sampleProjectPermissionsJson :: Either String ProjectPermissions
+        result `shouldSatisfy` isRight
+
+    it "correctly parses all fields from JSON" $ do
+        let decoded = decode sampleProjectPermissionsJson :: Maybe ProjectPermissions
+        decoded `shouldSatisfy` isJust
+        let perms = fromJust decoded
+        length (p_project_collaborator_actions perms) `shouldBe` 1
+        length (p_workspace_collaborator_actions perms) `shouldBe` 1
+
+    it "correctly parses role as Creator" $ do
+        let decoded = decode sampleProjectPermissionsJson :: Maybe ProjectPermissions
+        decoded `shouldSatisfy` isJust
+        let perms = fromJust decoded
+        let RoleActions {p_name = roleName} = head (p_project_collaborator_actions perms)
+        roleName `shouldBe` Creator
+
+    it "correctly parses action names as Text" $ do
+        let decoded = decode sampleProjectPermissionsJson :: Maybe ProjectPermissions
+        decoded `shouldSatisfy` isJust
+        let perms = fromJust decoded
+        let RoleActions {p_actions = actions} = head (p_project_collaborator_actions perms)
+        length actions `shouldBe` 2
+        let Action {p_name = action1Name} = head actions
+        let Action {p_name = action2Name} = actions !! 1
+        action1Name `shouldBe` "create_task"
+        action2Name `shouldBe` "delete_project"

@@ -1,9 +1,5 @@
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE UndecidableInstances #-}
-
 module Web.Todoist.Builder.Has
-    ( Has
-    , HasDescription (..)
+    ( HasDescription (..)
     , HasParentId (..)
     , HasViewStyle (..)
     , HasWorkspaceId (..)
@@ -13,9 +9,6 @@ import Web.Todoist.Domain.Types (ViewStyle)
 
 import Data.Int (Int)
 import Data.Text (Text)
-
-class (HasDescription p, HasParentId p, HasViewStyle p, HasWorkspaceId p) => Has p
-instance (HasDescription p, HasParentId p, HasViewStyle p, HasWorkspaceId p) => Has p
 
 class HasDescription p where
     hasDescription :: Text -> p -> p

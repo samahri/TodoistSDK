@@ -13,9 +13,13 @@ module Web.Todoist.TestHelpers
     , sampleCollaboratorsJson
     , sampleProjectCreate
     , sampleProjectCreateJson
+    , sampleAction
+    , sampleRoleActions
+    , sampleProjectPermissions
+    , sampleProjectPermissionsJson
     ) where
 
-import Web.Todoist.Builder.Has (HasDescription (hasDescription))
+import Web.Todoist.Builder (runBuilder, setDescription)
 import Web.Todoist.Domain.Project
     ( Collaborator (..)
     , Project (..)
@@ -25,19 +29,23 @@ import Web.Todoist.Domain.Project
     )
 import Web.Todoist.Domain.Types (ViewStyle (..))
 import Web.Todoist.Internal.Types
-    ( CreatedAt (..)
+    ( Action (..)
+    , CollaboratorRole (..)
+    , CreatedAt (..)
     , CreatorUid (..)
     , ParentId (..)
+    , ProjectPermissions (..)
     , ProjectResponse (..)
     , Role (..)
+    , RoleActions (..)
     , UpdatedAt (..)
     )
 
 import Data.Bool (Bool (..))
 import Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString.Lazy.Char8 as BSL
-import Data.Function (($))
 import Data.Maybe (Maybe (..))
+import Data.Semigroup ((<>))
 
 -- | Sample ProjectId for testing
 sampleProjectId :: ProjectId
@@ -181,7 +189,7 @@ sampleCollaboratorsJson =
 
 -- | Sample ProjectCreate
 sampleProjectCreate :: ProjectCreate
-sampleProjectCreate = hasDescription "A new project to be created" $ newProject "New Project"
+sampleProjectCreate = runBuilder (newProject "New Project" <> setDescription "A new project to be created")
 
 -- | JSON representation of ProjectCreate (for serialization test)
 sampleProjectCreateJson :: ByteString
@@ -190,4 +198,39 @@ sampleProjectCreateJson =
         "{\
         \\"name\":\"New Project\",\
         \\"description\":\"A new project to be created\"\
+        \}"
+
+-- | Sample Action for permissions testing
+sampleAction :: Action
+sampleAction = Action {p_name = "create_task"}
+
+-- | Sample RoleActions for permissions testing
+sampleRoleActions :: RoleActions
+sampleRoleActions =
+    RoleActions
+        { p_name = Creator
+        , p_actions = [sampleAction, Action {p_name = "delete_project"}]
+        }
+
+-- | Sample ProjectPermissions for testing
+sampleProjectPermissions :: ProjectPermissions
+sampleProjectPermissions =
+    ProjectPermissions
+        { p_project_collaborator_actions = [sampleRoleActions]
+        , p_workspace_collaborator_actions = [sampleRoleActions]
+        }
+
+-- | JSON representation of ProjectPermissions
+sampleProjectPermissionsJson :: ByteString
+sampleProjectPermissionsJson =
+    BSL.pack
+        "{\
+        \\"project_collaborator_actions\":[{\
+        \\"name\":\"CREATOR\",\
+        \\"actions\":[{\"name\":\"create_task\"},{\"name\":\"delete_project\"}]\
+        \}],\
+        \\"workspace_collaborator_actions\":[{\
+        \\"name\":\"CREATOR\",\
+        \\"actions\":[{\"name\":\"create_task\"},{\"name\":\"delete_project\"}]\
+        \}]\
         \}"

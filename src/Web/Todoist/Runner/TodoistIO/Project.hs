@@ -19,6 +19,7 @@ import Web.Todoist.Internal.HTTP (PostResponse (..), apiDelete, apiGet, apiPost)
 import Web.Todoist.Internal.Request (mkTodoistRequest)
 import Web.Todoist.Internal.Types
     ( CreatedAt (..)
+    , ProjectPermissions
     , ProjectResponse (..)
     , TodoistReturn (results)
     , UpdatedAt (..)
@@ -97,6 +98,15 @@ instance TodoistProjectM TodoistIO where
         config <- ask
         let apiRequest = mkTodoistRequest @Void ["projects", _id, "unarchive"] Nothing Nothing
         resp <- liftIO $ apiPost (Nothing @Void) (JsonResponse (Proxy @ProjectId)) config apiRequest
+        case resp of
+            Right res -> pure res
+            Left err -> lift $ except (Left err)
+
+    getProjectPermissions :: TodoistIO ProjectPermissions
+    getProjectPermissions = TodoistIO $ do
+        config <- ask
+        let apiRequest = mkTodoistRequest @Void ["projects", "permissions"] Nothing Nothing
+        resp <- liftIO $ apiGet (Proxy @ProjectPermissions) config apiRequest
         case resp of
             Right res -> pure res
             Left err -> lift $ except (Left err)

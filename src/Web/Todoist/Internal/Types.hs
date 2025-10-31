@@ -14,6 +14,10 @@ module Web.Todoist.Internal.Types
     , ParentId (..)
     , ProjectAccessView (..)
     , ProjectVisibility (..)
+    , CollaboratorRole (..)
+    , Action (..)
+    , RoleActions (..)
+    , ProjectPermissions (..)
     , Params
     , Endpoint
     ) where
@@ -32,11 +36,14 @@ import Data.Aeson
     )
 import Data.Aeson.Types (Parser)
 import Data.Bool (Bool)
+import Data.Eq (Eq)
 import Data.Function (($))
 import Data.Int (Int)
 import Data.Maybe (Maybe (Just, Nothing))
+import Data.Semigroup ((<>))
 import Data.String (String)
 import Data.Text (Text)
+import qualified Data.Text as T
 import GHC.Generics (Generic)
 import Text.Show (Show)
 
@@ -200,3 +207,78 @@ instance ToJSON ProjectVisibility where
     toJSON Restricted = String "restricted"
     toJSON Team = String "team"
     toJSON Public = String "public"
+
+{- | Collaborator role enum. Represents different permission levels
+for project collaborators.
+-}
+data CollaboratorRole = Creator | Admin | Member | ReadWrite | ReadOnly
+    deriving (Show, Eq, Generic)
+
+instance FromJSON CollaboratorRole where
+    parseJSON :: Value -> Parser CollaboratorRole
+    parseJSON = withText "CollaboratorRole" $ \case
+        "CREATOR" -> pure Creator
+        "ADMIN" -> pure Admin
+        "MEMBER" -> pure Member
+        "READ_WRITE" -> pure ReadWrite
+        "READ_ONLY" -> pure ReadOnly
+        other -> fail $ "Unknown collaborator role: " <> T.unpack other
+
+instance ToJSON CollaboratorRole where
+    toJSON :: CollaboratorRole -> Value
+    toJSON Creator = String "CREATOR"
+    toJSON Admin = String "ADMIN"
+    toJSON Member = String "MEMBER"
+    toJSON ReadWrite = String "READ_WRITE"
+    toJSON ReadOnly = String "READ_ONLY"
+
+{- | An action that can be performed by a collaborator role.
+Action names are kept as Text for maximum flexibility as the API
+may add new action types without warning.
+-}
+newtype Action = Action
+    { p_name :: Text
+    }
+    deriving (Show, Eq, Generic)
+
+instance FromJSON Action where
+    parseJSON :: Value -> Parser Action
+    parseJSON = genericParseJSON jsonOpts
+
+instance ToJSON Action where
+    toJSON :: Action -> Value
+    toJSON = genericToJSON jsonOpts
+
+-- | A role with its associated list of allowed actions.
+data RoleActions = RoleActions
+    { p_name :: CollaboratorRole
+    -- ^ The collaborator role (e.g., Creator)
+    , p_actions :: [Action]
+    -- ^ Actions this role can perform
+    }
+    deriving (Show, Eq, Generic)
+
+instance FromJSON RoleActions where
+    parseJSON :: Value -> Parser RoleActions
+    parseJSON = genericParseJSON jsonOpts
+
+instance ToJSON RoleActions where
+    toJSON :: RoleActions -> Value
+    toJSON = genericToJSON jsonOpts
+
+{- | Top-level permissions response from GET /api/v1/projects/permissions.
+Contains role-action mappings for both project and workspace collaborators.
+-}
+data ProjectPermissions = ProjectPermissions
+    { p_project_collaborator_actions :: [RoleActions]
+    , p_workspace_collaborator_actions :: [RoleActions]
+    }
+    deriving (Show, Eq, Generic)
+
+instance FromJSON ProjectPermissions where
+    parseJSON :: Value -> Parser ProjectPermissions
+    parseJSON = genericParseJSON jsonOpts
+
+instance ToJSON ProjectPermissions where
+    toJSON :: ProjectPermissions -> Value
+    toJSON = genericToJSON jsonOpts

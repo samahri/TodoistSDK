@@ -24,6 +24,7 @@ import Web.Todoist.Builder.Has
     , HasWorkspaceId (..)
     )
 import Web.Todoist.Domain.Types (ViewStyle (..))
+import Web.Todoist.Internal.Types (ProjectPermissions)
 
 import Control.Monad (Monad)
 import Data.Aeson
@@ -159,3 +160,5 @@ class (Monad m) => TodoistProjectM m where
     archiveProject :: ProjectId -> m ProjectId
 
     unarchiveProject :: ProjectId -> m ProjectId
+
+    getProjectPermissions :: m ProjectPermissions

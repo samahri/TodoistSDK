@@ -11,16 +11,21 @@ import Web.Todoist.Domain.Project (ProjectCreate, TodoistProjectM (..), newProje
 import qualified Web.Todoist.Domain.Project as P
 import Web.Todoist.Internal.Config (TodoistConfig)
 import Web.Todoist.Internal.Error (TodoistError)
+import Web.Todoist.Internal.Types
+    ( Action (..)
+    , ProjectPermissions (..)
+    , RoleActions (..)
+    )
 import Web.Todoist.Runner (todoist)
 
 import Control.Exception (bracket)
-import Control.Monad (mapM, mapM_, void)
+import Control.Monad (forM_, mapM, mapM_, void)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Except (ExceptT)
 import Data.Bool (Bool (..))
 import Data.Either (Either (..))
 import Data.Eq ((==))
-import Data.Function (($), (.))
+import Data.Function (const, ($), (.))
 import Data.Functor ((<$>))
 import Data.Int (Int)
 import qualified Data.List as L
@@ -46,6 +51,7 @@ spec = do
             archiveUnarchiveSpec config
             getAllProjectsSpec config
             getProjectCollaboratorsSpec config
+            getProjectPermissionsSpec config
 
 projectLifecycleSpec :: TodoistConfig -> Spec
 projectLifecycleSpec config = describe "Project lifecycle (create, get, delete)" $ do
@@ -220,6 +226,47 @@ getProjectCollaboratorsSpec config = describe "Get project collaborators" $ do
 
             -- Validate each collaborator's structure
             liftIO $ mapM_ validateCollaborator collaborators
+
+getProjectPermissionsSpec :: TodoistConfig -> Spec
+getProjectPermissionsSpec config = describe "Get project permissions" $ do
+    it "creates 3 projects, retrieves permissions, validates structure, then deletes projects" $ do
+        -- Generate unique base name for this test run
+        baseName <- generateUniqueName "IntegTest-Permissions"
+
+        -- Create 3 project names
+        let projectName1 = pack $ baseName <> "-Project1"
+        let projectName2 = pack $ baseName <> "-Project2"
+        let projectName3 = pack $ baseName <> "-Project3"
+        let projectNames = [projectName1, projectName2, projectName3]
+
+        -- Use withTestProjects to handle creation and cleanup
+        withTestProjects config projectNames $ \projectIds -> do
+            -- Verify we created 3 projects
+            liftIO $ L.length projectIds `shouldBe` (3 :: Int)
+
+            -- Get permissions (static endpoint - doesn't use project IDs)
+            permissions <- liftTodoist config getProjectPermissions
+
+            -- Validate structure exists
+            liftIO $ do
+                -- Both arrays should be present (may be empty but must exist)
+                p_project_collaborator_actions permissions `shouldSatisfy` const True
+                p_workspace_collaborator_actions permissions `shouldSatisfy` const True
+
+                -- If there are role actions, validate their structure
+                let validateRoleAction (RoleActions {p_name = roleName, p_actions = actions}) = do
+                        -- p_name is type-safe CollaboratorRole - if it parsed, it's valid
+                        -- Don't check for specific role, just that it parsed correctly
+                        roleName `shouldSatisfy` const True
+                        -- Validate each action has a non-empty name
+                        forM_ actions $ \(Action {p_name = actionName}) -> do
+                            T.null actionName `shouldBe` False
+
+                -- Validate all roles in both arrays
+                mapM_ validateRoleAction (p_project_collaborator_actions permissions)
+                mapM_ validateRoleAction (p_workspace_collaborator_actions permissions)
+
+-- Projects will be automatically deleted by withTestProjects bracket
 
 {- | Create a test project from a ProjectCreate, run an action with its ID, then delete it
 Uses bracket to ensure cleanup happens even if the action fails

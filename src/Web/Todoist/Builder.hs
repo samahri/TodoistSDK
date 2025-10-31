@@ -9,8 +9,7 @@ module Web.Todoist.Builder
     ) where
 
 import Web.Todoist.Builder.Has
-    ( Has
-    , HasDescription (..)
+    ( HasDescription (..)
     , HasParentId (..)
     , HasViewStyle (..)
     , HasWorkspaceId (..)
@@ -35,14 +34,17 @@ instance Semigroup (Builder s) where
 runBuilder :: Builder s -> s
 runBuilder (Builder sd (Dual (Endo f))) = f sd
 
-seed :: (Has s) => s -> Builder s
-seed s = Builder s mempty
+seed :: s -> Builder s
+seed s = Builder {bSeed = s, bMods = mempty}
 
 modB :: (s -> s) -> Builder s
 modB f =
     Builder
-        (error "modifier used without seed; ensure seed function is leftmost")
-        (Dual (Endo f))
+        { bSeed =
+            error
+                "modifier used without seed; ensure seed function is leftmost"
+        , bMods = Dual {getDual = Endo {appEndo = f}}
+        }
 
 setDescription :: (HasDescription s) => Text -> Builder s
 setDescription desc = modB (hasDescription desc)
