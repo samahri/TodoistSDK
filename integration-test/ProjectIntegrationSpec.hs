@@ -6,8 +6,13 @@ module ProjectIntegrationSpec (spec) where
 
 import Helpers (assertSucceeds, buildTestProject, generateUniqueName, getTestConfig, liftTodoist)
 
-import Web.Todoist.Builder (runBuilder)
-import Web.Todoist.Domain.Project (ProjectCreate, TodoistProjectM (..), newProject)
+import Web.Todoist.Builder (runBuilder, setDescription)
+import Web.Todoist.Domain.Project
+    ( ProjectCreate
+    , ProjectUpdate (..)
+    , TodoistProjectM (..)
+    , newProject
+    )
 import qualified Web.Todoist.Domain.Project as P
 import Web.Todoist.Internal.Config (TodoistConfig)
 import Web.Todoist.Internal.Error (TodoistError)
@@ -52,6 +57,7 @@ spec = do
             getAllProjectsSpec config
             getProjectCollaboratorsSpec config
             getProjectPermissionsSpec config
+            updateProjectSpec config
 
 projectLifecycleSpec :: TodoistConfig -> Spec
 projectLifecycleSpec config = describe "Project lifecycle (create, get, delete)" $ do
@@ -267,6 +273,103 @@ getProjectPermissionsSpec config = describe "Get project permissions" $ do
                 mapM_ validateRoleAction (p_workspace_collaborator_actions permissions)
 
 -- Projects will be automatically deleted by withTestProjects bracket
+
+updateProjectSpec :: TodoistConfig -> Spec
+updateProjectSpec config = describe "Update project" $ do
+    it "creates a project, updates its properties, verifies changes, then deletes it" $ do
+        -- Generate unique project name
+        originalName <- pack <$> generateUniqueName "IntegTest-Update-Original"
+
+        -- Define description values
+        let originalDescription = "Original description"
+        let updatedDescription = "Updated description"
+
+        -- Create initial project with specific properties
+        let initialProject = runBuilder $ newProject originalName <> setDescription originalDescription
+
+        withTestProjectCreate config initialProject $ \projectId -> do
+            -- Verify initial state
+            project1 <- liftTodoist config (getProject projectId)
+            liftIO $ do
+                let P.Project {P._name = proj1Name, P._description = proj1Desc, P._is_favorite = proj1Fav} = project1
+                proj1Name `shouldBe` originalName
+                proj1Desc `shouldBe` originalDescription
+                proj1Fav `shouldBe` False -- default from newProject
+
+            -- Update the project (change name, description, and favorite status)
+            let updatedName = originalName <> "-Updated"
+            let projectUpdate =
+                    ProjectUpdate
+                        { _name = Just updatedName
+                        , _description = Just updatedDescription
+                        , _color = Nothing -- don't change color
+                        , _is_favorite = Just True
+                        , _view_style = Nothing -- don't change view style
+                        }
+
+            updatedProject <- liftTodoist config (updateProject projectId projectUpdate)
+
+            -- Verify the response contains updated values
+            liftIO $ do
+                let P.Project
+                        { P._name = updatedProjName
+                        , P._description = updatedProjDesc
+                        , P._is_favorite = updatedProjFav
+                        } = updatedProject
+                updatedProjName `shouldBe` updatedName
+                updatedProjDesc `shouldBe` updatedDescription
+                updatedProjFav `shouldBe` True
+
+            -- Fetch the project again to double-check persistence
+            project2 <- liftTodoist config (getProject projectId)
+            liftIO $ do
+                let P.Project
+                        { P._name = proj2Name
+                        , P._description = proj2Desc
+                        , P._is_favorite = proj2Fav
+                        , P._view_style = proj2ViewStyle
+                        } = project2
+                let P.Project {P._view_style = proj1ViewStyle} = project1
+                proj2Name `shouldBe` updatedName
+                proj2Desc `shouldBe` updatedDescription
+                proj2Fav `shouldBe` True
+                -- Verify unchanged fields remain unchanged
+                proj2ViewStyle `shouldBe` proj1ViewStyle
+
+    it "supports partial updates (only updating specific fields)" $ do
+        -- Generate unique project name
+        projectName <- pack <$> generateUniqueName "IntegTest-PartialUpdate"
+
+        -- Define initial description
+        let initialDescription = "Initial description"
+
+        -- Create initial project
+        let initialProject = runBuilder $ newProject projectName <> setDescription initialDescription
+
+        withTestProjectCreate config initialProject $ \projectId -> do
+            -- Get initial state
+            project1 <- liftTodoist config (getProject projectId)
+            let P.Project {P._description = originalDescription} = project1
+
+            -- Partial update: only change is_favorite
+            let partialUpdate =
+                    ProjectUpdate
+                        { _name = Nothing
+                        , _description = Nothing
+                        , _color = Nothing
+                        , _is_favorite = Just True
+                        , _view_style = Nothing
+                        }
+
+            updatedProject <- liftTodoist config (updateProject projectId partialUpdate)
+
+            -- Verify only is_favorite changed
+            liftIO $ do
+                let P.Project {P._is_favorite = updatedFav, P._name = updatedName, P._description = updatedDesc} = updatedProject
+                updatedFav `shouldBe` True
+                -- Other fields should remain unchanged
+                updatedName `shouldBe` projectName
+                updatedDesc `shouldBe` originalDescription
 
 {- | Create a test project from a ProjectCreate, run an action with its ID, then delete it
 Uses bracket to ensure cleanup happens even if the action fails

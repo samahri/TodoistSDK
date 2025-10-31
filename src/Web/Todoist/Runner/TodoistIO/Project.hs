@@ -12,6 +12,7 @@ import Web.Todoist.Domain.Project
     , Project (..)
     , ProjectCreate
     , ProjectId (..)
+    , ProjectUpdate
     , TodoistProjectM (..)
     )
 import Web.Todoist.Domain.Types (parseViewStyle)
@@ -109,6 +110,16 @@ instance TodoistProjectM TodoistIO where
         resp <- liftIO $ apiGet (Proxy @ProjectPermissions) config apiRequest
         case resp of
             Right res -> pure res
+            Left err -> lift $ except (Left err)
+
+    updateProject :: ProjectId -> ProjectUpdate -> TodoistIO Project
+    updateProject ProjectId {..} projectUpdate = TodoistIO $ do
+        config <- ask
+        let apiRequest = mkTodoistRequest @ProjectUpdate ["projects", _id] Nothing Nothing
+        resp <-
+            liftIO $ apiPost (Just projectUpdate) (JsonResponse (Proxy @ProjectResponse)) config apiRequest
+        case resp of
+            Right res -> pure $ projectResponseToProject res
             Left err -> lift $ except (Left err)
 
 -- | Convert a ProjectResponse (HTTP API type) to a Project (domain type)

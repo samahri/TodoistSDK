@@ -12,13 +12,16 @@ module Web.Todoist.Domain.Project
     , ProjectId (..)
     , Collaborator (..)
     , ProjectCreate (..)
+    , ProjectUpdate (..)
     , newProject
-    -- defaultProject
+    , emptyProjectUpdate
     ) where
 
 import Web.Todoist.Builder (Builder, seed)
 import Web.Todoist.Builder.Has
     ( HasDescription (..)
+    , HasIsFavorite (..)
+    , HasName (..)
     , HasParentId (..)
     , HasViewStyle (..)
     , HasWorkspaceId (..)
@@ -114,6 +117,42 @@ instance HasWorkspaceId ProjectCreate where
     hasWorkspaceId :: Int -> ProjectCreate -> ProjectCreate
     hasWorkspaceId wid ProjectCreate {..} = ProjectCreate {_workspace_id = Just wid, ..}
 
+{- | Request body type for updating an existing project
+All fields are optional to support partial updates
+-}
+data ProjectUpdate = ProjectUpdate
+    { _name :: Maybe Text
+    , _description :: Maybe Text
+    , _color :: Maybe Text -- Note: API accepts string or integer, using Text for now
+    , _is_favorite :: Maybe Bool
+    , _view_style :: Maybe ViewStyle
+    }
+    deriving (Show, Eq, Generic)
+
+instance ToJSON ProjectUpdate where
+    toJSON :: ProjectUpdate -> Value
+    toJSON = genericToJSON defaultOptions {fieldLabelModifier = L.drop 1}
+
+instance FromJSON ProjectUpdate where
+    parseJSON :: Value -> Parser ProjectUpdate
+    parseJSON = genericParseJSON defaultOptions {fieldLabelModifier = L.drop 1}
+
+instance HasName ProjectUpdate where
+    hasName :: Text -> ProjectUpdate -> ProjectUpdate
+    hasName name ProjectUpdate {..} = ProjectUpdate {_name = Just name, ..}
+
+instance HasDescription ProjectUpdate where
+    hasDescription :: Text -> ProjectUpdate -> ProjectUpdate
+    hasDescription desc ProjectUpdate {..} = ProjectUpdate {_description = Just desc, ..}
+
+instance HasViewStyle ProjectUpdate where
+    hasViewStyle :: ViewStyle -> ProjectUpdate -> ProjectUpdate
+    hasViewStyle style ProjectUpdate {..} = ProjectUpdate {_view_style = Just style, ..}
+
+instance HasIsFavorite ProjectUpdate where
+    hasIsFavorite :: Bool -> ProjectUpdate -> ProjectUpdate
+    hasIsFavorite fav ProjectUpdate {..} = ProjectUpdate {_is_favorite = Just fav, ..}
+
 -- projects
 newProject :: Text -> Builder ProjectCreate
 newProject name =
@@ -125,6 +164,20 @@ newProject name =
             , _is_favorite = False
             , _view_style = Nothing
             , _workspace_id = Nothing
+            }
+
+{- | Create an empty ProjectUpdate (for use with Builder combinators)
+Use with setters: emptyProjectUpdate <> setName "New Name" <> setDescription "desc"
+-}
+emptyProjectUpdate :: Builder ProjectUpdate
+emptyProjectUpdate =
+    seed
+        ProjectUpdate
+            { _name = Nothing
+            , _description = Nothing
+            , _color = Nothing
+            , _is_favorite = Nothing
+            , _view_style = Nothing
             }
 
 data Collaborator = Collaborator
@@ -162,3 +215,6 @@ class (Monad m) => TodoistProjectM m where
     unarchiveProject :: ProjectId -> m ProjectId
 
     getProjectPermissions :: m ProjectPermissions
+
+    -- | Update an existing project
+    updateProject :: ProjectId -> ProjectUpdate -> m Project

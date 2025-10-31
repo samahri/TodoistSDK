@@ -7,6 +7,7 @@ import Web.Todoist.Domain.Project
     , Project (..)
     , ProjectCreate
     , ProjectId (..)
+    , ProjectUpdate (..)
     )
 import Web.Todoist.Domain.Types (ViewStyle (..), parseViewStyle)
 import Web.Todoist.Internal.Types
@@ -21,6 +22,8 @@ import Web.Todoist.Runner.TodoistIO (projectResponseToProject)
 import Web.Todoist.TestHelpers
     ( sampleCollaborator
     , sampleCollaboratorsJson
+    , samplePartialProjectUpdate
+    , samplePartialProjectUpdateJson
     , sampleProject
     , sampleProjectCreate
     , sampleProjectId
@@ -28,6 +31,8 @@ import Web.Todoist.TestHelpers
     , sampleProjectPermissionsJson
     , sampleProjectResponse
     , sampleProjectResponseJson
+    , sampleProjectUpdate
+    , sampleProjectUpdateJson
     , sampleProjectsJson
     )
 
@@ -52,6 +57,7 @@ spec = do
         deleteProjectSpec
         archiveUnarchiveProjectSpec
         getProjectPermissionsSpec
+        updateProjectSpec
 
 getProjectSpec :: Spec
 getProjectSpec = describe "getProject" $ do
@@ -106,13 +112,13 @@ conversionSpec = describe "projectResponseToProject" $ do
         project `shouldBe` sampleProject
 
     it "converts view_style string to ViewStyle type" $ do
-        let project = projectResponseToProject sampleProjectResponse
-        _view_style project `shouldBe` List
+        let Project {_view_style = viewStyle} = projectResponseToProject sampleProjectResponse
+        viewStyle `shouldBe` List
 
     it "preserves timestamp fields" $ do
-        let project = projectResponseToProject sampleProjectResponse
-        _created_at project `shouldBe` Just "2023-06-15T10:30:00Z"
-        _updated_at project `shouldBe` Just "2023-06-20T14:45:00Z"
+        let Project {_created_at = createdAt, _updated_at = updatedAt} = projectResponseToProject sampleProjectResponse
+        createdAt `shouldBe` Just "2023-06-15T10:30:00Z"
+        updatedAt `shouldBe` Just "2023-06-20T14:45:00Z"
 
 viewStyleSpec :: Spec
 viewStyleSpec = describe "parseViewStyle" $ do
@@ -267,3 +273,57 @@ jsonParsingPermissionsSpec = describe "ProjectPermissions JSON parsing" $ do
         let Action {p_name = action2Name} = actions !! 1
         action1Name `shouldBe` "create_task"
         action2Name `shouldBe` "delete_project"
+
+updateProjectSpec :: Spec
+updateProjectSpec = describe "updateProject" $ do
+    jsonSerializationSpec
+    jsonParsingUpdateSpec
+    jsonPartialUpdateSpec
+
+jsonSerializationSpec :: Spec
+jsonSerializationSpec = describe "ProjectUpdate JSON serialization" $ do
+    it "serializes ProjectUpdate to valid JSON" $ do
+        let json = encode sampleProjectUpdate
+        let result = eitherDecode json :: Either String ProjectUpdate
+        result `shouldSatisfy` isRight
+
+    it "serializes all fields correctly" $ do
+        let json = encode sampleProjectUpdate
+        let decoded = decode json :: Maybe ProjectUpdate
+        decoded `shouldBe` Just sampleProjectUpdate
+
+jsonParsingUpdateSpec :: Spec
+jsonParsingUpdateSpec = describe "ProjectUpdate JSON parsing" $ do
+    it "parses valid ProjectUpdate JSON" $ do
+        let result = eitherDecode sampleProjectUpdateJson :: Either String ProjectUpdate
+        result `shouldSatisfy` isRight
+
+    it "correctly parses all fields from JSON" $ do
+        let decoded = decode sampleProjectUpdateJson :: Maybe ProjectUpdate
+        decoded `shouldSatisfy` isJust
+        let ProjectUpdate {_name = name, _description = desc, _is_favorite = isFav} = fromJust decoded
+        name `shouldBe` Just "Updated Project Name"
+        desc `shouldBe` Just "Updated description"
+        isFav `shouldBe` Just True
+
+jsonPartialUpdateSpec :: Spec
+jsonPartialUpdateSpec = describe "Partial ProjectUpdate" $ do
+    it "parses partial update JSON correctly" $ do
+        let result = eitherDecode samplePartialProjectUpdateJson :: Either String ProjectUpdate
+        result `shouldSatisfy` isRight
+
+    it "handles missing fields as Nothing" $ do
+        let decoded = decode samplePartialProjectUpdateJson :: Maybe ProjectUpdate
+        decoded `shouldSatisfy` isJust
+        let ProjectUpdate
+                { _name = name
+                , _description = desc
+                , _color = color
+                , _is_favorite = isFav
+                , _view_style = viewStyle
+                } = fromJust decoded
+        name `shouldBe` Just "New Name"
+        desc `shouldBe` Nothing
+        color `shouldBe` Nothing
+        isFav `shouldBe` Just True
+        viewStyle `shouldBe` Nothing

@@ -3,6 +3,8 @@ module Web.Todoist.Builder
     , setParentId
     , setViewStyle
     , setWorkspaceId
+    , setName
+    , setIsFavorite
     , seed
     , runBuilder
     , Builder
@@ -10,12 +12,15 @@ module Web.Todoist.Builder
 
 import Web.Todoist.Builder.Has
     ( HasDescription (..)
+    , HasIsFavorite (..)
+    , HasName (..)
     , HasParentId (..)
     , HasViewStyle (..)
     , HasWorkspaceId (..)
     )
 import Web.Todoist.Domain.Types (ViewStyle)
 
+import Data.Bool (Bool)
 import Data.Int (Int)
 import Data.Monoid (Dual (..), Endo (..), Monoid (..))
 import Data.Semigroup (Semigroup (..))
@@ -57,3 +62,9 @@ setViewStyle style = modB (hasViewStyle style)
 
 setWorkspaceId :: (HasWorkspaceId s) => Int -> Builder s
 setWorkspaceId wid = modB (hasWorkspaceId wid)
+
+setName :: (HasName s) => Text -> Builder s
+setName name = modB (hasName name)
+
+setIsFavorite :: (HasIsFavorite s) => Bool -> Builder s
+setIsFavorite fav = modB (hasIsFavorite fav)

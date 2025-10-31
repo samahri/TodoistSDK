@@ -3,10 +3,13 @@ module Web.Todoist.Builder.Has
     , HasParentId (..)
     , HasViewStyle (..)
     , HasWorkspaceId (..)
+    , HasName (..)
+    , HasIsFavorite (..)
     ) where
 
 import Web.Todoist.Domain.Types (ViewStyle)
 
+import Data.Bool (Bool)
 import Data.Int (Int)
 import Data.Text (Text)
 
@@ -21,3 +24,11 @@ class HasViewStyle p where
 
 class HasWorkspaceId p where
     hasWorkspaceId :: Int -> p -> p
+
+-- | Type class for types that have a name field
+class HasName p where
+    hasName :: Text -> p -> p
+
+-- | Type class for types that have an is_favorite field
+class HasIsFavorite p where
+    hasIsFavorite :: Bool -> p -> p

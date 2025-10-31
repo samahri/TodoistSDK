@@ -13,6 +13,10 @@ module Web.Todoist.TestHelpers
     , sampleCollaboratorsJson
     , sampleProjectCreate
     , sampleProjectCreateJson
+    , sampleProjectUpdate
+    , sampleProjectUpdateJson
+    , samplePartialProjectUpdate
+    , samplePartialProjectUpdateJson
     , sampleAction
     , sampleRoleActions
     , sampleProjectPermissions
@@ -25,6 +29,7 @@ import Web.Todoist.Domain.Project
     , Project (..)
     , ProjectCreate
     , ProjectId (..)
+    , ProjectUpdate (..)
     , newProject
     )
 import Web.Todoist.Domain.Types (ViewStyle (..))
@@ -198,6 +203,49 @@ sampleProjectCreateJson =
         "{\
         \\"name\":\"New Project\",\
         \\"description\":\"A new project to be created\"\
+        \}"
+
+-- | Sample ProjectUpdate for testing
+sampleProjectUpdate :: ProjectUpdate
+sampleProjectUpdate =
+    ProjectUpdate
+        { _name = Just "Updated Project Name"
+        , _description = Just "Updated description"
+        , _color = Just "red"
+        , _is_favorite = Just True
+        , _view_style = Just List
+        }
+
+-- | JSON representation of ProjectUpdate
+sampleProjectUpdateJson :: ByteString
+sampleProjectUpdateJson =
+    BSL.pack
+        "{\
+        \\"name\":\"Updated Project Name\",\
+        \\"description\":\"Updated description\",\
+        \\"color\":\"red\",\
+        \\"is_favorite\":true,\
+        \\"view_style\":\"list\"\
+        \}"
+
+-- | Sample ProjectUpdate with only some fields (partial update)
+samplePartialProjectUpdate :: ProjectUpdate
+samplePartialProjectUpdate =
+    ProjectUpdate
+        { _name = Just "New Name"
+        , _description = Nothing
+        , _color = Nothing
+        , _is_favorite = Just True
+        , _view_style = Nothing
+        }
+
+-- | JSON representation of partial ProjectUpdate
+samplePartialProjectUpdateJson :: ByteString
+samplePartialProjectUpdateJson =
+    BSL.pack
+        "{\
+        \\"name\":\"New Name\",\
+        \\"is_favorite\":true\
         \}"
 
 -- | Sample Action for permissions testing
