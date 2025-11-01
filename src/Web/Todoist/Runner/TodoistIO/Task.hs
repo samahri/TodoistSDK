@@ -1,3 +1,4 @@
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TypeApplications #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
@@ -6,34 +7,64 @@
 module Web.Todoist.Runner.TodoistIO.Task () where
 
 import Web.Todoist.Domain.Task
+    ( AddTaskQuick
+    , CompletedTasksQueryParam
+    , CompletedTasksQueryParamAPI (items)
+    , MoveTask
+    , NewTask
+    , Task
+    , TaskCreate
+    , TaskFilter (..)
+    , TaskId (..)
+    , TaskParam (..)
+    , TaskPatch
+    , TodoistTaskM (..)
+    )
+import Web.Todoist.Internal.Config (TodoistConfig)
+import Web.Todoist.Internal.Error (TodoistError)
 import Web.Todoist.Internal.HTTP (PostResponse (..), apiDelete, apiGet, apiPost)
 import Web.Todoist.Internal.Request (mkTodoistRequest)
-import Web.Todoist.Internal.Types (TodoistReturn (results))
+import Web.Todoist.Internal.Types (TodoistReturn (next_cursor, results))
 import Web.Todoist.QueryParam (QueryParam (toQueryParam))
 
 import Control.Applicative (pure)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Class (lift)
-import Control.Monad.Trans.Except (except)
-import Control.Monad.Trans.Reader (ask)
+import Control.Monad.Trans.Except (ExceptT, except)
+import Control.Monad.Trans.Reader (ReaderT, ask)
 import Data.Either (Either (Left, Right))
 import Data.Function (($))
+import Data.Functor (fmap)
+import Data.Int (Int)
 import Data.Maybe (Maybe (..))
+import Data.Monoid ((<>))
 import Data.Proxy (Proxy (Proxy))
+import Data.Text (Text)
+import qualified Data.Text as T
 import Data.Void (Void)
+import System.IO (IO)
 
 -- Import TodoistIO type from Core module to avoid circular dependencies
 import Web.Todoist.Runner.TodoistIO.Core (TodoistIO (..))
 
 instance TodoistTaskM TodoistIO where
     getTasks :: TaskParam -> TodoistIO [TaskId]
-    getTasks taskparams = TodoistIO $ do
+    getTasks initialParams = TodoistIO $ do
         config <- ask
-        let apiRequest = mkTodoistRequest @Void ["tasks"] (Just $ toQueryParam taskparams) Nothing
-        resp <- liftIO $ apiGet (Proxy @(TodoistReturn TaskId)) config apiRequest
-        case resp of
-            Right res -> pure $ results res
-            Left err -> lift $ except (Left err)
+        let loop :: Maybe Text -> [TaskId] -> ReaderT TodoistConfig (ExceptT TodoistError IO) [TaskId]
+            loop cursorVal acc = do
+                let TaskParam {project_id, section_id, parent_id, task_ids} = initialParams
+                    params = TaskParam {project_id, section_id, parent_id, task_ids, cursor = cursorVal, limit = Nothing}
+                    apiRequest = mkTodoistRequest @Void ["tasks"] (Just $ toQueryParam params) Nothing
+                resp <- liftIO $ apiGet (Proxy @(TodoistReturn TaskId)) config apiRequest
+                case resp of
+                    Right res -> do
+                        let newAcc = acc <> results res
+                        case next_cursor res of
+                            Nothing -> pure newAcc
+                            Just c -> loop (Just $ T.pack c) newAcc
+                    Left err -> lift $ except (Left err)
+        loop Nothing []
 
     getTask :: TaskId -> TodoistIO Task
     getTask TaskId {..} = TodoistIO $ do
@@ -90,13 +121,22 @@ instance TodoistTaskM TodoistIO where
             Left err -> lift $ except (Left err)
 
     getTasksByFilter :: TaskFilter -> TodoistIO [TaskId]
-    getTasksByFilter taskFilter = TodoistIO $ do
+    getTasksByFilter initialFilter = TodoistIO $ do
         config <- ask
-        let apiRequest = mkTodoistRequest @Void ["tasks", "filter"] (Just $ toQueryParam taskFilter) Nothing
-        resp <- liftIO $ apiGet (Proxy @(TodoistReturn TaskId)) config apiRequest
-        case resp of
-            Right res -> pure $ results res
-            Left err -> lift $ except (Left err)
+        let loop :: Maybe Text -> [TaskId] -> ReaderT TodoistConfig (ExceptT TodoistError IO) [TaskId]
+            loop cursorVal acc = do
+                let TaskFilter {query, lang, limit} = initialFilter
+                    filter' = TaskFilter {query, lang, cursor = cursorVal, limit}
+                    apiRequest = mkTodoistRequest @Void ["tasks", "filter"] (Just $ toQueryParam filter') Nothing
+                resp <- liftIO $ apiGet (Proxy @(TodoistReturn TaskId)) config apiRequest
+                case resp of
+                    Right res -> do
+                        let newAcc = acc <> results res
+                        case next_cursor res of
+                            Nothing -> pure newAcc
+                            Just c -> loop (Just $ T.pack c) newAcc
+                    Left err -> lift $ except (Left err)
+        loop Nothing []
 
     moveTask :: TaskId -> MoveTask -> TodoistIO TaskId
     moveTask TaskId {..} moveTaskBody = TodoistIO $ do
@@ -141,3 +181,48 @@ instance TodoistTaskM TodoistIO where
         case resp of
             Right res -> pure $ items res
             Left err -> lift $ except (Left err)
+
+    getTasksPaginated :: TaskParam -> TodoistIO ([TaskId], Maybe Text)
+    getTasksPaginated taskparams = TodoistIO $ do
+        config <- ask
+        let apiRequest = mkTodoistRequest @Void ["tasks"] (Just $ toQueryParam taskparams) Nothing
+        resp <- liftIO $ apiGet (Proxy @(TodoistReturn TaskId)) config apiRequest
+        case resp of
+            Right res -> pure (results res, fmap T.pack (next_cursor res))
+            Left err -> lift $ except (Left err)
+
+    getTasksByFilterPaginated :: TaskFilter -> TodoistIO ([TaskId], Maybe Text)
+    getTasksByFilterPaginated taskFilter = TodoistIO $ do
+        config <- ask
+        let apiRequest = mkTodoistRequest @Void ["tasks", "filter"] (Just $ toQueryParam taskFilter) Nothing
+        resp <- liftIO $ apiGet (Proxy @(TodoistReturn TaskId)) config apiRequest
+        case resp of
+            Right res -> pure (results res, fmap T.pack (next_cursor res))
+            Left err -> lift $ except (Left err)
+
+    getTasksWithLimit :: TaskParam -> Int -> TodoistIO [TaskId]
+    getTasksWithLimit baseParams pageLimit = TodoistIO $ do
+        let loop :: Maybe Text -> [TaskId] -> ReaderT TodoistConfig (ExceptT TodoistError IO) [TaskId]
+            loop cursorVal acc = do
+                let TaskParam {project_id, section_id, parent_id, task_ids} = baseParams
+                    params =
+                        TaskParam {project_id, section_id, parent_id, task_ids, cursor = cursorVal, limit = Just pageLimit}
+                (tasks, nextCursor) <- unTodoist $ getTasksPaginated params
+                let newAcc = acc <> tasks
+                case nextCursor of
+                    Nothing -> pure newAcc
+                    Just c -> loop (Just c) newAcc
+        loop Nothing []
+
+    getTasksByFilterWithLimit :: TaskFilter -> Int -> TodoistIO [TaskId]
+    getTasksByFilterWithLimit baseFilter pageLimit = TodoistIO $ do
+        let loop :: Maybe Text -> [TaskId] -> ReaderT TodoistConfig (ExceptT TodoistError IO) [TaskId]
+            loop cursorVal acc = do
+                let TaskFilter {query, lang} = baseFilter
+                    filter' = TaskFilter {query, lang, cursor = cursorVal, limit = Just pageLimit}
+                (tasks, nextCursor) <- unTodoist $ getTasksByFilterPaginated filter'
+                let newAcc = acc <> tasks
+                case nextCursor of
+                    Nothing -> pure newAcc
+                    Just c -> loop (Just c) newAcc
+        loop Nothing []

@@ -13,8 +13,10 @@ module Web.Todoist.Domain.Project
     , Collaborator (..)
     , ProjectCreate (..)
     , ProjectUpdate (..)
+    , PaginationParam (..)
     , newProject
     , emptyProjectUpdate
+    , emptyPaginationParam
     ) where
 
 import Web.Todoist.Builder (Builder, seed)
@@ -27,7 +29,8 @@ import Web.Todoist.Builder.Has
     , HasWorkspaceId (..)
     )
 import Web.Todoist.Domain.Types (ViewStyle (..))
-import Web.Todoist.Internal.Types (ProjectPermissions)
+import Web.Todoist.Internal.Types (Params, ProjectPermissions)
+import Web.Todoist.QueryParam (QueryParam (..))
 
 import Control.Monad (Monad)
 import Data.Aeson
@@ -44,9 +47,11 @@ import Data.Bool (Bool (False))
 import Data.Eq (Eq)
 import Data.Int (Int)
 import qualified Data.List as L
-import Data.Maybe (Maybe (Just, Nothing))
+import Data.Maybe (Maybe (Just, Nothing), maybe)
+import Data.Monoid ((<>))
 import Data.String (String)
 import Data.Text (Text)
+import qualified Data.Text
 import GHC.Generics (Generic)
 import Text.Show (Show)
 
@@ -195,17 +200,35 @@ instance FromJSON Collaborator where
     parseJSON :: Value -> Parser Collaborator
     parseJSON = genericParseJSON defaultOptions {fieldLabelModifier = L.drop 1}
 
+{- | Query parameters for paginated requests
+Used for projects and collaborators endpoints
+-}
+data PaginationParam = PaginationParam
+    { _cursor :: Maybe Text
+    , _limit :: Maybe Int
+    }
+    deriving (Show, Eq)
+
+instance QueryParam PaginationParam where
+    toQueryParam :: PaginationParam -> Params
+    toQueryParam PaginationParam {..} =
+        maybe [] (\c -> [("cursor", c)]) _cursor
+            <> maybe [] (\l -> [("limit", Data.Text.show l)]) _limit
+
+-- | Create empty PaginationParam for first page fetch
+emptyPaginationParam :: PaginationParam
+emptyPaginationParam = PaginationParam {_cursor = Nothing, _limit = Nothing}
+
 data ParentId = ParentIdStr String | ParentIdInt Int deriving (Show, Generic, FromJSON, ToJSON)
 
--- TODO: API_DESIGN - Separate domain types from API response types (as noted below)
 class (Monad m) => TodoistProjectM m where
+    -- | Get all projects (automatically fetches all pages)
     getAllProjects :: m [Project]
 
     getProject :: ProjectId -> m Project
 
     getProjectCollaborators :: ProjectId -> m [Collaborator]
 
-    -- todo: separate domain types from api types
     addProject :: ProjectCreate -> m ProjectId
 
     deleteProject :: ProjectId -> m ()
@@ -218,3 +241,19 @@ class (Monad m) => TodoistProjectM m where
 
     -- | Update an existing project
     updateProject :: ProjectId -> ProjectUpdate -> m Project
+
+    {- | Get projects with manual pagination control
+    Returns a tuple of (results, next_cursor) for the requested page
+    -}
+    getAllProjectsPaginated :: PaginationParam -> m ([Project], Maybe Text)
+
+    {- | Get project collaborators with manual pagination control
+    Returns a tuple of (results, next_cursor) for the requested page
+    -}
+    getProjectCollaboratorsPaginated :: ProjectId -> PaginationParam -> m ([Collaborator], Maybe Text)
+
+    -- | Get all projects with custom page size (fetches all pages automatically)
+    getAllProjectsWithLimit :: Int -> m [Project]
+
+    -- | Get all project collaborators with custom page size (fetches all pages automatically)
+    getProjectCollaboratorsWithLimit :: ProjectId -> Int -> m [Collaborator]

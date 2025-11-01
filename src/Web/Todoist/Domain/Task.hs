@@ -5,8 +5,6 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TupleSections #-}
 
--- TODO: Create Web.Todoist.Types module for shared data types
--- TODO: Create Web.Todoist.Error module for TodoistError and related types
 module Web.Todoist.Domain.Task
     ( TodoistTaskM (..)
     , TaskId (..)
@@ -254,7 +252,7 @@ newtype CompletedTasksQueryParamAPI = CompletedTasksQueryParamAPI
     deriving (Show, Generic, FromJSON)
 
 class (Monad m) => TodoistTaskM m where
-    -- TODO: DOCUMENTATION - Write algebraic laws
+    -- | Get tasks (automatically fetches all pages)
     getTasks :: TaskParam -> m [TaskId]
 
     getTask :: TaskId -> m Task
@@ -269,6 +267,7 @@ class (Monad m) => TodoistTaskM m where
 
     deleteTask :: TaskId -> m ()
 
+    -- | Get tasks by filter (automatically fetches all pages)
     getTasksByFilter :: TaskFilter -> m [TaskId]
 
     moveTask :: TaskId -> MoveTask -> m TaskId
@@ -279,12 +278,31 @@ class (Monad m) => TodoistTaskM m where
 
     getCompletedTasksByCompletionDate :: CompletedTasksQueryParam -> m [TaskId]
 
+    {- | Get tasks with manual pagination control
+    Returns a tuple of (results, next_cursor) for the requested page
+    -}
+    getTasksPaginated :: TaskParam -> m ([TaskId], Maybe Text)
+
+    {- | Get tasks by filter with manual pagination control
+    Returns a tuple of (results, next_cursor) for the requested page
+    Note: TaskFilter already has cursor and limit fields
+    -}
+    getTasksByFilterPaginated :: TaskFilter -> m ([TaskId], Maybe Text)
+
+    -- | Get all tasks with custom page size (fetches all pages automatically)
+    getTasksWithLimit :: TaskParam -> Int -> m [TaskId]
+
+    -- | Get all tasks by filter with custom page size (fetches all pages automatically)
+    getTasksByFilterWithLimit :: TaskFilter -> Int -> m [TaskId]
+
 -- | Query parameters for filtering tasks
 data TaskParam = TaskParam
     { project_id :: Maybe Text
     , section_id :: Maybe Text
     , parent_id :: Maybe Text
     , task_ids :: [Text]
+    , cursor :: Maybe Text
+    , limit :: Maybe Int
     }
     deriving (Show)
 
@@ -295,6 +313,8 @@ instance QueryParam TaskParam where
             <> maybe [] (\secId -> [("section_id", secId)]) section_id
             <> maybe [] (\parId -> [("parent_id", parId)]) parent_id
             <> L.map ("task_id",) task_ids
+            <> maybe [] (\c -> [("cursor", c)]) cursor
+            <> maybe [] (\l -> [("limit", show l)]) limit
 
 emptyParams :: TaskParam
 emptyParams =
@@ -303,6 +323,8 @@ emptyParams =
         , section_id = Nothing
         , parent_id = Nothing
         , task_ids = []
+        , cursor = Nothing
+        , limit = Nothing
         }
 
 -- | Query parameters for filtering tasks by text query
