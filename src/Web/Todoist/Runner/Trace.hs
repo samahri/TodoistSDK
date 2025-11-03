@@ -14,14 +14,10 @@ import Web.Todoist.Domain.Project
     , TodoistProjectM (..)
     )
 import Web.Todoist.Domain.Task
-    ( NewTask
-    , Task (Task)
-    , TaskCreate
-    , TaskId (TaskId)
+    ( Task
+    , TaskId
     , TaskParam
-    , TaskPatch
     , TodoistTaskM (..)
-    , emptyTask
     )
 
 import Control.Applicative (Applicative, pure)
@@ -29,6 +25,32 @@ import Control.Monad (Functor, Monad)
 import Control.Monad.Trans.Writer (Writer, tell)
 import Data.Function (($))
 import Text.Show (Show)
+
+-- emptyTask :: NewTask
+-- emptyTask =
+--     NewTask
+--         { _user_id = ""
+--         , _id = ""
+--         , _project_id = ""
+--         , _section_id = Nothing
+--         , _parent_id = Nothing
+--         , _added_by_uid = Nothing
+--         , _assigned_by_uid = Nothing
+--         , _responsible_uid = Nothing
+--         , _labels = []
+--         , _checked = False
+--         , _is_deleted = False
+--         , added_at = Nothing
+--         , _completed_at = Nothing
+--         , _updated_at = Nothing
+--         , _priority = 0
+--         , _child_order = 0
+--         , _content = ""
+--         , _description = ""
+--         , _note_count = 0
+--         , _day_order = 0
+--         , _is_collapsed = False
+--         }
 
 data Op
     = ProjectOp ProjectOp
@@ -71,25 +93,45 @@ instance TodoistProjectM Trace where
         pure $ ProjectId ""
 
 instance TodoistTaskM Trace where
-    getTasks :: TaskParam -> Trace [TaskId]
+    getTasks :: TaskParam -> Trace [Task]
     getTasks _ = Trace $ do
         tell [TaskOp GetTasks]
-        pure [TaskId ""]
+        pure []
 
-    getTask :: TaskId -> Trace Task
-    getTask tid = Trace $ do
-        tell [TaskOp GetTasks]
-        pure $ Task tid ""
+    -- getTask :: TaskId -> Trace Task
+    -- getTask tid = Trace $ do
+    --     tell [TaskOp GetTasks]
+    --     pure $ Task
+    --         { _id = tid
+    --         , _content = ""
+    --         , _description = ""
+    --         , _project_id = ""
+    --         , _section_id = Nothing
+    --         , _parent_id = Nothing
+    --         , _labels = Nothing
+    --         , _priority = 0
+    --         , _due = Nothing
+    --         , _deadline = Nothing
+    --         , _duration = Nothing
+    --         , _is_collapsed = False
+    --         , _order = 0
+    --         , _assignee_id = Nothing
+    --         , _assigner_id = Nothing
+    --         , _completed_at = Nothing
+    --         , _creator_id = ""
+    --         , _created_at = ""
+    --         , _updated_at = ""
+    --         }
 
-    addTask :: TaskCreate -> Trace NewTask
-    addTask _ = Trace $ do
-        tell [TaskOp AddTask]
-        pure emptyTask
+    -- addTask :: TaskCreate -> Trace NewTask
+    -- addTask _ = Trace $ do
+    --     tell [TaskOp AddTask]
+    --     pure emptyTask
 
-    updateTask :: TaskId -> TaskPatch -> Trace NewTask
-    updateTask _ _ = Trace $ do
-        tell [TaskOp UpdateTask]
-        pure emptyTask
+    -- updateTask :: TaskId -> TaskPatch -> Trace NewTask
+    -- updateTask _ _ = Trace $ do
+    --     tell [TaskOp UpdateTask]
+    --     pure emptyTask
 
     closeTask :: TaskId -> Trace ()
     closeTask _ = Trace $ do

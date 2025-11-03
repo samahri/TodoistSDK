@@ -18,6 +18,11 @@ module Web.Todoist.Internal.Types
     , Action (..)
     , RoleActions (..)
     , ProjectPermissions (..)
+    , TaskResponse (..)
+    , DurationResponse (..)
+    , DeadlineResponse (..)
+    , DueResponse (..)
+    , NewTaskResponse (..)
     , Params
     , Endpoint
     ) where
@@ -76,7 +81,7 @@ data ProjectResponse = ProjectResponse
     , p_is_favorite :: Bool
     , p_is_frozen :: Bool
     , p_name :: Text
-    , p_updated_at :: UpdatedAt
+    , p_updated_at :: UpdatedAt -- TODO: use Maybe Text
     , p_view_style :: Text
     , p_default_order :: Int
     , p_description :: Text
@@ -133,7 +138,7 @@ instance ToJSON CreatedAt where
 newtype UpdatedAt = UpdatedAt
     { p_updated_at :: Maybe Text
     }
-    deriving (Show, Generic)
+    deriving (Show, Generic, Eq)
 
 instance FromJSON UpdatedAt where
     parseJSON :: Value -> Parser UpdatedAt
@@ -281,4 +286,125 @@ instance FromJSON ProjectPermissions where
 
 instance ToJSON ProjectPermissions where
     toJSON :: ProjectPermissions -> Value
+    toJSON = genericToJSON jsonOpts
+
+-- | Duration information for a task (API response version)
+data DurationResponse = DurationResponse
+    { p_amount :: Int
+    , p_unit :: Text
+    }
+    deriving (Show, Eq, Generic)
+
+instance FromJSON DurationResponse where
+    parseJSON :: Value -> Parser DurationResponse
+    parseJSON = genericParseJSON jsonOpts
+
+instance ToJSON DurationResponse where
+    toJSON :: DurationResponse -> Value
+    toJSON = genericToJSON jsonOpts
+
+-- | Deadline information for a task (API response version)
+data DeadlineResponse = DeadlineResponse
+    { p_date :: Text
+    , p_lang :: Text
+    }
+    deriving (Show, Eq, Generic)
+
+instance FromJSON DeadlineResponse where
+    parseJSON :: Value -> Parser DeadlineResponse
+    parseJSON = genericParseJSON jsonOpts
+
+instance ToJSON DeadlineResponse where
+    toJSON :: DeadlineResponse -> Value
+    toJSON = genericToJSON jsonOpts
+
+-- | Due date information for a task (API response version)
+data DueResponse = DueResponse
+    { p_date :: Text
+    , p_string :: Text
+    , p_lang :: Text
+    , p_is_recurring :: Bool
+    , p_timezone :: Maybe Text
+    }
+    deriving (Show, Eq, Generic)
+
+instance FromJSON DueResponse where
+    parseJSON :: Value -> Parser DueResponse
+    parseJSON = genericParseJSON jsonOpts
+
+instance ToJSON DueResponse where
+    toJSON :: DueResponse -> Value
+    toJSON = genericToJSON jsonOpts
+
+{- | HTTP API response type for task endpoints
+This represents the complete JSON response returned by the Todoist REST API
+when retrieving or manipulating tasks. Field names use p_ prefix which is dropped by jsonOpts.
+-}
+data TaskResponse = TaskResponse
+    { p_user_id :: Text
+    , p_id :: Text
+    , p_project_id :: Text
+    , p_section_id :: Maybe Text
+    , p_parent_id :: Maybe Text
+    , p_added_by_uid :: Maybe Text
+    , p_assigned_by_uid :: Maybe Text
+    , p_responsible_uid :: Maybe Text
+    , p_labels :: [Text]
+    , p_deadline :: Maybe DeadlineResponse
+    , p_duration :: Maybe DurationResponse
+    , p_checked :: Bool
+    , p_is_deleted :: Bool
+    , p_added_at :: Maybe Text
+    , p_completed_at :: Maybe Text
+    , p_updated_at :: Maybe Text
+    , p_due :: Maybe DueResponse
+    , p_priority :: Int
+    , p_child_order :: Int
+    , p_content :: Text
+    , p_description :: Text
+    , p_note_count :: Int
+    , p_day_order :: Int
+    , p_is_collapsed :: Bool
+    }
+    deriving (Show, Eq, Generic)
+
+instance FromJSON TaskResponse where
+    parseJSON :: Value -> Parser TaskResponse
+    parseJSON = genericParseJSON jsonOpts
+
+instance ToJSON TaskResponse where
+    toJSON :: TaskResponse -> Value
+    toJSON = genericToJSON jsonOpts
+
+data NewTaskResponse = NewTaskResponse
+    { p_user_id :: Text
+    , p_id :: Text
+    , p_project_id :: Text
+    , p_section_id :: Maybe Text
+    , p_parent_id :: Maybe Text
+    , p_added_by_uid :: Maybe Text
+    , p_assigned_by_uid :: Maybe Text
+    , p_responsible_uid :: Maybe Text
+    , p_labels :: [Text]
+    , p_checked :: Bool
+    , p_is_deleted :: Bool
+    , p_added_at :: Maybe Text
+    , p_completed_at :: Maybe Text
+    , p_updated_at :: Maybe Text
+    , p_priority :: Int
+    , p_child_order :: Int
+    , p_content :: Text
+    , p_description :: Text
+    , p_note_count :: Int
+    , p_day_order :: Int
+    , p_is_collapsed :: Bool
+    }
+    deriving (Show, Generic)
+
+instance FromJSON NewTaskResponse where
+    parseJSON :: Value -> Parser NewTaskResponse
+    parseJSON = genericParseJSON jsonOpts
+
+instance ToJSON NewTaskResponse where
+    toJSON :: NewTaskResponse -> Value
     toJSON = genericToJSON jsonOpts

@@ -22,11 +22,14 @@ cabal.project.local~
 .HTF/
 .ghc.environment.*
 .env
+tutorials/*
+app/*
 
 # claude artifacts
 .claude/*
 CLAUDE.md
 PROGRESS.md
+thoughts/*
 
 # Environment variables
 .env
