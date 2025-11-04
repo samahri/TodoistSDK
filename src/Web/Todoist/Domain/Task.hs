@@ -15,7 +15,7 @@ module Web.Todoist.Domain.Task
     , Duration (..)
     , DurationUnit (..)
     , NewTask (..) -- todo: remove child exports
-    , MoveTask
+    , MoveTask (..)
     , AddTaskQuick
     , emptyMoveTask
     , addTaskQuickText
@@ -26,11 +26,13 @@ module Web.Todoist.Domain.Task
     , TaskCreate
     , TaskPatch
     , newTask
-    -- , setDescription
+    , newMoveTask
     , emptyTaskPatch
+    , setProjectId
+    , taskFilterWithQuery
     ) where
 
-import Web.Todoist.Builder (Builder, Initial, seed)
+import Web.Todoist.Builder (Initial, seed)
 import Web.Todoist.Builder.Has
     ( HasAssigneeId (..)
     , HasContent (..)
@@ -46,6 +48,7 @@ import Web.Todoist.Builder.Has
     , HasOrder (..)
     , HasParentId (..)
     , HasPriority (..)
+    , HasProjectId (..)
     , HasSectionId (..)
     )
 import Web.Todoist.Internal.Types (Params)
@@ -60,26 +63,24 @@ import Data.Aeson
     , defaultOptions
     , genericParseJSON
     , genericToJSON
+    , omitNothingFields
     )
 import Data.Aeson.Types (Parser)
-import Data.Bool (Bool (False))
+import Data.Bool (Bool (..))
 import Data.Eq (Eq)
 import Data.Int (Int)
 import qualified Data.List as L
 import Data.Maybe (Maybe (..), maybe)
 import Data.Monoid ((<>))
-import Data.Text (Text, pack)
+import Data.Text (Text)
 import qualified Data.Text
 import GHC.Generics (Generic)
 import Text.Show (Show)
-import qualified Prelude
 
--- TODO: use Text
--- TODO: NAMING - Remove p_ prefix from record fields, use proper field names
 newtype TaskId = TaskId
     { _id :: Text
     }
-    deriving (Show, Generic)
+    deriving (Show, Eq, Generic)
 
 instance FromJSON TaskId where
     parseJSON :: Value -> Parser TaskId
@@ -229,6 +230,27 @@ instance FromJSON MoveTask where
     parseJSON :: Value -> Parser MoveTask
     parseJSON = genericParseJSON defaultOptions {fieldLabelModifier = L.drop 1}
 
+newMoveTask :: Initial MoveTask
+newMoveTask =
+    seed
+        MoveTask
+            { _project_id = Nothing
+            , _section_id = Nothing
+            , _parent_id = Nothing
+            }
+
+instance HasProjectId MoveTask where
+    hasProjectId :: Text -> MoveTask -> MoveTask
+    hasProjectId projId MoveTask {..} = MoveTask {_project_id = Just projId, ..}
+
+instance HasSectionId MoveTask where
+    hasSectionId :: Text -> MoveTask -> MoveTask
+    hasSectionId secId MoveTask {..} = MoveTask {_section_id = Just secId, ..}
+
+instance HasParentId MoveTask where
+    hasParentId :: Text -> MoveTask -> MoveTask
+    hasParentId parId MoveTask {..} = MoveTask {_parent_id = Just parId, ..}
+
 emptyMoveTask :: MoveTask
 emptyMoveTask =
     MoveTask
@@ -362,17 +384,21 @@ instance HasDeadlineDate TaskCreate where
     hasDeadlineDate :: Text -> TaskCreate -> TaskCreate
     hasDeadlineDate deadlineDate TaskCreate {..} = TaskCreate {_deadline_date = Just deadlineDate, ..}
 
+instance HasProjectId TaskCreate where
+    hasProjectId :: Text -> TaskCreate -> TaskCreate
+    hasProjectId projId TaskCreate {..} = TaskCreate {_project_id = Just projId, ..}
+
 data TaskPatch = TaskPatch
     { _content :: Maybe Text
     , _description :: Maybe Text
     , _labels :: Maybe [Text]
-    , _priority :: Maybe Text
+    , _priority :: Maybe Int
     , _due_string :: Maybe Text
     , _due_date :: Maybe Text
     , _due_datetime :: Maybe Text
     , _due_lang :: Maybe Text
-    , _assignee_id :: Maybe Text
-    , _duration :: Maybe Text
+    , _assignee_id :: Maybe Int
+    , _duration :: Maybe Int
     , _duration_unit :: Maybe Text
     , _deadline_date :: Maybe Text
     , _deadline_lang :: Maybe Text
@@ -400,7 +426,7 @@ emptyTaskPatch =
 
 instance ToJSON TaskPatch where
     toJSON :: TaskPatch -> Value
-    toJSON = genericToJSON defaultOptions {fieldLabelModifier = L.drop 1}
+    toJSON = genericToJSON defaultOptions {fieldLabelModifier = L.drop 1, omitNothingFields = True}
 
 instance HasDescription TaskPatch where
     hasDescription :: Text -> TaskPatch -> TaskPatch
@@ -416,7 +442,7 @@ instance HasLabels TaskPatch where
 
 instance HasPriority TaskPatch where
     hasPriority :: Int -> TaskPatch -> TaskPatch
-    hasPriority priority TaskPatch {..} = TaskPatch {_priority = Just (pack (Prelude.show priority)), ..}
+    hasPriority priority TaskPatch {..} = TaskPatch {_priority = Just priority, ..}
 
 instance HasDueString TaskPatch where
     hasDueString :: Text -> TaskPatch -> TaskPatch
@@ -436,11 +462,11 @@ instance HasDueLang TaskPatch where
 
 instance HasAssigneeId TaskPatch where
     hasAssigneeId :: Int -> TaskPatch -> TaskPatch
-    hasAssigneeId aid TaskPatch {..} = TaskPatch {_assignee_id = Just (pack (Prelude.show aid)), ..}
+    hasAssigneeId aid TaskPatch {..} = TaskPatch {_assignee_id = Just aid, ..}
 
 instance HasDuration TaskPatch where
     hasDuration :: Int -> TaskPatch -> TaskPatch
-    hasDuration duration TaskPatch {..} = TaskPatch {_duration = Just (pack (Prelude.show duration)), ..}
+    hasDuration duration TaskPatch {..} = TaskPatch {_duration = Just duration, ..}
 
 instance HasDurationUnit TaskPatch where
     hasDurationUnit :: Text -> TaskPatch -> TaskPatch

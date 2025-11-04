@@ -8,6 +8,7 @@ module Web.Todoist.Runner
     , newTodoistConfig
     , todoistTraceRunner
     , runTodoistWith
+    , MonadTodoist
     ) where
 
 import Web.Todoist.Domain.Project (TodoistProjectM)

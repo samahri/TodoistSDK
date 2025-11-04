@@ -4,6 +4,7 @@ module Web.Todoist.Builder
     ( -- Setter functions
       setDescription
     , setParentId
+    , setProjectId
     , setViewStyle
     , setWorkspaceId
     , setName
@@ -45,6 +46,7 @@ import Web.Todoist.Builder.Has
     , HasOrder (..)
     , HasParentId (..)
     , HasPriority (..)
+    , HasProjectId (..)
     , HasSectionId (..)
     , HasViewStyle (..)
     , HasWorkspaceId (..)
@@ -86,6 +88,9 @@ setDescription desc = modB (hasDescription desc)
 
 setParentId :: (HasParentId s) => Text -> Builder s
 setParentId pid = modB (hasParentId pid)
+
+setProjectId :: (HasProjectId s) => Text -> Builder s
+setProjectId pid = modB (hasProjectId pid)
 
 setViewStyle :: (HasViewStyle s) => ViewStyle -> Builder s
 setViewStyle style = modB (hasViewStyle style)

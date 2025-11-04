@@ -1,6 +1,7 @@
 module Web.Todoist.Builder.Has
     ( HasDescription (..)
     , HasParentId (..)
+    , HasProjectId (..)
     , HasViewStyle (..)
     , HasWorkspaceId (..)
     , HasName (..)
@@ -31,6 +32,9 @@ class HasDescription p where
 
 class HasParentId p where
     hasParentId :: Text -> p -> p
+
+class HasProjectId p where
+    hasProjectId :: Text -> p -> p
 
 class HasViewStyle p where
     hasViewStyle :: ViewStyle -> p -> p

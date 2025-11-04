@@ -1,7 +1,8 @@
 {-# LANGUAGE DisambiguateRecordFields #-}
 
 module Web.Todoist.TestHelpers
-    ( sampleProjectResponse
+    ( -- Project-related exports
+      sampleProjectResponse
     , sampleProjectResponseJson
     , sampleProjectId
     , sampleProjectIdJson
@@ -21,6 +22,21 @@ module Web.Todoist.TestHelpers
     , sampleRoleActions
     , sampleProjectPermissions
     , sampleProjectPermissionsJson
+      -- Task-related exports
+    , sampleDurationResponse
+    , sampleDuration
+    , sampleDeadlineResponse
+    , sampleDeadline
+    , sampleDueResponse
+    , sampleDue
+    , sampleTaskResponse
+    , sampleTaskResponseJson
+    , sampleTask
+    , sampleTaskId
+    , sampleNewTaskResponse
+    , sampleNewTaskResponseJson
+    , sampleNewTask
+    , sampleTasksJson
     ) where
 
 import Web.Todoist.Builder (runBuilder, setDescription)
@@ -32,17 +48,31 @@ import Web.Todoist.Domain.Project
     , ProjectUpdate (..)
     , newProject
     )
+import Web.Todoist.Domain.Task
+    ( Deadline (..)
+    , Due (..)
+    , Duration (..)
+    , DurationUnit (..)
+    , NewTask (..)
+    , Task (..)
+    , TaskId (..)
+    )
 import Web.Todoist.Domain.Types (ViewStyle (..))
 import Web.Todoist.Internal.Types
     ( Action (..)
     , CollaboratorRole (..)
     , CreatedAt (..)
     , CreatorUid (..)
+    , DeadlineResponse (..)
+    , DueResponse (..)
+    , DurationResponse (..)
+    , NewTaskResponse (..)
     , ParentId (..)
     , ProjectPermissions (..)
     , ProjectResponse (..)
     , Role (..)
     , RoleActions (..)
+    , TaskResponse (..)
     , UpdatedAt (..)
     )
 
@@ -280,4 +310,252 @@ sampleProjectPermissionsJson =
         \\"name\":\"CREATOR\",\
         \\"actions\":[{\"name\":\"create_task\"},{\"name\":\"delete_project\"}]\
         \}]\
+        \}"
+
+-- ============================================================================
+-- Task-related test data
+-- ============================================================================
+
+-- | Sample DurationResponse for testing
+sampleDurationResponse :: DurationResponse
+sampleDurationResponse =
+    DurationResponse
+        { p_amount = 30
+        , p_unit = "minute"
+        }
+
+-- | Sample Duration (domain model)
+sampleDuration :: Duration
+sampleDuration =
+    Duration
+        { _amount = 30
+        , _unit = Minute
+        }
+
+-- | Sample DeadlineResponse for testing
+sampleDeadlineResponse :: DeadlineResponse
+sampleDeadlineResponse =
+    DeadlineResponse
+        { p_date = "2025-12-31"
+        , p_lang = "en"
+        }
+
+-- | Sample Deadline (domain model)
+sampleDeadline :: Deadline
+sampleDeadline =
+    Deadline
+        { _date = "2025-12-31"
+        , _lang = "en"
+        }
+
+-- | Sample DueResponse for testing
+sampleDueResponse :: DueResponse
+sampleDueResponse =
+    DueResponse
+        { p_date = "2025-11-15"
+        , p_string = "Nov 15"
+        , p_lang = "en"
+        , p_is_recurring = False
+        , p_timezone = Just "America/New_York"
+        }
+
+-- | Sample Due (domain model)
+sampleDue :: Due
+sampleDue =
+    Due
+        { _date = "2025-11-15"
+        , _string = "Nov 15"
+        , _lang = "en"
+        , _is_recurring = False
+        , _timezone = Just "America/New_York"
+        }
+
+-- | Sample TaskId for testing
+sampleTaskId :: TaskId
+sampleTaskId = TaskId {_id = "7654321098"}
+
+-- | Sample TaskResponse with all fields populated
+sampleTaskResponse :: TaskResponse
+sampleTaskResponse =
+    TaskResponse
+        { p_user_id = "56092663"
+        , p_id = "7654321098"
+        , p_project_id = "2203306141"
+        , p_section_id = Just "section123"
+        , p_parent_id = Just "parent456"
+        , p_added_by_uid = Just "56092663"
+        , p_assigned_by_uid = Just "56092663"
+        , p_responsible_uid = Just "assignee789"
+        , p_labels = ["urgent", "work"]
+        , p_deadline = Just sampleDeadlineResponse
+        , p_duration = Just sampleDurationResponse
+        , p_checked = False
+        , p_is_deleted = False
+        , p_added_at = Just "2025-11-01T10:00:00Z"
+        , p_completed_at = Nothing
+        , p_updated_at = Just "2025-11-03T14:30:00Z"
+        , p_due = Just sampleDueResponse
+        , p_priority = 3
+        , p_child_order = 1
+        , p_content = "Test Task Content"
+        , p_description = "This is a test task description"
+        , p_note_count = 2
+        , p_day_order = 5
+        , p_is_collapsed = False
+        }
+
+-- | Sample Task (domain model) corresponding to sampleTaskResponse
+sampleTask :: Task
+sampleTask =
+    Task
+        { _id = "7654321098"
+        , _content = "Test Task Content"
+        , _description = "This is a test task description"
+        , _project_id = "2203306141"
+        , _section_id = Just "section123"
+        , _parent_id = Just "parent456"
+        , _labels = ["urgent", "work"]
+        , _priority = 3
+        , _due = Just sampleDue
+        , _deadline = Just sampleDeadline
+        , _duration = Just sampleDuration
+        , _is_collapsed = False
+        , _order = 1
+        , _assignee_id = Just "assignee789"
+        , _assigner_id = Just "56092663"
+        , _completed_at = Nothing
+        , _creator_id = "56092663"
+        , _created_at = "2025-11-01T10:00:00Z"
+        , _updated_at = "2025-11-03T14:30:00Z"
+        }
+
+-- | JSON representation of a valid TaskResponse
+sampleTaskResponseJson :: ByteString
+sampleTaskResponseJson =
+    BSL.pack
+        "{\
+        \\"user_id\":\"56092663\",\
+        \\"id\":\"7654321098\",\
+        \\"project_id\":\"2203306141\",\
+        \\"section_id\":\"section123\",\
+        \\"parent_id\":\"parent456\",\
+        \\"added_by_uid\":\"56092663\",\
+        \\"assigned_by_uid\":\"56092663\",\
+        \\"responsible_uid\":\"assignee789\",\
+        \\"labels\":[\"urgent\",\"work\"],\
+        \\"deadline\":{\"date\":\"2025-12-31\",\"lang\":\"en\"},\
+        \\"duration\":{\"amount\":30,\"unit\":\"minute\"},\
+        \\"checked\":false,\
+        \\"is_deleted\":false,\
+        \\"added_at\":\"2025-11-01T10:00:00Z\",\
+        \\"completed_at\":null,\
+        \\"updated_at\":\"2025-11-03T14:30:00Z\",\
+        \\"due\":{\"date\":\"2025-11-15\",\"string\":\"Nov 15\",\"lang\":\"en\",\"is_recurring\":false,\"timezone\":\"America/New_York\"},\
+        \\"priority\":3,\
+        \\"child_order\":1,\
+        \\"content\":\"Test Task Content\",\
+        \\"description\":\"This is a test task description\",\
+        \\"note_count\":2,\
+        \\"day_order\":5,\
+        \\"is_collapsed\":false\
+        \}"
+
+-- | Sample NewTaskResponse for testing
+sampleNewTaskResponse :: NewTaskResponse
+sampleNewTaskResponse =
+    NewTaskResponse
+        { p_user_id = "56092663"
+        , p_id = "9876543210"
+        , p_project_id = "2203306141"
+        , p_section_id = Nothing
+        , p_parent_id = Nothing
+        , p_added_by_uid = Just "56092663"
+        , p_assigned_by_uid = Nothing
+        , p_responsible_uid = Nothing
+        , p_labels = ["new"]
+        , p_checked = False
+        , p_is_deleted = False
+        , p_added_at = Just "2025-11-04T09:00:00Z"
+        , p_completed_at = Nothing
+        , p_updated_at = Just "2025-11-04T09:00:00Z"
+        , p_priority = 1
+        , p_child_order = 0
+        , p_content = "New Task"
+        , p_description = "A newly created task"
+        , p_note_count = 0
+        , p_day_order = 1
+        , p_is_collapsed = False
+        }
+
+-- | Sample NewTask (domain model) corresponding to sampleNewTaskResponse
+sampleNewTask :: NewTask
+sampleNewTask =
+    NewTask
+        { _user_id = "56092663"
+        , _id = "9876543210"
+        , _project_id = "2203306141"
+        , _section_id = Nothing
+        , _parent_id = Nothing
+        , _added_by_uid = Just "56092663"
+        , _assigned_by_uid = Nothing
+        , _responsible_uid = Nothing
+        , _labels = ["new"]
+        , _checked = False
+        , _is_deleted = False
+        , _added_at = Just "2025-11-04T09:00:00Z"
+        , _completed_at = Nothing
+        , _updated_at = Just "2025-11-04T09:00:00Z"
+        , _priority = 1
+        , _child_order = 0
+        , _content = "New Task"
+        , _description = "A newly created task"
+        , _note_count = 0
+        , _day_order = 1
+        , _is_collapsed = False
+        }
+
+-- | JSON representation of a valid NewTaskResponse
+sampleNewTaskResponseJson :: ByteString
+sampleNewTaskResponseJson =
+    BSL.pack
+        "{\
+        \\"user_id\":\"56092663\",\
+        \\"id\":\"9876543210\",\
+        \\"project_id\":\"2203306141\",\
+        \\"section_id\":null,\
+        \\"parent_id\":null,\
+        \\"added_by_uid\":\"56092663\",\
+        \\"assigned_by_uid\":null,\
+        \\"responsible_uid\":null,\
+        \\"labels\":[\"new\"],\
+        \\"checked\":false,\
+        \\"is_deleted\":false,\
+        \\"added_at\":\"2025-11-04T09:00:00Z\",\
+        \\"completed_at\":null,\
+        \\"updated_at\":\"2025-11-04T09:00:00Z\",\
+        \\"priority\":1,\
+        \\"child_order\":0,\
+        \\"content\":\"New Task\",\
+        \\"description\":\"A newly created task\",\
+        \\"note_count\":0,\
+        \\"day_order\":1,\
+        \\"is_collapsed\":false\
+        \}"
+
+-- | JSON for TodoistReturn [TaskResponse] (getTasks response)
+sampleTasksJson :: ByteString
+sampleTasksJson =
+    BSL.pack
+        "{\
+        \\"results\":[\
+        \{\"user_id\":\"56092663\",\"id\":\"7654321098\",\"project_id\":\"2203306141\",\
+        \\"section_id\":\"section123\",\"parent_id\":\"parent456\",\"added_by_uid\":\"56092663\",\
+        \\"assigned_by_uid\":\"56092663\",\"responsible_uid\":\"assignee789\",\"labels\":[\"urgent\",\"work\"],\
+        \\"deadline\":{\"date\":\"2025-12-31\",\"lang\":\"en\"},\"duration\":{\"amount\":30,\"unit\":\"minute\"},\
+        \\"checked\":false,\"is_deleted\":false,\"added_at\":\"2025-11-01T10:00:00Z\",\"completed_at\":null,\
+        \\"updated_at\":\"2025-11-03T14:30:00Z\",\"due\":{\"date\":\"2025-11-15\",\"string\":\"Nov 15\",\"lang\":\"en\",\"is_recurring\":false,\"timezone\":\"America/New_York\"},\
+        \\"priority\":3,\"child_order\":1,\"content\":\"Test Task Content\",\"description\":\"This is a test task description\",\
+        \\"note_count\":2,\"day_order\":5,\"is_collapsed\":false}\
+        \],\
+        \\"next_cursor\":null\
         \}"

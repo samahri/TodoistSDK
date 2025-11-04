@@ -9,6 +9,7 @@ module Helpers
     , liftTodoist
     , assertSucceeds
     , buildTestProject
+    , buildTestTask
     ) where
 
 import qualified Configuration.Dotenv as Dotenv
@@ -32,15 +33,18 @@ import System.Random (randomRIO)
 import Test.Hspec (shouldBe)
 import Text.Show (Show, show)
 import Web.Todoist.Builder
-    ( runBuilder
+    ( Initial
+    , runBuilder
     , setDescription
+    , setProjectId
     , setViewStyle
     )
 import Web.Todoist.Domain.Project (ProjectCreate, TodoistProjectM (..), newProject)
+import Web.Todoist.Domain.Task (TaskCreate, newTask)
 import Web.Todoist.Domain.Types (ViewStyle (..))
 import Web.Todoist.Internal.Config (TodoistConfig)
 import Web.Todoist.Internal.Error (TodoistError)
-import Web.Todoist.Runner (newTodoistConfig, todoist)
+import Web.Todoist.Runner (MonadTodoist, newTodoistConfig, todoist)
 
 -- | Load .env file, ignoring errors if file doesn't exist
 loadEnvFile :: IO ()
@@ -77,7 +81,7 @@ withTestConfig action = do
 {- | Lift a Todoist operation into ExceptT
 Makes it easier to chain API calls in do-notation
 -}
-liftTodoist :: TodoistConfig -> (forall m. (TodoistProjectM m) => m a) -> ExceptT TodoistError IO a
+liftTodoist :: TodoistConfig -> (forall m. (MonadTodoist m) => m a) -> ExceptT TodoistError IO a
 liftTodoist config operation = ExceptT $ todoist config operation
 
 {- | Unwrap an ExceptT computation and fail the test if it resulted in an error
@@ -101,3 +105,12 @@ buildTestProject projectName =
     runBuilder
         (newProject projectName)
         (setDescription "Test project description for integration testing" <> setViewStyle Board)
+
+{- | Build a test task with basic fields set using the Builder pattern
+Creates a TaskCreate with content, description, and project_id for testing
+-}
+buildTestTask :: Text -> Text -> TaskCreate
+buildTestTask taskContent projectId =
+    runBuilder
+        (newTask taskContent)
+        (setDescription "Test task description for integration testing" <> setProjectId projectId)
