@@ -42,7 +42,7 @@ import System.IO (IO, putStrLn)
 import Test.Hspec (Spec, describe, it, pendingWith, runIO, shouldBe, shouldSatisfy)
 import Text.Show (show)
 
-import GHC.Base (undefined)
+import GHC.Base (mempty, undefined)
 
 spec :: Spec
 spec = do
@@ -285,7 +285,7 @@ updateProjectSpec config = describe "Update project" $ do
         let updatedDescription = "Updated description"
 
         -- Create initial project with specific properties
-        let initialProject = runBuilder $ newProject originalName <> setDescription originalDescription
+        let initialProject = runBuilder (newProject originalName) (setDescription originalDescription)
 
         withTestProjectCreate config initialProject $ \projectId -> do
             -- Verify initial state
@@ -344,7 +344,7 @@ updateProjectSpec config = describe "Update project" $ do
         let initialDescription = "Initial description"
 
         -- Create initial project
-        let initialProject = runBuilder $ newProject projectName <> setDescription initialDescription
+        let initialProject = runBuilder (newProject projectName) (setDescription initialDescription)
 
         withTestProjectCreate config initialProject $ \projectId -> do
             -- Get initial state
@@ -396,7 +396,7 @@ withTestProject :: TodoistConfig -> Text -> (P.ProjectId -> ExceptT TodoistError
 withTestProject config projectName action = do
     let createProject = do
             liftIO $ putStrLn $ "Creating test project: " <> show projectName
-            liftTodoist config (addProject $ runBuilder $ newProject projectName)
+            liftTodoist config (addProject $ runBuilder (newProject projectName) mempty)
 
     let deleteProject' projectId = do
             liftIO $ putStrLn $ "Cleaning up test project: " <> show projectName
@@ -414,7 +414,7 @@ withTestProjects :: TodoistConfig -> [Text] -> ([P.ProjectId] -> ExceptT Todoist
 withTestProjects config projectNames action = do
     let createProjects = do
             liftIO $ putStrLn $ "Creating " <> show (L.length projectNames) <> " test projects"
-            mapM (\name -> liftTodoist config (addProject $ runBuilder $ newProject name)) projectNames
+            mapM (\name -> liftTodoist config (addProject $ runBuilder (newProject name) mempty)) projectNames
 
     let deleteProjects projectIds = do
             liftIO $ putStrLn $ "Cleaning up " <> show (L.length projectIds) <> " test projects"

@@ -50,7 +50,6 @@ import Data.Bool (Bool (..))
 import Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import Data.Maybe (Maybe (..))
-import Data.Semigroup ((<>))
 
 -- | Sample ProjectId for testing
 sampleProjectId :: ProjectId
@@ -194,7 +193,7 @@ sampleCollaboratorsJson =
 
 -- | Sample ProjectCreate
 sampleProjectCreate :: ProjectCreate
-sampleProjectCreate = runBuilder (newProject "New Project" <> setDescription "A new project to be created")
+sampleProjectCreate = runBuilder (newProject "New Project") (setDescription "A new project to be created")
 
 -- | JSON representation of ProjectCreate (for serialization test)
 sampleProjectCreateJson :: ByteString

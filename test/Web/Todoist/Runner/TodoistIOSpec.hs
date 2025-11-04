@@ -22,7 +22,6 @@ import Web.Todoist.Runner.TodoistIO (projectResponseToProject)
 import Web.Todoist.TestHelpers
     ( sampleCollaborator
     , sampleCollaboratorsJson
-    , samplePartialProjectUpdate
     , samplePartialProjectUpdateJson
     , sampleProject
     , sampleProjectCreate

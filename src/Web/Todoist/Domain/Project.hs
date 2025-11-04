@@ -19,7 +19,7 @@ module Web.Todoist.Domain.Project
     , emptyPaginationParam
     ) where
 
-import Web.Todoist.Builder (Builder, seed)
+import Web.Todoist.Builder (Initial, seed)
 import Web.Todoist.Builder.Has
     ( HasDescription (..)
     , HasIsFavorite (..)
@@ -159,7 +159,7 @@ instance HasIsFavorite ProjectUpdate where
     hasIsFavorite fav ProjectUpdate {..} = ProjectUpdate {_is_favorite = Just fav, ..}
 
 -- projects
-newProject :: Text -> Builder ProjectCreate
+newProject :: Text -> Initial ProjectCreate
 newProject name =
     seed
         ProjectCreate
@@ -172,9 +172,9 @@ newProject name =
             }
 
 {- | Create an empty ProjectUpdate (for use with Builder combinators)
-Use with setters: emptyProjectUpdate <> setName "New Name" <> setDescription "desc"
+Use with runBuilder: runBuilder emptyProjectUpdate (setName "New Name" <> setDescription "desc")
 -}
-emptyProjectUpdate :: Builder ProjectUpdate
+emptyProjectUpdate :: Initial ProjectUpdate
 emptyProjectUpdate =
     seed
         ProjectUpdate

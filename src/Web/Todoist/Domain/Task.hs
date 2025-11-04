@@ -13,7 +13,7 @@ module Web.Todoist.Domain.Task
     , Due (..)
     , Deadline (..)
     , Duration (..)
-    , DurationUnit (..) 
+    , DurationUnit (..)
     , NewTask (..) -- todo: remove child exports
     , MoveTask
     , AddTaskQuick
@@ -30,7 +30,7 @@ module Web.Todoist.Domain.Task
     , emptyTaskPatch
     ) where
 
-import Web.Todoist.Builder (Builder, seed)
+import Web.Todoist.Builder (Builder, Initial, seed)
 import Web.Todoist.Builder.Has
     ( HasAssigneeId (..)
     , HasContent (..)
@@ -54,12 +54,12 @@ import Web.Todoist.QueryParam (QueryParam (..))
 import Control.Monad (Monad)
 import Data.Aeson
     ( FromJSON (parseJSON)
+    , Options (..)
     , ToJSON (toJSON)
     , Value
     , defaultOptions
     , genericParseJSON
     , genericToJSON
-    , Options(..)
     )
 import Data.Aeson.Types (Parser)
 import Data.Bool (Bool (False))
@@ -71,8 +71,8 @@ import Data.Monoid ((<>))
 import Data.Text (Text, pack)
 import qualified Data.Text
 import GHC.Generics (Generic)
-import qualified Prelude
 import Text.Show (Show)
+import qualified Prelude
 
 -- TODO: use Text
 -- TODO: NAMING - Remove p_ prefix from record fields, use proper field names
@@ -280,7 +280,7 @@ instance ToJSON TaskCreate where
     toJSON :: TaskCreate -> Value
     toJSON = genericToJSON defaultOptions {fieldLabelModifier = L.drop 1}
 
-newTask :: Text -> Builder TaskCreate
+newTask :: Text -> Initial TaskCreate
 newTask content =
     seed
         TaskCreate
@@ -379,7 +379,7 @@ data TaskPatch = TaskPatch
     }
     deriving (Show, Generic)
 
-emptyTaskPatch :: Builder TaskPatch
+emptyTaskPatch :: Initial TaskPatch
 emptyTaskPatch =
     seed
         TaskPatch

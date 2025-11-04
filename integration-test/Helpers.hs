@@ -99,7 +99,5 @@ Creates a ProjectCreate with all possible fields populated for testing
 buildTestProject :: Text -> ProjectCreate
 buildTestProject projectName =
     runBuilder
-        ( newProject projectName
-            <> setDescription "Test project description for integration testing"
-            <> setViewStyle Board
-        )
+        (newProject projectName)
+        (setDescription "Test project description for integration testing" <> setViewStyle Board)
