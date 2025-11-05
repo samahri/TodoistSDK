@@ -25,6 +25,7 @@ module Web.Todoist.Internal.Types
     , NewTaskResponse (..)
     , CommentResponse (..)
     , SectionResponse (..)
+    , LabelResponse (..)
     , FileAttachment (..)
     , Reactions (..)
     , Params
@@ -486,3 +487,25 @@ data SectionResponse = SectionResponse
 instance FromJSON SectionResponse where
     parseJSON :: Value -> Parser SectionResponse
     parseJSON = genericParseJSON jsonOpts
+
+instance ToJSON SectionResponse where
+    toJSON :: SectionResponse -> Value
+    toJSON = genericToJSON jsonOpts
+
+-- | HTTP API response type for GET label endpoint
+data LabelResponse = LabelResponse
+    { p_id :: Text
+    , p_name :: Text
+    , p_color :: Text
+    , p_order :: Maybe Int
+    , p_is_favorite :: Bool
+    }
+    deriving (Show, Generic)
+
+instance FromJSON LabelResponse where
+    parseJSON :: Value -> Parser LabelResponse
+    parseJSON = genericParseJSON jsonOpts
+
+instance ToJSON LabelResponse where
+    toJSON :: LabelResponse -> Value
+    toJSON = genericToJSON jsonOpts

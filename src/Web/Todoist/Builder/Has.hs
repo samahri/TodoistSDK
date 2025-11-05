@@ -22,6 +22,7 @@ module Web.Todoist.Builder.Has
     , HasTaskId (..)
     , HasUidsToNotify (..)
     , HasAttachment (..)
+    , HasColor (..)
     ) where
 
 import Web.Todoist.Domain.Types (Attachment, ViewStyle)
@@ -101,3 +102,6 @@ class HasUidsToNotify p where
 
 class HasAttachment p where
     hasAttachment :: Attachment -> p -> p
+
+class HasColor p where
+    hasColor :: Text -> p -> p

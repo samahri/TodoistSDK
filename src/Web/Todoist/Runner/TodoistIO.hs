@@ -14,6 +14,7 @@ import Web.Todoist.Runner.TodoistIO.Core (TodoistIO (..))
 
 -- Import submodules to bring instances into scope
 import Web.Todoist.Runner.TodoistIO.Comment ()
+import Web.Todoist.Runner.TodoistIO.Label ()
 import Web.Todoist.Runner.TodoistIO.Project (projectResponseToProject)
 import Web.Todoist.Runner.TodoistIO.Section ()
 import Web.Todoist.Runner.TodoistIO.Task ()

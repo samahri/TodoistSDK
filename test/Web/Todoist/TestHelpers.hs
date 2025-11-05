@@ -53,6 +53,12 @@ module Web.Todoist.TestHelpers
     , sampleSectionCreate
     , sampleSectionUpdate
     , sampleSectionsJson
+    -- Label-related exports
+    , sampleLabelResponse
+    , sampleLabel
+    , sampleLabelResponseJson
+    , sampleLabelsJson
+    , sampleSharedLabelsJson
     ) where
 
 import Web.Todoist.Builder (runBuilder, setDescription)
@@ -61,6 +67,9 @@ import Web.Todoist.Domain.Comment
     , CommentCreate
     , CommentId (..)
     , newComment
+    )
+import Web.Todoist.Domain.Label
+    ( Label (..)
     )
 import Web.Todoist.Domain.Project
     ( Collaborator (..)
@@ -97,6 +106,7 @@ import Web.Todoist.Internal.Types
     , DueResponse (..)
     , DurationResponse (..)
     , FileAttachment (..)
+    , LabelResponse (..)
     , NewTaskResponse (..)
     , ParentId (..)
     , ProjectPermissions (..)
@@ -781,3 +791,42 @@ sampleSectionsJson =
         \}],\
         \\"next_cursor\":null\
         \}"
+
+-- ==================== Label-related Helpers ====================
+
+-- | Sample LabelResponse for testing
+sampleLabelResponse :: LabelResponse
+sampleLabelResponse =
+    LabelResponse
+        { p_id = "label123"
+        , p_name = "Test Label"
+        , p_color = "charcoal"
+        , p_order = Just 1
+        , p_is_favorite = False
+        }
+
+-- | Sample Label domain type for testing
+sampleLabel :: Label
+sampleLabel =
+    Label
+        { _id = "label123"
+        , _name = "Test Label"
+        , _color = "charcoal"
+        , _order = Just 1
+        , _is_favorite = False
+        }
+
+-- | JSON for single LabelResponse
+sampleLabelResponseJson :: ByteString
+sampleLabelResponseJson =
+    "{\"id\":\"label123\",\"name\":\"Test Label\",\"color\":\"charcoal\",\"order\":1,\"is_favorite\":false}"
+
+-- | JSON for paginated labels response
+sampleLabelsJson :: ByteString
+sampleLabelsJson =
+    "{\"results\":[{\"id\":\"label123\",\"name\":\"Test Label\",\"color\":\"charcoal\",\"order\":1,\"is_favorite\":false}],\"next_cursor\":null}"
+
+-- | JSON for shared labels response
+sampleSharedLabelsJson :: ByteString
+sampleSharedLabelsJson =
+    "{\"results\":[\"Label1\",\"Label2\",\"Label3\"],\"next_cursor\":null}"

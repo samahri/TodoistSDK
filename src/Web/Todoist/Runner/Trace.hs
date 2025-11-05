@@ -14,6 +14,17 @@ import Web.Todoist.Domain.Comment
     , CommentUpdate
     , TodoistCommentM (..)
     )
+import Web.Todoist.Domain.Label
+    ( Label (..)
+    , LabelCreate
+    , LabelId (LabelId)
+    , LabelParam
+    , LabelUpdate
+    , SharedLabelParam
+    , SharedLabelRemove
+    , SharedLabelRename
+    , TodoistLabelM (..)
+    )
 import Web.Todoist.Domain.Project
     ( Collaborator (Collaborator)
     , Project
@@ -76,6 +87,7 @@ data Op
     | TaskOp TaskOp
     | CommentOp CommentOp
     | SectionOp SectionOp
+    | LabelOp LabelOp
     deriving (Show)
 
 data ProjectOp
@@ -110,6 +122,19 @@ data SectionOp
     | UpdateSection
     | DeleteSection
     | GetSectionsPaginated
+    deriving (Show)
+
+data LabelOp
+    = GetLabels
+    | GetLabel
+    | AddLabel
+    | UpdateLabel
+    | DeleteLabel
+    | GetLabelsPaginated
+    | GetSharedLabels
+    | GetSharedLabelsPaginated
+    | RemoveSharedLabels
+    | RenameSharedLabels
     deriving (Show)
 
 newtype Trace a = Trace {runTrace :: Writer [Op] a}
@@ -248,3 +273,54 @@ instance TodoistSectionM Trace where
     getSectionsPaginated _ = Trace $ do
         tell [SectionOp GetSectionsPaginated]
         pure ([], Nothing)
+
+instance TodoistLabelM Trace where
+    getLabels :: LabelParam -> Trace [Label]
+    getLabels _ = Trace $ do
+        tell [LabelOp GetLabels]
+        pure []
+
+    getLabel :: LabelId -> Trace Label
+    getLabel _ = Trace $ do
+        tell [LabelOp GetLabel]
+        pure $ Label "" "" "" Nothing False
+
+    addLabel :: LabelCreate -> Trace LabelId
+    addLabel _ = Trace $ do
+        tell [LabelOp AddLabel]
+        pure $ LabelId ""
+
+    updateLabel :: LabelId -> LabelUpdate -> Trace Label
+    updateLabel _ _ = Trace $ do
+        tell [LabelOp UpdateLabel]
+        pure $ Label "" "" "" Nothing False
+
+    deleteLabel :: LabelId -> Trace ()
+    deleteLabel _ = Trace $ do
+        tell [LabelOp DeleteLabel]
+        pure ()
+
+    getLabelsPaginated :: LabelParam -> Trace ([Label], Maybe Text)
+    getLabelsPaginated _ = Trace $ do
+        tell [LabelOp GetLabelsPaginated]
+        pure ([], Nothing)
+
+    getSharedLabels :: SharedLabelParam -> Trace [Text]
+    getSharedLabels _ = Trace $ do
+        tell [LabelOp GetSharedLabels]
+        pure []
+
+    getSharedLabelsPaginated :: SharedLabelParam -> Trace ([Text], Maybe Text)
+    getSharedLabelsPaginated _ = Trace $ do
+        tell [LabelOp GetSharedLabelsPaginated]
+        pure ([], Nothing)
+
+    removeSharedLabels :: SharedLabelRemove -> Trace ()
+    removeSharedLabels _ = Trace $ do
+        tell [LabelOp RemoveSharedLabels]
+        pure ()
+
+    renameSharedLabels :: SharedLabelRename -> Trace ()
+    renameSharedLabels _ = Trace $ do
+        tell [LabelOp RenameSharedLabels]
+        pure ()
