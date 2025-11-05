@@ -45,6 +45,14 @@ module Web.Todoist.TestHelpers
     , sampleCommentResponseWithAttachment
     , sampleCommentResponseWithAttachmentJson
     , sampleCommentCreate
+    -- Section-related exports
+    , sampleSectionId
+    , sampleSectionResponse
+    , sampleSectionResponseJson
+    , sampleSection
+    , sampleSectionCreate
+    , sampleSectionUpdate
+    , sampleSectionsJson
     ) where
 
 import Web.Todoist.Builder (runBuilder, setDescription)
@@ -61,6 +69,13 @@ import Web.Todoist.Domain.Project
     , ProjectId (..)
     , ProjectUpdate (..)
     , newProject
+    )
+import Web.Todoist.Domain.Section
+    ( Section (..)
+    , SectionCreate
+    , SectionId (..)
+    , SectionUpdate (..)
+    , newSection
     )
 import Web.Todoist.Domain.Task
     ( Deadline (..)
@@ -88,6 +103,7 @@ import Web.Todoist.Internal.Types
     , ProjectResponse (..)
     , Role (..)
     , RoleActions (..)
+    , SectionResponse (..)
     , TaskResponse (..)
     , UpdatedAt (..)
     )
@@ -681,3 +697,87 @@ sampleCommentCreate =
     runBuilder
         (newComment "New comment")
         mempty
+
+-- ===== Section Fixtures =====
+
+-- | Sample Section ID
+sampleSectionId :: SectionId
+sampleSectionId = SectionId {_id = "section123"}
+
+-- | Sample SectionResponse
+sampleSectionResponse :: SectionResponse
+sampleSectionResponse =
+    SectionResponse
+        { p_id = "section123"
+        , p_user_id = "user456"
+        , p_project_id = "project789"
+        , p_added_at = "2024-01-01T12:00:00Z"
+        , p_updated_at = Just "2024-01-02T14:30:00Z"
+        , p_archived_at = Nothing
+        , p_name = "Test Section"
+        , p_section_order = 1
+        , p_is_archived = False
+        , p_is_deleted = False
+        , p_is_collapsed = False
+        }
+
+-- | Sample SectionResponse JSON
+sampleSectionResponseJson :: ByteString
+sampleSectionResponseJson =
+    BSL.pack
+        "{\
+        \\"id\":\"section123\",\
+        \\"user_id\":\"user456\",\
+        \\"project_id\":\"project789\",\
+        \\"added_at\":\"2024-01-01T12:00:00Z\",\
+        \\"updated_at\":\"2024-01-02T14:30:00Z\",\
+        \\"archived_at\":null,\
+        \\"name\":\"Test Section\",\
+        \\"section_order\":1,\
+        \\"is_archived\":false,\
+        \\"is_deleted\":false,\
+        \\"is_collapsed\":false\
+        \}"
+
+-- | Sample Section (domain model)
+sampleSection :: Section
+sampleSection =
+    Section
+        { _id = "section123"
+        , _name = "Test Section"
+        , _project_id = "project789"
+        , _is_collapsed = False
+        , _order = 1
+        }
+
+-- | Sample SectionCreate
+sampleSectionCreate :: SectionCreate
+sampleSectionCreate = runBuilder (newSection "New Section" "project789") mempty
+
+-- | Sample SectionUpdate
+sampleSectionUpdate :: SectionUpdate
+sampleSectionUpdate =
+    SectionUpdate
+        { _name = Just "Updated Section"
+        }
+
+-- | JSON for TodoistReturn [SectionResponse] (getSections response)
+sampleSectionsJson :: ByteString
+sampleSectionsJson =
+    BSL.pack
+        "{\
+        \\"results\":[{\
+        \\"id\":\"section123\",\
+        \\"user_id\":\"user456\",\
+        \\"project_id\":\"project789\",\
+        \\"added_at\":\"2024-01-01T12:00:00Z\",\
+        \\"updated_at\":\"2024-01-02T14:30:00Z\",\
+        \\"archived_at\":null,\
+        \\"name\":\"Test Section\",\
+        \\"section_order\":1,\
+        \\"is_archived\":false,\
+        \\"is_deleted\":false,\
+        \\"is_collapsed\":false\
+        \}],\
+        \\"next_cursor\":null\
+        \}"

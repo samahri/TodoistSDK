@@ -21,6 +21,7 @@ library
   exposed-modules:     Web.Todoist.Domain.Project
                        Web.Todoist.Domain.Task
                        Web.Todoist.Domain.Comment
+                       Web.Todoist.Domain.Section
                        Web.Todoist.Domain.Types
                        Web.Todoist.Builder.Has
                        Web.Todoist.Builder
@@ -31,6 +32,7 @@ library
                        Web.Todoist.Runner.TodoistIO.Project
                        Web.Todoist.Runner.TodoistIO.Task
                        Web.Todoist.Runner.TodoistIO.Comment
+                       Web.Todoist.Runner.TodoistIO.Section
                        Web.Todoist.Runner.Trace
                        Web.Todoist.Internal.Config
                        Web.Todoist.Internal.Error
@@ -67,6 +69,7 @@ test-suite todoist-sdk-test
       Web.Todoist.Runner.TodoistIOSpec
       Web.Todoist.Runner.TodoistIO.TaskSpec
       Web.Todoist.Runner.TodoistIO.CommentSpec
+      Web.Todoist.Runner.TodoistIO.SectionSpec
       Web.Todoist.BuilderSpec
   hs-source-dirs:
       test
@@ -93,6 +96,7 @@ test-suite integration-tests
       ProjectIntegrationSpec
       TaskIntegrationSpec
       CommentIntegrationSpec
+      SectionIntegrationSpec
       Helpers
   hs-source-dirs:
       integration-test

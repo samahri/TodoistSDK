@@ -9,7 +9,7 @@ module Web.Todoist.Runner.Trace
 import Web.Todoist.Domain.Comment
     ( Comment (..)
     , CommentCreate
-    , CommentId (CommentId)
+    , CommentId
     , CommentParam
     , CommentUpdate
     , TodoistCommentM (..)
@@ -21,6 +21,14 @@ import Web.Todoist.Domain.Project
     , ProjectId (ProjectId)
     , TodoistProjectM (..)
     )
+import Web.Todoist.Domain.Section
+    ( Section (..)
+    , SectionCreate
+    , SectionId (SectionId)
+    , SectionParam
+    , SectionUpdate
+    , TodoistSectionM (..)
+    )
 import Web.Todoist.Domain.Task
     ( Task
     , TaskId
@@ -31,6 +39,7 @@ import Web.Todoist.Domain.Task
 import Control.Applicative (Applicative, pure)
 import Control.Monad (Functor, Monad)
 import Control.Monad.Trans.Writer (Writer, tell)
+import Data.Bool (Bool (False))
 import Data.Function (($))
 import Data.Maybe (Maybe (Nothing))
 import Data.Text (Text)
@@ -66,6 +75,7 @@ data Op
     = ProjectOp ProjectOp
     | TaskOp TaskOp
     | CommentOp CommentOp
+    | SectionOp SectionOp
     deriving (Show)
 
 data ProjectOp
@@ -91,6 +101,15 @@ data CommentOp
     | GetComment
     | UpdateComment
     | DeleteComment
+    deriving (Show)
+
+data SectionOp
+    = GetSections
+    | GetSection
+    | AddSection
+    | UpdateSection
+    | DeleteSection
+    | GetSectionsPaginated
     deriving (Show)
 
 newtype Trace a = Trace {runTrace :: Writer [Op] a}
@@ -198,3 +217,34 @@ instance TodoistCommentM Trace where
     deleteComment _ = Trace $ do
         tell [CommentOp DeleteComment]
         pure ()
+
+instance TodoistSectionM Trace where
+    getSections :: SectionParam -> Trace [Section]
+    getSections _ = Trace $ do
+        tell [SectionOp GetSections]
+        pure []
+
+    getSection :: SectionId -> Trace Section
+    getSection _ = Trace $ do
+        tell [SectionOp GetSection]
+        pure $ Section "" "" "" False 0
+
+    addSection :: SectionCreate -> Trace SectionId
+    addSection _ = Trace $ do
+        tell [SectionOp AddSection]
+        pure $ SectionId ""
+
+    updateSection :: SectionId -> SectionUpdate -> Trace Section
+    updateSection _ _ = Trace $ do
+        tell [SectionOp UpdateSection]
+        pure $ Section "" "" "" False 0
+
+    deleteSection :: SectionId -> Trace ()
+    deleteSection _ = Trace $ do
+        tell [SectionOp DeleteSection]
+        pure ()
+
+    getSectionsPaginated :: SectionParam -> Trace ([Section], Maybe Text)
+    getSectionsPaginated _ = Trace $ do
+        tell [SectionOp GetSectionsPaginated]
+        pure ([], Nothing)

@@ -24,6 +24,7 @@ module Web.Todoist.Internal.Types
     , DueResponse (..)
     , NewTaskResponse (..)
     , CommentResponse (..)
+    , SectionResponse (..)
     , FileAttachment (..)
     , Reactions (..)
     , Params
@@ -463,3 +464,25 @@ instance FromJSON CommentResponse where
 instance ToJSON CommentResponse where
     toJSON :: CommentResponse -> Value
     toJSON = genericToJSON jsonOpts
+
+{- | HTTP response type for Section endpoints
+Uses p_ prefix which gets dropped by jsonOpts (drops 2 chars)
+-}
+data SectionResponse = SectionResponse
+    { p_id :: Text
+    , p_user_id :: Text
+    , p_project_id :: Text
+    , p_added_at :: Text
+    , p_updated_at :: Maybe Text
+    , p_archived_at :: Maybe Text
+    , p_name :: Text
+    , p_section_order :: Int
+    , p_is_archived :: Bool
+    , p_is_deleted :: Bool
+    , p_is_collapsed :: Bool
+    }
+    deriving (Show, Generic)
+
+instance FromJSON SectionResponse where
+    parseJSON :: Value -> Parser SectionResponse
+    parseJSON = genericParseJSON jsonOpts
