@@ -5,6 +5,7 @@ module Web.Todoist.Builder
       setDescription
     , setParentId
     , setProjectId
+    , setTaskId
     , setViewStyle
     , setWorkspaceId
     , setName
@@ -22,6 +23,8 @@ module Web.Todoist.Builder
     , setDuration
     , setDurationUnit
     , setDeadlineDate
+    , setAttachment
+    , setUidsToNotify
     -- Core types and functions
     , Initial -- Type exported for internal use only
     , seed
@@ -31,6 +34,7 @@ module Web.Todoist.Builder
 
 import Web.Todoist.Builder.Has
     ( HasAssigneeId (..)
+    , HasAttachment (hasAttachment)
     , HasContent (..)
     , HasDeadlineDate (..)
     , HasDescription (..)
@@ -48,10 +52,12 @@ import Web.Todoist.Builder.Has
     , HasPriority (..)
     , HasProjectId (..)
     , HasSectionId (..)
+    , HasTaskId (..)
+    , HasUidsToNotify (..)
     , HasViewStyle (..)
     , HasWorkspaceId (..)
     )
-import Web.Todoist.Domain.Types (ViewStyle)
+import Web.Todoist.Domain.Types (Attachment, ViewStyle)
 
 import Data.Bool (Bool)
 import Data.Int (Int)
@@ -142,3 +148,12 @@ setDurationUnit durationUnit = modB (hasDurationUnit durationUnit)
 
 setDeadlineDate :: (HasDeadlineDate s) => Text -> Builder s
 setDeadlineDate deadlineDate = modB (hasDeadlineDate deadlineDate)
+
+setAttachment :: (HasAttachment s) => Attachment -> Builder s
+setAttachment attachment = modB (hasAttachment attachment)
+
+setTaskId :: (HasTaskId s) => Text -> Builder s
+setTaskId tid = modB (hasTaskId tid)
+
+setUidsToNotify :: (HasUidsToNotify s) => [Int] -> Builder s
+setUidsToNotify uids = modB (hasUidsToNotify uids)

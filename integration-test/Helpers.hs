@@ -1,3 +1,4 @@
+{-# LANGUAGE MonoLocalBinds #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
 
@@ -33,13 +34,12 @@ import System.Random (randomRIO)
 import Test.Hspec (shouldBe)
 import Text.Show (Show, show)
 import Web.Todoist.Builder
-    ( Initial
-    , runBuilder
+    ( runBuilder
     , setDescription
     , setProjectId
     , setViewStyle
     )
-import Web.Todoist.Domain.Project (ProjectCreate, TodoistProjectM (..), newProject)
+import Web.Todoist.Domain.Project (ProjectCreate, newProject)
 import Web.Todoist.Domain.Task (TaskCreate, newTask)
 import Web.Todoist.Domain.Types (ViewStyle (..))
 import Web.Todoist.Internal.Config (TodoistConfig)

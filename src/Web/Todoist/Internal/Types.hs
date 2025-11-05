@@ -23,6 +23,9 @@ module Web.Todoist.Internal.Types
     , DeadlineResponse (..)
     , DueResponse (..)
     , NewTaskResponse (..)
+    , CommentResponse (..)
+    , FileAttachment (..)
+    , Reactions (..)
     , Params
     , Endpoint
     ) where
@@ -407,4 +410,56 @@ instance FromJSON NewTaskResponse where
 
 instance ToJSON NewTaskResponse where
     toJSON :: NewTaskResponse -> Value
+    toJSON = genericToJSON jsonOpts
+
+-- | File attachment in comment response
+data FileAttachment = FileAttachment
+    { p_file_name :: Text
+    , p_file_type :: Text
+    , p_file_url :: Text
+    , p_resource_type :: Text
+    }
+    deriving (Show, Eq, Generic)
+
+instance FromJSON FileAttachment where
+    parseJSON :: Value -> Parser FileAttachment
+    parseJSON = genericParseJSON jsonOpts
+
+instance ToJSON FileAttachment where
+    toJSON :: FileAttachment -> Value
+    toJSON = genericToJSON jsonOpts
+
+-- | Reactions data (opaque object for now)
+newtype Reactions = Reactions {p_reactions :: Value}
+    deriving (Show, Eq, Generic)
+
+instance FromJSON Reactions where
+    parseJSON :: Value -> Parser Reactions
+    parseJSON v = pure $ Reactions {p_reactions = v}
+
+instance ToJSON Reactions where
+    toJSON :: Reactions -> Value
+    toJSON (Reactions r) = r
+
+-- | HTTP response type for Comment API (contains all fields from API)
+data CommentResponse = CommentResponse
+    { p_id :: Text
+    , p_content :: Text
+    , p_posted_uid :: Maybe Text
+    , p_posted_at :: Maybe Text
+    , p_item_id :: Maybe Text -- Maps to task_id in domain
+    , p_project_id :: Maybe Text
+    , p_file_attachment :: Maybe FileAttachment -- Maps to attachment in domain
+    , p_uids_to_notify :: Maybe [Text]
+    , p_is_deleted :: Bool
+    , p_reactions :: Maybe Reactions
+    }
+    deriving (Show, Generic)
+
+instance FromJSON CommentResponse where
+    parseJSON :: Value -> Parser CommentResponse
+    parseJSON = genericParseJSON jsonOpts
+
+instance ToJSON CommentResponse where
+    toJSON :: CommentResponse -> Value
     toJSON = genericToJSON jsonOpts

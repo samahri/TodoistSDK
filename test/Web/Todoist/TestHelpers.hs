@@ -22,7 +22,7 @@ module Web.Todoist.TestHelpers
     , sampleRoleActions
     , sampleProjectPermissions
     , sampleProjectPermissionsJson
-      -- Task-related exports
+    -- Task-related exports
     , sampleDurationResponse
     , sampleDuration
     , sampleDeadlineResponse
@@ -37,9 +37,23 @@ module Web.Todoist.TestHelpers
     , sampleNewTaskResponseJson
     , sampleNewTask
     , sampleTasksJson
+    -- Comment-related exports
+    , sampleCommentId
+    , sampleCommentResponse
+    , sampleCommentResponseJson
+    , sampleComment
+    , sampleCommentResponseWithAttachment
+    , sampleCommentResponseWithAttachmentJson
+    , sampleCommentCreate
     ) where
 
 import Web.Todoist.Builder (runBuilder, setDescription)
+import Web.Todoist.Domain.Comment
+    ( Comment (..)
+    , CommentCreate
+    , CommentId (..)
+    , newComment
+    )
 import Web.Todoist.Domain.Project
     ( Collaborator (..)
     , Project (..)
@@ -61,11 +75,13 @@ import Web.Todoist.Domain.Types (ViewStyle (..))
 import Web.Todoist.Internal.Types
     ( Action (..)
     , CollaboratorRole (..)
+    , CommentResponse (..)
     , CreatedAt (..)
     , CreatorUid (..)
     , DeadlineResponse (..)
     , DueResponse (..)
     , DurationResponse (..)
+    , FileAttachment (..)
     , NewTaskResponse (..)
     , ParentId (..)
     , ProjectPermissions (..)
@@ -79,7 +95,9 @@ import Web.Todoist.Internal.Types
 import Data.Bool (Bool (..))
 import Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString.Lazy.Char8 as BSL
+import Data.Function (($))
 import Data.Maybe (Maybe (..))
+import Data.Monoid (mempty)
 
 -- | Sample ProjectId for testing
 sampleProjectId :: ProjectId
@@ -559,3 +577,107 @@ sampleTasksJson =
         \],\
         \\"next_cursor\":null\
         \}"
+
+-- ===== Comment Fixtures =====
+
+-- | Sample Comment ID
+sampleCommentId :: CommentId
+sampleCommentId = CommentId {_id = "3012345678"}
+
+-- | Sample CommentResponse
+sampleCommentResponse :: CommentResponse
+sampleCommentResponse =
+    CommentResponse
+        { p_id = "3012345678"
+        , p_content = "This is a test comment"
+        , p_posted_uid = Just "2671355"
+        , p_posted_at = Just "2023-10-15T14:30:00Z"
+        , p_item_id = Nothing
+        , p_project_id = Just "2203306141"
+        , p_file_attachment = Nothing
+        , p_uids_to_notify = Just ["2671355"]
+        , p_is_deleted = False
+        , p_reactions = Nothing
+        }
+
+-- | Sample CommentResponse JSON
+sampleCommentResponseJson :: ByteString
+sampleCommentResponseJson =
+    BSL.pack
+        "{\
+        \\"id\":\"3012345678\",\
+        \\"content\":\"This is a test comment\",\
+        \\"posted_uid\":\"2671355\",\
+        \\"posted_at\":\"2023-10-15T14:30:00Z\",\
+        \\"item_id\":null,\
+        \\"project_id\":\"2203306141\",\
+        \\"file_attachment\":null,\
+        \\"uids_to_notify\":[\"2671355\"],\
+        \\"is_deleted\":false,\
+        \\"reactions\":null\
+        \}"
+
+-- | Sample Comment
+sampleComment :: Comment
+sampleComment =
+    Comment
+        { _id = "3012345678"
+        , _content = "This is a test comment"
+        , _poster_id = Just "2671355"
+        , _posted_at = Just "2023-10-15T14:30:00Z"
+        , _task_id = Nothing
+        , _project_id = Just "2203306141"
+        , _attachment = Nothing
+        }
+
+-- | Sample CommentResponse with attachment
+sampleCommentResponseWithAttachment :: CommentResponse
+sampleCommentResponseWithAttachment =
+    CommentResponse
+        { p_id = "3012345679"
+        , p_content = "Comment with attachment"
+        , p_posted_uid = Just "2671355"
+        , p_posted_at = Just "2023-10-15T15:00:00Z"
+        , p_item_id = Just "2995104339"
+        , p_project_id = Nothing
+        , p_file_attachment =
+            Just $
+                FileAttachment
+                    { p_file_name = "document.pdf"
+                    , p_file_type = "application/pdf"
+                    , p_file_url = "https://example.com/document.pdf"
+                    , p_resource_type = "file"
+                    }
+        , p_uids_to_notify = Nothing
+        , p_is_deleted = False
+        , p_reactions = Nothing
+        }
+
+-- | Sample CommentResponse with attachment JSON
+sampleCommentResponseWithAttachmentJson :: ByteString
+sampleCommentResponseWithAttachmentJson =
+    BSL.pack
+        "{\
+        \\"id\":\"3012345679\",\
+        \\"content\":\"Comment with attachment\",\
+        \\"posted_uid\":\"2671355\",\
+        \\"posted_at\":\"2023-10-15T15:00:00Z\",\
+        \\"item_id\":\"2995104339\",\
+        \\"project_id\":null,\
+        \\"file_attachment\":{\
+        \\"file_name\":\"document.pdf\",\
+        \\"file_type\":\"application/pdf\",\
+        \\"file_url\":\"https://example.com/document.pdf\",\
+        \\"resource_type\":\"file\"\
+        \},\
+        \\"uids_to_notify\":null,\
+        \\"is_deleted\":false,\
+        \\"reactions\":null\
+        \}"
+
+-- | Sample CommentCreate
+sampleCommentCreate :: CommentCreate
+sampleCommentCreate =
+    runBuilder
+        (newComment "New comment")
+        mempty

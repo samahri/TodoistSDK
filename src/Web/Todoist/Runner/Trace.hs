@@ -6,6 +6,14 @@ module Web.Todoist.Runner.Trace
     , Trace (..)
     ) where
 
+import Web.Todoist.Domain.Comment
+    ( Comment (..)
+    , CommentCreate
+    , CommentId (CommentId)
+    , CommentParam
+    , CommentUpdate
+    , TodoistCommentM (..)
+    )
 import Web.Todoist.Domain.Project
     ( Collaborator (Collaborator)
     , Project
@@ -24,6 +32,8 @@ import Control.Applicative (Applicative, pure)
 import Control.Monad (Functor, Monad)
 import Control.Monad.Trans.Writer (Writer, tell)
 import Data.Function (($))
+import Data.Maybe (Maybe (Nothing))
+import Data.Text (Text)
 import Text.Show (Show)
 
 -- emptyTask :: NewTask
@@ -55,6 +65,7 @@ import Text.Show (Show)
 data Op
     = ProjectOp ProjectOp
     | TaskOp TaskOp
+    | CommentOp CommentOp
     deriving (Show)
 
 data ProjectOp
@@ -71,6 +82,15 @@ data TaskOp
     | CloseTask
     | DeleteTask
     | UncloseTask
+    deriving (Show)
+
+data CommentOp
+    = AddComment
+    | GetComments
+    | GetCommentsPaginated
+    | GetComment
+    | UpdateComment
+    | DeleteComment
     deriving (Show)
 
 newtype Trace a = Trace {runTrace :: Writer [Op] a}
@@ -146,4 +166,35 @@ instance TodoistTaskM Trace where
     deleteTask :: TaskId -> Trace ()
     deleteTask _ = Trace $ do
         tell [TaskOp DeleteTask]
+        pure ()
+
+instance TodoistCommentM Trace where
+    addComment :: CommentCreate -> Trace Comment
+    addComment _ = Trace $ do
+        tell [CommentOp AddComment]
+        pure $ Comment "" "" Nothing Nothing Nothing Nothing Nothing
+
+    getComments :: CommentParam -> Trace [Comment]
+    getComments _ = Trace $ do
+        tell [CommentOp GetComments]
+        pure []
+
+    getCommentsPaginated :: CommentParam -> Trace ([Comment], Maybe Text)
+    getCommentsPaginated _ = Trace $ do
+        tell [CommentOp GetCommentsPaginated]
+        pure ([], Nothing)
+
+    getComment :: CommentId -> Trace Comment
+    getComment _ = Trace $ do
+        tell [CommentOp GetComment]
+        pure $ Comment "" "" Nothing Nothing Nothing Nothing Nothing
+
+    updateComment :: CommentId -> CommentUpdate -> Trace Comment
+    updateComment _ _ = Trace $ do
+        tell [CommentOp UpdateComment]
+        pure $ Comment "" "" Nothing Nothing Nothing Nothing Nothing
+
+    deleteComment :: CommentId -> Trace ()
+    deleteComment _ = Trace $ do
+        tell [CommentOp DeleteComment]
         pure ()

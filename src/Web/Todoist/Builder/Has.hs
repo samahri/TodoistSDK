@@ -19,9 +19,12 @@ module Web.Todoist.Builder.Has
     , HasDuration (..)
     , HasDurationUnit (..)
     , HasDeadlineDate (..)
+    , HasTaskId (..)
+    , HasUidsToNotify (..)
+    , HasAttachment (..)
     ) where
 
-import Web.Todoist.Domain.Types (ViewStyle)
+import Web.Todoist.Domain.Types (Attachment, ViewStyle)
 
 import Data.Bool (Bool)
 import Data.Int (Int)
@@ -88,3 +91,13 @@ class HasDurationUnit p where
 
 class HasDeadlineDate p where
     hasDeadlineDate :: Text -> p -> p
+
+-- Comment-specific setters
+class HasTaskId p where
+    hasTaskId :: Text -> p -> p
+
+class HasUidsToNotify p where
+    hasUidsToNotify :: [Int] -> p -> p
+
+class HasAttachment p where
+    hasAttachment :: Attachment -> p -> p

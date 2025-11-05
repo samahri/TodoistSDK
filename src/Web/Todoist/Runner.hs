@@ -11,6 +11,7 @@ module Web.Todoist.Runner
     , MonadTodoist
     ) where
 
+import Web.Todoist.Domain.Comment (TodoistCommentM)
 import Web.Todoist.Domain.Project (TodoistProjectM)
 import Web.Todoist.Domain.Task (TodoistTaskM)
 import Web.Todoist.Internal.Config (Token (..))
@@ -33,8 +34,8 @@ import System.IO (IO)
 newTodoistConfig :: Text -> TodoistConfig
 newTodoistConfig token = TodoistConfig {authToken = Token token}
 
-class (TodoistProjectM m, TodoistTaskM m) => MonadTodoist m
-instance (TodoistProjectM m, TodoistTaskM m) => MonadTodoist m
+class (TodoistProjectM m, TodoistTaskM m, TodoistCommentM m) => MonadTodoist m
+instance (TodoistProjectM m, TodoistTaskM m, TodoistCommentM m) => MonadTodoist m
 
 todoist :: TodoistConfig -> TodoistIO a -> IO (Either TodoistError a)
 todoist env operations = runExceptT (runReaderT (unTodoist operations) env)
