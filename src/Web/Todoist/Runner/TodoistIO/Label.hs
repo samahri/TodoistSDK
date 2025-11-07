@@ -71,7 +71,7 @@ instance TodoistLabelM TodoistIO where
     getLabel :: LabelId -> TodoistIO Label
     getLabel LabelId {..} = TodoistIO $ do
         config <- ask
-        let apiRequest = mkTodoistRequest @Void ["labels", _id] Nothing Nothing
+        let apiRequest = mkTodoistRequest @Void ["labels", getLabelId] Nothing Nothing
         resp <- liftIO $ apiGet (Proxy @LabelResponse) config apiRequest
         case resp of
             Right res -> pure $ labelResponseToLabel res
@@ -89,7 +89,7 @@ instance TodoistLabelM TodoistIO where
     updateLabel :: LabelId -> LabelUpdate -> TodoistIO Label
     updateLabel LabelId {..} labelUpdate = TodoistIO $ do
         config <- ask
-        let apiRequest = mkTodoistRequest @LabelUpdate ["labels", _id] Nothing Nothing
+        let apiRequest = mkTodoistRequest @LabelUpdate ["labels", getLabelId] Nothing Nothing
         resp <-
             liftIO $ apiPost (Just labelUpdate) (JsonResponse (Proxy @LabelResponse)) config apiRequest
         case resp of
@@ -99,7 +99,7 @@ instance TodoistLabelM TodoistIO where
     deleteLabel :: LabelId -> TodoistIO ()
     deleteLabel LabelId {..} = TodoistIO $ do
         config <- ask
-        let apiRequest = mkTodoistRequest @Void ["labels", _id] Nothing Nothing
+        let apiRequest = mkTodoistRequest @Void ["labels", getLabelId] Nothing Nothing
         resp <- liftIO $ apiDelete config apiRequest
         case resp of
             Right _ -> pure ()

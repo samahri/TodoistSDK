@@ -80,7 +80,7 @@ labelLifecycleSpec config =
                 -- Verify deletion by checking label is not in active labels list
                 let params = LabelParam {_cursor = Nothing, _limit = Nothing}
                 labels <- liftTodoist config (getLabels params)
-                let LabelId {_id = expectedId} = labelId
+                let LabelId {getLabelId = expectedId} = labelId
                     labelIds = fmap (\(Label {_id = lid}) -> lid) labels
                 liftIO $ expectedId `elem` labelIds `shouldBe` False
 
@@ -124,7 +124,7 @@ updateLabelSpec config =
 
                 -- Verify update
                 let Label {_name = updatedName, _id = updatedId, _color = updatedColor, _is_favorite = updatedFav} = updatedLabel
-                    LabelId {_id = expectedId} = labelId
+                    LabelId {getLabelId = expectedId} = labelId
                 liftIO $ updatedName `shouldBe` newName
                 liftIO $ updatedId `shouldBe` expectedId
                 liftIO $ updatedColor `shouldBe` "berry_red"

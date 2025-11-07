@@ -70,11 +70,11 @@ spec = do
             cursor `shouldBe` Nothing
 
     describe "LabelId JSON serialization" $ do
-        it "serializes LabelId correctly" $ do
+        it "deserializes LabelId correctly from object" $ do
             let encoded = eitherDecode "{\"id\":\"label123\"}" :: Either String LabelId
             encoded `shouldSatisfy` isRight
             let labelId = fromJust $ decode "{\"id\":\"label123\"}"
-                LabelId {_id = lidId} = labelId
+                LabelId {getLabelId = lidId} = labelId
             lidId `shouldBe` ("label123" :: Text)
 
     describe "Label domain type" $ do
