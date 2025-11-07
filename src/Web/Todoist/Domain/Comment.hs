@@ -54,6 +54,7 @@ For more details on the Todoist Comments API, see:
 module Web.Todoist.Domain.Comment
     ( -- * Types
       CommentId (..)
+    , Content (..)
     , Comment (..)
     , CommentCreate
     , CommentUpdate
@@ -78,47 +79,72 @@ import Web.Todoist.Builder.Has
 import Web.Todoist.Internal.Types (FileAttachment, Params)
 import Web.Todoist.QueryParam (QueryParam (..))
 
+import Control.Applicative ((<$>))
+import Control.Monad (Monad)
 import Data.Aeson
-    ( ToJSON (..)
+    ( FromJSON (..)
+    , ToJSON (..)
     , Value
     , genericToJSON
     , object
     )
 import qualified Data.Aeson as Aeson
+import Data.Aeson.Types (Parser)
 import Data.Bool (Bool (False, True), not)
 import Data.Eq (Eq)
 import Data.Foldable (null)
+import Data.Function (($), (.))
+import Data.Int (Int)
+import Data.List (filter)
 import qualified Data.List as L
 import Data.Maybe (Maybe (Just, Nothing), maybe)
+import Data.Monoid ((<>))
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Tuple as L
 import GHC.Generics (Generic)
-import Text.Show (Show)
-import Web.Todoist.Domain.Types (Attachment)
-import Prelude (Int, Monad, filter, show, ($), (.), (<>))
+import Text.Show (Show (..))
+import Web.Todoist.Domain.Types (Attachment, ProjectId (..), TaskId (..), Uid)
 
 -- | Newtype wrapper for Comment ID
-newtype CommentId = CommentId {_id :: Text}
+newtype CommentId = CommentId {getCommentId :: Text}
     deriving (Show, Eq, Generic)
 
--- | Comment domain type (cleaned up, user-facing representation)
+instance ToJSON CommentId where
+    toJSON :: CommentId -> Value
+    toJSON (CommentId txt) = toJSON txt
+
+instance FromJSON CommentId where
+    parseJSON :: Value -> Parser CommentId
+    parseJSON v = CommentId <$> parseJSON v
+
+newtype Content = Content {getContent :: Text} deriving (Show, Eq, Generic)
+
+instance ToJSON Content where
+    toJSON :: Content -> Value
+    toJSON (Content txt) = toJSON txt
+
+instance FromJSON Content where
+    parseJSON :: Value -> Parser Content
+    parseJSON v = Content <$> parseJSON v
+
+-- | Comment domain type
 data Comment = Comment
-    { _id :: Text
-    , _content :: Text
-    , _poster_id :: Maybe Text
-    , _posted_at :: Maybe Text
-    , _task_id :: Maybe Text
-    , _project_id :: Maybe Text
+    { _id :: CommentId
+    , _content :: Content
+    , _poster_id :: Maybe Uid
+    , _posted_at :: Maybe Uid
+    , _task_id :: Maybe TaskId
+    , _project_id :: Maybe ProjectId
     , _attachment :: Maybe FileAttachment
     }
     deriving (Show, Eq, Generic)
 
 -- | Request body for creating a comment
 data CommentCreate = CommentCreate
-    { _content :: Text
-    , _project_id :: Maybe Text
-    , _task_id :: Maybe Text
+    { _content :: Content
+    , _project_id :: Maybe ProjectId
+    , _task_id :: Maybe TaskId
     , _attachment :: Maybe Attachment
     , _uids_to_notify :: [Int]
     }
@@ -132,8 +158,8 @@ instance ToJSON CommentCreate where
             filter
                 (not . isEmptyValue . L.snd)
                 [ ("content", Aeson.toJSON _content)
-                , ("project_id", Aeson.toJSON _project_id)
-                , ("task_id", Aeson.toJSON _task_id)
+                , ("project_id", maybe Aeson.Null (Aeson.toJSON . getProjectId) _project_id)
+                , ("task_id", maybe Aeson.Null (Aeson.toJSON . getTaskId) _task_id)
                 , ("attachment", Aeson.toJSON _attachment)
                 , ("uids_to_notify", Aeson.toJSON _uids_to_notify)
                 ]
@@ -183,7 +209,7 @@ newComment content =
     let truncated = T.take 15000 content
      in seed $
             CommentCreate
-                { _content = truncated
+                { _content = Content truncated
                 , _project_id = Nothing
                 , _task_id = Nothing
                 , _attachment = Nothing
@@ -223,15 +249,15 @@ class (Monad m) => TodoistCommentM m where
 -- Builder pattern instances
 instance HasContent CommentCreate where
     hasContent :: Text -> CommentCreate -> CommentCreate
-    hasContent content CommentCreate {..} = CommentCreate {_content = content, ..}
+    hasContent content CommentCreate {..} = CommentCreate {_content = Content content, ..}
 
 instance HasProjectId CommentCreate where
     hasProjectId :: Text -> CommentCreate -> CommentCreate
-    hasProjectId pid CommentCreate {..} = CommentCreate {_project_id = Just pid, ..}
+    hasProjectId pid CommentCreate {..} = CommentCreate {_project_id = Just (ProjectId pid), ..}
 
 instance HasTaskId CommentCreate where
     hasTaskId :: Text -> CommentCreate -> CommentCreate
-    hasTaskId tid CommentCreate {..} = CommentCreate {_task_id = Just tid, ..}
+    hasTaskId tid CommentCreate {..} = CommentCreate {_task_id = Just (TaskId tid), ..}
 
 instance HasAttachment CommentCreate where
     hasAttachment :: Attachment -> CommentCreate -> CommentCreate

@@ -12,12 +12,11 @@ import Web.Todoist.Domain.Project
     , PaginationParam (..)
     , Project (..)
     , ProjectCreate
-    , ProjectId (..)
     , ProjectUpdate
     , TodoistProjectM (..)
     , emptyPaginationParam
     )
-import Web.Todoist.Domain.Types (parseViewStyle)
+import Web.Todoist.Domain.Types (ProjectId (..), parseViewStyle)
 import Web.Todoist.Internal.Config (TodoistConfig)
 import Web.Todoist.Internal.Error (TodoistError)
 import Web.Todoist.Internal.HTTP (PostResponse (..), apiDelete, apiGet, apiPost)
@@ -51,9 +50,9 @@ import System.IO (IO)
 
 instance TodoistProjectM TodoistIO where
     getProject :: ProjectId -> TodoistIO Project
-    getProject ProjectId {..} = TodoistIO $ do
+    getProject ProjectId {getProjectId = projectIdText} = TodoistIO $ do
         config <- ask
-        let apiRequest = mkTodoistRequest @Void ["projects", _id] Nothing Nothing
+        let apiRequest = mkTodoistRequest @Void ["projects", projectIdText] Nothing Nothing
         resp <- liftIO $ apiGet (Proxy @ProjectResponse) config apiRequest
         case resp of
             Right res -> pure $ projectResponseToProject res
@@ -77,13 +76,17 @@ instance TodoistProjectM TodoistIO where
         loop Nothing []
 
     getProjectCollaborators :: ProjectId -> TodoistIO [Collaborator]
-    getProjectCollaborators ProjectId {..} = TodoistIO $ do
+    getProjectCollaborators ProjectId {getProjectId = projectIdText} = TodoistIO $ do
         config <- ask
         let loop ::
                 Maybe Text -> [Collaborator] -> ReaderT TodoistConfig (ExceptT TodoistError IO) [Collaborator]
             loop cursor acc = do
                 let params = emptyPaginationParam {_cursor = cursor}
-                    apiRequest = mkTodoistRequest @Void ["projects", _id, "collaborators"] (Just $ toQueryParam params) Nothing
+                    apiRequest =
+                        mkTodoistRequest @Void
+                            ["projects", projectIdText, "collaborators"]
+                            (Just $ toQueryParam params)
+                            Nothing
                 resp <- liftIO $ apiGet (Proxy @(TodoistReturn Collaborator)) config apiRequest
                 case resp of
                     Right res -> do
@@ -95,9 +98,9 @@ instance TodoistProjectM TodoistIO where
         loop Nothing []
 
     deleteProject :: ProjectId -> TodoistIO ()
-    deleteProject ProjectId {..} = TodoistIO $ do
+    deleteProject ProjectId {getProjectId = projectIdText} = TodoistIO $ do
         config <- ask
-        let apiRequest = mkTodoistRequest @Void ["projects", _id] Nothing Nothing
+        let apiRequest = mkTodoistRequest @Void ["projects", projectIdText] Nothing Nothing
         resp <- liftIO $ apiDelete config apiRequest
         case resp of
             Right _ -> pure ()
@@ -113,18 +116,18 @@ instance TodoistProjectM TodoistIO where
             Left err -> lift $ except (Left err)
 
     archiveProject :: ProjectId -> TodoistIO ProjectId
-    archiveProject ProjectId {..} = TodoistIO $ do
+    archiveProject ProjectId {getProjectId = projectIdText} = TodoistIO $ do
         config <- ask
-        let apiRequest = mkTodoistRequest @Void ["projects", _id, "archive"] Nothing Nothing
+        let apiRequest = mkTodoistRequest @Void ["projects", projectIdText, "archive"] Nothing Nothing
         resp <- liftIO $ apiPost (Nothing @Void) (JsonResponse (Proxy @ProjectId)) config apiRequest
         case resp of
             Right res -> pure res
             Left err -> lift $ except (Left err)
 
     unarchiveProject :: ProjectId -> TodoistIO ProjectId
-    unarchiveProject ProjectId {..} = TodoistIO $ do
+    unarchiveProject ProjectId {getProjectId = projectIdText} = TodoistIO $ do
         config <- ask
-        let apiRequest = mkTodoistRequest @Void ["projects", _id, "unarchive"] Nothing Nothing
+        let apiRequest = mkTodoistRequest @Void ["projects", projectIdText, "unarchive"] Nothing Nothing
         resp <- liftIO $ apiPost (Nothing @Void) (JsonResponse (Proxy @ProjectId)) config apiRequest
         case resp of
             Right res -> pure res
@@ -140,9 +143,9 @@ instance TodoistProjectM TodoistIO where
             Left err -> lift $ except (Left err)
 
     updateProject :: ProjectId -> ProjectUpdate -> TodoistIO Project
-    updateProject ProjectId {..} projectUpdate = TodoistIO $ do
+    updateProject ProjectId {getProjectId = projectIdText} projectUpdate = TodoistIO $ do
         config <- ask
-        let apiRequest = mkTodoistRequest @ProjectUpdate ["projects", _id] Nothing Nothing
+        let apiRequest = mkTodoistRequest @ProjectUpdate ["projects", projectIdText] Nothing Nothing
         resp <-
             liftIO $ apiPost (Just projectUpdate) (JsonResponse (Proxy @ProjectResponse)) config apiRequest
         case resp of
@@ -161,9 +164,13 @@ instance TodoistProjectM TodoistIO where
 
     getProjectCollaboratorsPaginated ::
         ProjectId -> PaginationParam -> TodoistIO ([Collaborator], Maybe Text)
-    getProjectCollaboratorsPaginated ProjectId {..} params = TodoistIO $ do
+    getProjectCollaboratorsPaginated ProjectId {getProjectId = projectIdText} params = TodoistIO $ do
         config <- ask
-        let apiRequest = mkTodoistRequest @Void ["projects", _id, "collaborators"] (Just $ toQueryParam params) Nothing
+        let apiRequest =
+                mkTodoistRequest @Void
+                    ["projects", projectIdText, "collaborators"]
+                    (Just $ toQueryParam params)
+                    Nothing
         resp <- liftIO $ apiGet (Proxy @(TodoistReturn Collaborator)) config apiRequest
         case resp of
             Right res -> pure (results res, fmap T.pack (next_cursor res))

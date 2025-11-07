@@ -9,7 +9,6 @@
 module Web.Todoist.Domain.Project
     ( TodoistProjectM (..)
     , Project (..)
-    , ProjectId (..)
     , Collaborator (..)
     , ProjectCreate (..)
     , ProjectUpdate (..)
@@ -28,7 +27,7 @@ import Web.Todoist.Builder.Has
     , HasViewStyle (..)
     , HasWorkspaceId (..)
     )
-import Web.Todoist.Domain.Types (ViewStyle (..))
+import Web.Todoist.Domain.Types (ProjectId (..), ViewStyle (..))
 import Web.Todoist.Internal.Types (Params, ProjectPermissions)
 import Web.Todoist.QueryParam (QueryParam (..))
 
@@ -54,21 +53,6 @@ import Data.Text (Text)
 import qualified Data.Text
 import GHC.Generics (Generic)
 import Text.Show (Show)
-
--- TODO: DOCUMENTATION - Add Haddock documentation for all exported types
-newtype ProjectId = ProjectId
-    { _id :: Text
-    }
-    deriving (Show, Eq, Generic)
-
--- Custom JSON instances for ProjectId to use "id" field directly
-instance FromJSON ProjectId where
-    parseJSON :: Value -> Parser ProjectId
-    parseJSON = genericParseJSON defaultOptions {fieldLabelModifier = L.drop 1}
-
-instance ToJSON ProjectId where
-    toJSON :: ProjectId -> Value
-    toJSON = genericToJSON defaultOptions {fieldLabelModifier = L.drop 1}
 
 data Project = Project
     { _id :: Text

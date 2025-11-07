@@ -4,6 +4,9 @@
 module Web.Todoist.Domain.Types
     ( Attachment
     , ViewStyle (..)
+    , ProjectId (..)
+    , TaskId (..)
+    , Uid (..)
     , parseViewStyle
     ) where
 
@@ -16,10 +19,15 @@ import Data.Aeson
     , fieldLabelModifier
     , genericParseJSON
     , genericToJSON
+    , object
+    , withObject
+    , (.:)
+    , (.=)
     )
 import Data.Aeson.Types (Parser)
 import Data.Eq (Eq)
 import Data.Function (($))
+import Data.Functor ((<$>))
 import qualified Data.List as L
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -65,3 +73,42 @@ instance ToJSON Attachment where
 instance FromJSON Attachment where
     parseJSON :: Value -> Parser Attachment
     parseJSON = genericParseJSON defaultOptions {fieldLabelModifier = L.drop 1}
+
+-- TODO: DOCUMENTATION - Add Haddock documentation for all exported types
+newtype ProjectId = ProjectId
+    { getProjectId :: Text
+    }
+    deriving (Show, Eq, Generic)
+
+-- Custom JSON instances for ProjectId - parse from {"id": "..."} object
+instance FromJSON ProjectId where
+    parseJSON :: Value -> Parser ProjectId
+    parseJSON = withObject "ProjectId" $ \obj ->
+        ProjectId <$> obj .: "id"
+
+instance ToJSON ProjectId where
+    toJSON :: ProjectId -> Value
+    toJSON (ProjectId txt) = object ["id" .= txt]
+
+newtype TaskId = TaskId
+    { getTaskId :: Text
+    }
+    deriving (Show, Eq, Generic)
+
+instance FromJSON TaskId where
+    parseJSON :: Value -> Parser TaskId
+    parseJSON v = TaskId <$> parseJSON v
+
+instance ToJSON TaskId where
+    toJSON :: TaskId -> Value
+    toJSON (TaskId txt) = toJSON txt
+
+newtype Uid = Uid {getUid :: Text} deriving (Show, Eq, Generic)
+
+instance FromJSON Uid where
+    parseJSON :: Value -> Parser Uid
+    parseJSON v = Uid <$> parseJSON v
+
+instance ToJSON Uid where
+    toJSON :: Uid -> Value
+    toJSON (Uid txt) = toJSON txt

@@ -24,7 +24,6 @@ import System.IO (IO, putStrLn)
 import Test.Hspec (Spec, describe, it, pendingWith, runIO, shouldBe)
 import Text.Show (show)
 import Web.Todoist.Builder (runBuilder)
-import Web.Todoist.Domain.Project (ProjectId (..))
 import qualified Web.Todoist.Domain.Project as P
 import Web.Todoist.Domain.Section
     ( Section (..)
@@ -38,6 +37,7 @@ import Web.Todoist.Domain.Section
     , newSection
     , updateSection
     )
+import Web.Todoist.Domain.Types (ProjectId (..))
 import Web.Todoist.Internal.Error (TodoistError)
 import Web.Todoist.Runner (todoist)
 import Web.Todoist.Runner.TodoistIO (TodoistConfig)
@@ -65,7 +65,7 @@ sectionLifecycleSpec config =
                 -- Get section and verify fields
                 section <- liftTodoist config (getSection sectionId)
                 let Section {_name = secName, _project_id = secProjectId} = section
-                    P.ProjectId {P._id = projId} = projectId
+                    ProjectId {getProjectId = projId} = projectId
                 liftIO $ secName `shouldBe` sectionName
                 liftIO $ secProjectId `shouldBe` projId
 
@@ -86,7 +86,7 @@ getSectionsSpec config =
             projectName <- pack <$> generateUniqueName "IntegTest-GetSections-Project"
 
             withTestProject config projectName $ \projectId -> do
-                let P.ProjectId {P._id = projId} = projectId
+                let ProjectId {getProjectId = projId} = projectId
 
                 -- Create 3 sections
                 section1Name <- pack <$> liftIO (generateUniqueName "Section1")
@@ -159,7 +159,7 @@ withTestProjectAndSection config projectName sectionName action = do
                 putStrLn $
                     "Creating test project and section: " <> show projectName <> " / " <> show sectionName
             projectId <- liftTodoist config (P.addProject $ runBuilder (P.newProject projectName) mempty)
-            let P.ProjectId {P._id = projId} = projectId
+            let ProjectId {getProjectId = projId} = projectId
                 sectionCreate = runBuilder (newSection sectionName projId) mempty
             sectionId <- liftTodoist config (addSection sectionCreate)
             pure (projectId, sectionId)

@@ -14,6 +14,7 @@ import Web.Todoist.Domain.Project
     , newProject
     )
 import qualified Web.Todoist.Domain.Project as P
+import Web.Todoist.Domain.Types (ProjectId (..))
 import Web.Todoist.Internal.Config (TodoistConfig)
 import Web.Todoist.Internal.Error (TodoistError)
 import Web.Todoist.Internal.Types
@@ -90,7 +91,7 @@ projectLifecycleSpec config = describe "Project lifecycle (create, get, delete)"
                     } = project
 
             -- Verify the project details match expected values
-            let P.ProjectId {_id = pidId} = projectId
+            let ProjectId {getProjectId = pidId} = projectId
             liftIO $ projId `shouldBe` pidId
             liftIO $ projName `shouldBe` expectedName
 
@@ -122,8 +123,8 @@ archiveUnarchiveSpec config = describe "Project archive/unarchive lifecycle" $ d
             archivedId <- liftTodoist config (archiveProject projectId)
 
             -- Verify returned ID matches
-            let P.ProjectId {_id = pidId} = projectId
-            let P.ProjectId {_id = archivedPidId} = archivedId
+            let ProjectId {getProjectId = pidId} = projectId
+            let ProjectId {getProjectId = archivedPidId} = archivedId
             liftIO $ archivedPidId `shouldBe` pidId
 
             -- Verify project is archived by getting it
@@ -134,7 +135,7 @@ archiveUnarchiveSpec config = describe "Project archive/unarchive lifecycle" $ d
             unarchivedId <- liftTodoist config (unarchiveProject projectId)
 
             -- Verify returned ID matches
-            let P.ProjectId {_id = unarchivedPidId} = unarchivedId
+            let ProjectId {getProjectId = unarchivedPidId} = unarchivedId
             liftIO $ unarchivedPidId `shouldBe` pidId
 
             -- Verify project is no longer archived
@@ -189,9 +190,9 @@ getAllProjectsSpec config = describe "Get all projects" $ do
                             , Just (P.Project {_id = id3, _name = name3})
                             ) -> do
                                 -- Verify project IDs match
-                                let P.ProjectId {_id = pid1} = projectId1
-                                let P.ProjectId {_id = pid2} = projectId2
-                                let P.ProjectId {_id = pid3} = projectId3
+                                let ProjectId {getProjectId = pid1} = projectId1
+                                let ProjectId {getProjectId = pid2} = projectId2
+                                let ProjectId {getProjectId = pid3} = projectId3
 
                                 liftIO $ id1 `shouldBe` pid1
                                 liftIO $ id2 `shouldBe` pid2
@@ -376,7 +377,7 @@ Uses bracket to ensure cleanup happens even if the action fails
 The action runs in ExceptT for clean error handling
 -}
 withTestProjectCreate ::
-    TodoistConfig -> ProjectCreate -> (P.ProjectId -> ExceptT TodoistError IO a) -> IO ()
+    TodoistConfig -> ProjectCreate -> (ProjectId -> ExceptT TodoistError IO a) -> IO ()
 withTestProjectCreate config projectCreate action = do
     let createProject = do
             liftTodoist config (addProject projectCreate)
@@ -392,7 +393,7 @@ withTestProjectCreate config projectCreate action = do
 Uses bracket to ensure cleanup happens even if the action fails
 The action runs in ExceptT for clean error handling
 -}
-withTestProject :: TodoistConfig -> Text -> (P.ProjectId -> ExceptT TodoistError IO a) -> IO ()
+withTestProject :: TodoistConfig -> Text -> (ProjectId -> ExceptT TodoistError IO a) -> IO ()
 withTestProject config projectName action = do
     let createProject = do
             liftIO $ putStrLn $ "Creating test project: " <> show projectName
@@ -410,7 +411,7 @@ withTestProject config projectName action = do
 Uses bracket to ensure cleanup of all projects even if the action fails
 The action runs in ExceptT for clean error handling
 -}
-withTestProjects :: TodoistConfig -> [Text] -> ([P.ProjectId] -> ExceptT TodoistError IO a) -> IO ()
+withTestProjects :: TodoistConfig -> [Text] -> ([ProjectId] -> ExceptT TodoistError IO a) -> IO ()
 withTestProjects config projectNames action = do
     let createProjects = do
             liftIO $ putStrLn $ "Creating " <> show (L.length projectNames) <> " test projects"

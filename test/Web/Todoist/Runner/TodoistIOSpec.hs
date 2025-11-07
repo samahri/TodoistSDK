@@ -6,10 +6,9 @@ import Web.Todoist.Domain.Project
     ( Collaborator (..)
     , Project (..)
     , ProjectCreate
-    , ProjectId (..)
     , ProjectUpdate (..)
     )
-import Web.Todoist.Domain.Types (ViewStyle (..), parseViewStyle)
+import Web.Todoist.Domain.Types (ProjectId (..), ViewStyle (..), parseViewStyle)
 import Web.Todoist.Internal.Types
     ( Action (..)
     , CollaboratorRole (..)
@@ -40,11 +39,10 @@ import Data.Bool (Bool (..))
 import Data.Either (Either (..), isRight)
 import Data.Function (($))
 import Data.Functor ((<$>))
-import Data.List (length, (!!))
+import Data.List (head, length, (!!))
 import Data.Maybe (Maybe (..), fromJust, isJust)
 import Data.String (String)
 import Test.Hspec (Spec, describe, it, shouldBe, shouldSatisfy)
-import Prelude (head)
 
 spec :: Spec
 spec = do

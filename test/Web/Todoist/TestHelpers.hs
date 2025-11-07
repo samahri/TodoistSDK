@@ -66,6 +66,7 @@ import Web.Todoist.Domain.Comment
     ( Comment (..)
     , CommentCreate
     , CommentId (..)
+    , Content (..)
     , newComment
     )
 import Web.Todoist.Domain.Label
@@ -75,7 +76,6 @@ import Web.Todoist.Domain.Project
     ( Collaborator (..)
     , Project (..)
     , ProjectCreate
-    , ProjectId (..)
     , ProjectUpdate (..)
     , newProject
     )
@@ -93,9 +93,8 @@ import Web.Todoist.Domain.Task
     , DurationUnit (..)
     , NewTask (..)
     , Task (..)
-    , TaskId (..)
     )
-import Web.Todoist.Domain.Types (ViewStyle (..))
+import Web.Todoist.Domain.Types (ProjectId (..), TaskId (..), Uid (..), ViewStyle (..))
 import Web.Todoist.Internal.Types
     ( Action (..)
     , CollaboratorRole (..)
@@ -127,7 +126,7 @@ import Data.Monoid (mempty)
 
 -- | Sample ProjectId for testing
 sampleProjectId :: ProjectId
-sampleProjectId = ProjectId {_id = "2203306141"}
+sampleProjectId = ProjectId {getProjectId = "2203306141"}
 
 -- | Sample ProjectResponse with all fields populated
 sampleProjectResponse :: ProjectResponse
@@ -416,7 +415,7 @@ sampleDue =
 
 -- | Sample TaskId for testing
 sampleTaskId :: TaskId
-sampleTaskId = TaskId {_id = "7654321098"}
+sampleTaskId = TaskId {getTaskId = "7654321098"}
 
 -- | Sample TaskResponse with all fields populated
 sampleTaskResponse :: TaskResponse
@@ -608,7 +607,7 @@ sampleTasksJson =
 
 -- | Sample Comment ID
 sampleCommentId :: CommentId
-sampleCommentId = CommentId {_id = "3012345678"}
+sampleCommentId = CommentId {getCommentId = "3012345678"}
 
 -- | Sample CommentResponse
 sampleCommentResponse :: CommentResponse
@@ -647,12 +646,12 @@ sampleCommentResponseJson =
 sampleComment :: Comment
 sampleComment =
     Comment
-        { _id = "3012345678"
-        , _content = "This is a test comment"
-        , _poster_id = Just "2671355"
-        , _posted_at = Just "2023-10-15T14:30:00Z"
+        { _id = CommentId "3012345678"
+        , _content = Content "This is a test comment"
+        , _poster_id = Just (Uid "2671355")
+        , _posted_at = Just (Uid "2023-10-15T14:30:00Z")
         , _task_id = Nothing
-        , _project_id = Just "2203306141"
+        , _project_id = Just (ProjectId "2203306141")
         , _attachment = Nothing
         }
 

@@ -9,9 +9,10 @@ module Web.Todoist.Runner.Trace
 import Web.Todoist.Domain.Comment
     ( Comment (..)
     , CommentCreate
-    , CommentId
+    , CommentId (..)
     , CommentParam
     , CommentUpdate
+    , Content (..)
     , TodoistCommentM (..)
     )
 import Web.Todoist.Domain.Label
@@ -29,7 +30,6 @@ import Web.Todoist.Domain.Project
     ( Collaborator (Collaborator)
     , Project
     , ProjectCreate
-    , ProjectId (ProjectId)
     , TodoistProjectM (..)
     )
 import Web.Todoist.Domain.Section
@@ -42,10 +42,10 @@ import Web.Todoist.Domain.Section
     )
 import Web.Todoist.Domain.Task
     ( Task
-    , TaskId
     , TaskParam
     , TodoistTaskM (..)
     )
+import Web.Todoist.Domain.Types (ProjectId (ProjectId), TaskId)
 
 import Control.Applicative (Applicative, pure)
 import Control.Monad (Functor, Monad)
@@ -216,7 +216,7 @@ instance TodoistCommentM Trace where
     addComment :: CommentCreate -> Trace Comment
     addComment _ = Trace $ do
         tell [CommentOp AddComment]
-        pure $ Comment "" "" Nothing Nothing Nothing Nothing Nothing
+        pure $ Comment (CommentId "") (Content "") Nothing Nothing Nothing Nothing Nothing
 
     getComments :: CommentParam -> Trace [Comment]
     getComments _ = Trace $ do
@@ -231,12 +231,12 @@ instance TodoistCommentM Trace where
     getComment :: CommentId -> Trace Comment
     getComment _ = Trace $ do
         tell [CommentOp GetComment]
-        pure $ Comment "" "" Nothing Nothing Nothing Nothing Nothing
+        pure $ Comment (CommentId "") (Content "") Nothing Nothing Nothing Nothing Nothing
 
     updateComment :: CommentId -> CommentUpdate -> Trace Comment
     updateComment _ _ = Trace $ do
         tell [CommentOp UpdateComment]
-        pure $ Comment "" "" Nothing Nothing Nothing Nothing Nothing
+        pure $ Comment (CommentId "") (Content "") Nothing Nothing Nothing Nothing Nothing
 
     deleteComment :: CommentId -> Trace ()
     deleteComment _ = Trace $ do

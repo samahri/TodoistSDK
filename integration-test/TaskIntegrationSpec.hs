@@ -27,7 +27,6 @@ import Web.Todoist.Domain.Task
     ( CompletedTasksQueryParam (..)
     , NewTask (..)
     , Task (..)
-    , TaskId (..)
     , TaskParam (..)
     , TodoistTaskM (..)
     , addTaskQuickWithQuery
@@ -36,6 +35,7 @@ import Web.Todoist.Domain.Task
     , taskFilterWithQuery
     )
 import qualified Web.Todoist.Domain.Task as T
+import Web.Todoist.Domain.Types (ProjectId (..), TaskId (..))
 import Web.Todoist.Internal.Config (TodoistConfig)
 import Web.Todoist.Internal.Error (TodoistError)
 import Web.Todoist.Runner (todoist)
@@ -96,7 +96,7 @@ taskLifecycleSpec config = describe "Task lifecycle (create, get, delete)" $ do
                     } = task
 
             -- Verify task ID matches
-            let TaskId {_id = expectedIdText} = taskId
+            let TaskId {getTaskId = expectedIdText} = taskId
             liftIO $ retrievedId `shouldBe` expectedIdText
 
             -- Verify content matches
@@ -106,7 +106,7 @@ taskLifecycleSpec config = describe "Task lifecycle (create, get, delete)" $ do
             liftIO $ retrievedDescription `shouldBe` "Test task description for integration testing"
 
             -- Verify project ID matches
-            let P.ProjectId {_id = expectedProjectId} = projectId
+            let ProjectId {getProjectId = expectedProjectId} = projectId
             liftIO $ retrievedProjectId `shouldBe` expectedProjectId
 
             -- Test explicit delete (cleanup will handle if this fails)
@@ -161,7 +161,7 @@ getTasksSpec config = describe "Get multiple tasks" $ do
 
         withTestTasks config projectName taskContents $ \projectId taskIds -> do
             -- Get all tasks for this project
-            let P.ProjectId {_id = projIdText} = projectId
+            let ProjectId {getProjectId = projIdText} = projectId
             let taskParam =
                     T.setProjectId
                         projIdText
@@ -181,7 +181,7 @@ getTasksSpec config = describe "Get multiple tasks" $ do
             liftIO $ taskCount `shouldBe` (3 :: Int)
 
             -- Extract task IDs and contents from results
-            let taskIdsResult = L.map (\(Task {_id = tid}) -> TaskId {_id = tid}) tasks
+            let taskIdsResult = L.map (\(Task {_id = tid}) -> TaskId {getTaskId = tid}) tasks
             let taskContentsResult = L.map (\(Task {_content = content}) -> content) tasks
 
             -- Verify all 3 task IDs are present
@@ -259,7 +259,7 @@ updateTaskSpec config = describe "Update task" $ do
             liftIO $ persistedPriority `shouldBe` updatedPriority
 
             -- Verify project_id unchanged
-            let P.ProjectId {_id = expectedProjectId} = projectId
+            let ProjectId {getProjectId = expectedProjectId} = projectId
             liftIO $ persistedProjectId `shouldBe` expectedProjectId
 
     it "supports partial updates (only updating specific fields)" $ do
@@ -311,8 +311,8 @@ taskFilterSpec config = describe "Task filtering" $ do
             taskIds <- liftTodoist config (getTasksByFilter filter)
 
             -- Verify our task is in the results
-            let TaskId {_id = expectedIdText} = taskId
-            let taskIdTexts = L.map (\(TaskId {_id = tid}) -> tid) taskIds
+            let TaskId {getTaskId = expectedIdText} = taskId
+            let taskIdTexts = L.map (\(TaskId {getTaskId = tid}) -> tid) taskIds
             liftIO $ (expectedIdText `L.elem` taskIdTexts) `shouldBe` True
 
     it "retrieves completed tasks by due date range" $ do
@@ -345,7 +345,7 @@ taskFilterSpec config = describe "Task filtering" $ do
                     , cursor
                     , limit
                     } = addTaskQuickWithQuery "2025-11-01" "2025-11-30"
-            let P.ProjectId {_id = projIdText} = projectId
+            let ProjectId {getProjectId = projIdText} = projectId
             let queryParamWithProject =
                     CompletedTasksQueryParam
                         { since = since
@@ -363,8 +363,8 @@ taskFilterSpec config = describe "Task filtering" $ do
             completedTaskIds <- liftTodoist config (getCompletedTasksByDueDate queryParamWithProject)
 
             -- Verify our task is in the results
-            let TaskId {_id = expectedIdText} = taskId
-            let taskIdTexts = L.map (\(TaskId {_id = tid}) -> tid) completedTaskIds
+            let TaskId {getTaskId = expectedIdText} = taskId
+            let taskIdTexts = L.map (\(TaskId {getTaskId = tid}) -> tid) completedTaskIds
             liftIO $ (expectedIdText `L.elem` taskIdTexts) `shouldBe` True
 
             -- Unclose for cleanup
@@ -392,7 +392,7 @@ taskFilterSpec config = describe "Task filtering" $ do
                     , cursor
                     , limit
                     } = addTaskQuickWithQuery "2025-11-01" "2025-11-30"
-            let P.ProjectId {_id = projIdText} = projectId
+            let ProjectId {getProjectId = projIdText} = projectId
             let queryParamWithProject =
                     CompletedTasksQueryParam
                         { since = since
@@ -410,8 +410,8 @@ taskFilterSpec config = describe "Task filtering" $ do
             completedTaskIds <- liftTodoist config (getCompletedTasksByCompletionDate queryParamWithProject)
 
             -- Verify our task is in the results
-            let TaskId {_id = expectedIdText} = taskId
-            let taskIdTexts = L.map (\(TaskId {_id = tid}) -> tid) completedTaskIds
+            let TaskId {getTaskId = expectedIdText} = taskId
+            let taskIdTexts = L.map (\(TaskId {getTaskId = tid}) -> tid) completedTaskIds
             liftIO $ (expectedIdText `L.elem` taskIdTexts) `shouldBe` True
 
             -- Unclose for cleanup
@@ -433,18 +433,18 @@ moveTaskSpec config = describe "Move task between projects" $ do
             -- Verify task is in project 1
             task1 <- liftTodoist config (getTask taskId)
             let Task {_project_id = originalProjectId} = task1
-            let P.ProjectId {_id = project1IdText} = project1Id
+            let ProjectId {getProjectId = project1IdText} = project1Id
             liftIO $ originalProjectId `shouldBe` project1IdText
 
             -- Move task to project 2
-            let P.ProjectId {_id = project2IdText} = project2Id
+            let ProjectId {getProjectId = project2IdText} = project2Id
             let moveTaskData = runBuilder newMoveTask (setProjectId project2IdText)
 
             movedTaskId <- liftTodoist config (moveTask taskId moveTaskData)
 
             -- Verify returned task ID matches
-            let TaskId {_id = expectedIdText} = taskId
-            let TaskId {_id = movedIdText} = movedTaskId
+            let TaskId {getTaskId = expectedIdText} = taskId
+            let TaskId {getTaskId = movedIdText} = movedTaskId
             liftIO $ movedIdText `shouldBe` expectedIdText
 
             -- Verify task is now in project 2
@@ -463,7 +463,7 @@ withTestTask ::
     TodoistConfig ->
     Text -> -- project name
     Text -> -- task content
-    (P.ProjectId -> TaskId -> ExceptT TodoistError IO a) ->
+    (ProjectId -> TaskId -> ExceptT TodoistError IO a) ->
     IO ()
 withTestTask config projectName taskContent action = do
     let createResources = do
@@ -471,11 +471,11 @@ withTestTask config projectName taskContent action = do
             projectId <- liftTodoist config (P.addProject $ runBuilder (P.newProject projectName) mempty)
 
             liftIO $ putStrLn $ "Creating test task: " <> show taskContent
-            let P.ProjectId {_id = projIdText} = projectId
+            let ProjectId {getProjectId = projIdText} = projectId
             let taskCreate = buildTestTask taskContent projIdText
             newTaskResult <- liftTodoist config (addTask taskCreate)
             let NewTask {_id = newTaskIdText} = newTaskResult
-            let taskId = TaskId {_id = newTaskIdText}
+            let taskId = TaskId {getTaskId = newTaskIdText}
 
             pure (projectId, taskId)
 
@@ -497,7 +497,7 @@ withTestTasks ::
     TodoistConfig ->
     Text -> -- project name
     [Text] -> -- task contents
-    (P.ProjectId -> [TaskId] -> ExceptT TodoistError IO a) ->
+    (ProjectId -> [TaskId] -> ExceptT TodoistError IO a) ->
     IO ()
 withTestTasks config projectName taskContents action = do
     let createResources = do
@@ -505,14 +505,14 @@ withTestTasks config projectName taskContents action = do
             projectId <- liftTodoist config (P.addProject $ runBuilder (P.newProject projectName) mempty)
 
             liftIO $ putStrLn $ "Creating " <> show (L.length taskContents) <> " test tasks"
-            let P.ProjectId {_id = projIdText} = projectId
+            let ProjectId {getProjectId = projIdText} = projectId
             taskIds <-
                 mapM
                     ( \content -> do
                         let taskCreate = buildTestTask content projIdText
                         newTaskResult <- liftTodoist config (addTask taskCreate)
                         let NewTask {_id = newTaskIdText} = newTaskResult
-                        pure $ TaskId {_id = newTaskIdText}
+                        pure $ TaskId {getTaskId = newTaskIdText}
                     )
                     taskContents
 

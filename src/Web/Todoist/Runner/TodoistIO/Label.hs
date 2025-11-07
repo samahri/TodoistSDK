@@ -4,8 +4,6 @@
 
 module Web.Todoist.Runner.TodoistIO.Label () where
 
-import Prelude (fmap, pure, ($), (<>))
-
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.Except (ExceptT, except)
@@ -18,6 +16,10 @@ import qualified Data.Text as T
 import Data.Void (Void)
 import System.IO (IO)
 
+import Control.Applicative (pure)
+import Control.Monad (fmap)
+import Data.Function (($))
+import Data.Monoid ((<>))
 import Web.Todoist.Domain.Label
     ( Label (..)
     , LabelCreate

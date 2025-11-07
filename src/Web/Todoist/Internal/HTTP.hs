@@ -25,8 +25,8 @@ import Data.Monoid (mconcat, (<>))
 import Data.Proxy (Proxy (..))
 import System.IO (IO)
 import Text.Show (show)
-import Prelude (pure)
 
+import Control.Applicative (Applicative (pure))
 import Data.Aeson (FromJSON, ToJSON)
 import Network.HTTP.Req ((=:))
 import qualified Network.HTTP.Req as Http

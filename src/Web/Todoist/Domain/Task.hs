@@ -7,7 +7,6 @@
 
 module Web.Todoist.Domain.Task
     ( TodoistTaskM (..)
-    , TaskId (..)
     , TaskParam (..)
     , Task (..)
     , Due (..)
@@ -20,6 +19,7 @@ module Web.Todoist.Domain.Task
     , emptyMoveTask
     , addTaskQuickText
     , CompletedTasksQueryParamAPI (..)
+    , TaskCompletedItem (..)
     , TaskFilter (..)
     , CompletedTasksQueryParam (..)
     , addTaskQuickWithQuery
@@ -76,19 +76,7 @@ import Data.Text (Text)
 import qualified Data.Text
 import GHC.Generics (Generic)
 import Text.Show (Show)
-
-newtype TaskId = TaskId
-    { _id :: Text
-    }
-    deriving (Show, Eq, Generic)
-
-instance FromJSON TaskId where
-    parseJSON :: Value -> Parser TaskId
-    parseJSON = genericParseJSON defaultOptions {fieldLabelModifier = L.drop 1}
-
-instance ToJSON TaskId where
-    toJSON :: TaskId -> Value
-    toJSON = genericToJSON defaultOptions {fieldLabelModifier = L.drop 1}
+import Web.Todoist.Domain.Types (TaskId)
 
 -- | Duration unit for tasks
 data DurationUnit = Minute | Day
@@ -476,8 +464,19 @@ instance HasDeadlineDate TaskPatch where
     hasDeadlineDate :: Text -> TaskPatch -> TaskPatch
     hasDeadlineDate deadlineDate TaskPatch {..} = TaskPatch {_deadline_date = Just deadlineDate, ..}
 
+{- | Internal type for parsing completed tasks API response
+The API returns full task objects, not just IDs
+-}
 newtype CompletedTasksQueryParamAPI = CompletedTasksQueryParamAPI
-    { items :: [TaskId]
+    { items :: [TaskCompletedItem]
+    }
+    deriving (Show, Generic, FromJSON)
+
+{- | Minimal task representation for completed tasks response
+Only contains the id field we need from the completed tasks API
+-}
+newtype TaskCompletedItem = TaskCompletedItem
+    { id :: Text
     }
     deriving (Show, Generic, FromJSON)
 

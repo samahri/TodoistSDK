@@ -2,7 +2,8 @@
 
 module Web.Todoist.Runner.TodoistIO.CommentSpec (spec) where
 
-import Web.Todoist.Domain.Comment (Comment (..))
+import Web.Todoist.Domain.Comment (Comment (..), CommentId (..), Content (..))
+import Web.Todoist.Domain.Types (ProjectId (..), TaskId (..), Uid (..))
 import Web.Todoist.Internal.Types (CommentResponse (..))
 import Web.Todoist.Runner.TodoistIO.Comment (commentResponseToComment)
 import Web.Todoist.TestHelpers
@@ -70,12 +71,12 @@ commentResponseToCommentSpec = describe "commentResponseToComment conversion" $ 
         result `shouldSatisfy` isRight
 
         let Right (Comment {..}) = result
-        _id `shouldBe` "3012345678"
-        _content `shouldBe` "This is a test comment"
-        _poster_id `shouldBe` Just "2671355"
-        _posted_at `shouldBe` Just "2023-10-15T14:30:00Z"
+        _id `shouldBe` CommentId "3012345678"
+        _content `shouldBe` Content "This is a test comment"
+        _poster_id `shouldBe` Just (Uid "2671355")
+        _posted_at `shouldBe` Just (Uid "2023-10-15T14:30:00Z")
         _task_id `shouldBe` Nothing
-        _project_id `shouldBe` Just "2203306141"
+        _project_id `shouldBe` Just (ProjectId "2203306141")
         _attachment `shouldBe` Nothing
 
     it "converts CommentResponse with attachment to Comment correctly" $ do
@@ -83,8 +84,8 @@ commentResponseToCommentSpec = describe "commentResponseToComment conversion" $ 
         result `shouldSatisfy` isRight
 
         let Right (Comment {..}) = result
-        _id `shouldBe` "3012345679"
-        _task_id `shouldBe` Just "2995104339"
+        _id `shouldBe` CommentId "3012345679"
+        _task_id `shouldBe` Just (TaskId "2995104339")
         _project_id `shouldBe` Nothing
         _attachment `shouldSatisfy` isJust
 

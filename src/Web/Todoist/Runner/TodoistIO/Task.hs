@@ -17,13 +17,14 @@ import Web.Todoist.Domain.Task
     , MoveTask
     , NewTask (..)
     , Task (..)
+    , TaskCompletedItem (..)
     , TaskCreate
     , TaskFilter (..)
-    , TaskId (..)
     , TaskParam (..)
     , TaskPatch
     , TodoistTaskM (..)
     )
+import Web.Todoist.Domain.Types (TaskId (..))
 import Web.Todoist.Internal.Config (TodoistConfig)
 import Web.Todoist.Internal.Error (TodoistError)
 import Web.Todoist.Internal.HTTP (PostResponse (..), apiDelete, apiGet, apiPost)
@@ -164,9 +165,9 @@ instance TodoistTaskM TodoistIO where
         loop Nothing []
 
     getTask :: TaskId -> TodoistIO Task
-    getTask TaskId {..} = TodoistIO $ do
+    getTask TaskId {getTaskId = taskIdText} = TodoistIO $ do
         config <- ask
-        let apiRequest = mkTodoistRequest @Void ["tasks", _id] Nothing Nothing
+        let apiRequest = mkTodoistRequest @Void ["tasks", taskIdText] Nothing Nothing
         resp <- liftIO $ apiGet (Proxy @TaskResponse) config apiRequest
         case resp of
             Right res -> pure (taskResponseToTask res)
@@ -182,36 +183,36 @@ instance TodoistTaskM TodoistIO where
             Left err -> lift $ except (Left err)
 
     updateTask :: TaskId -> TaskPatch -> TodoistIO NewTask
-    updateTask TaskId {..} taskPatch = TodoistIO $ do
+    updateTask TaskId {getTaskId = taskIdText} taskPatch = TodoistIO $ do
         config <- ask
-        let apiRequest = mkTodoistRequest @TaskPatch ["tasks", _id] Nothing Nothing
+        let apiRequest = mkTodoistRequest @TaskPatch ["tasks", taskIdText] Nothing Nothing
         resp <- liftIO $ apiPost (Just taskPatch) (JsonResponse (Proxy @NewTaskResponse)) config apiRequest
         case resp of
             Right res -> pure (newTaskResponseToNewTask res)
             Left err -> lift $ except (Left err)
 
     closeTask :: TaskId -> TodoistIO ()
-    closeTask TaskId {..} = TodoistIO $ do
+    closeTask TaskId {getTaskId = taskIdText} = TodoistIO $ do
         config <- ask
-        let apiRequest = mkTodoistRequest @Void ["tasks", _id, "close"] Nothing Nothing
+        let apiRequest = mkTodoistRequest @Void ["tasks", taskIdText, "close"] Nothing Nothing
         resp <- liftIO $ apiPost (Nothing @Void) IgnoreResponse config apiRequest
         case resp of
             Right _ -> pure ()
             Left err -> lift $ except (Left err)
 
     uncloseTask :: TaskId -> TodoistIO ()
-    uncloseTask TaskId {..} = TodoistIO $ do
+    uncloseTask TaskId {getTaskId = taskIdText} = TodoistIO $ do
         config <- ask
-        let apiRequest = mkTodoistRequest @Void ["tasks", _id, "reopen"] Nothing Nothing
+        let apiRequest = mkTodoistRequest @Void ["tasks", taskIdText, "reopen"] Nothing Nothing
         resp <- liftIO $ apiPost (Nothing @Void) IgnoreResponse config apiRequest
         case resp of
             Right _ -> pure ()
             Left err -> lift $ except (Left err)
 
     deleteTask :: TaskId -> TodoistIO ()
-    deleteTask TaskId {..} = TodoistIO $ do
+    deleteTask TaskId {getTaskId = taskIdText} = TodoistIO $ do
         config <- ask
-        let apiRequest = mkTodoistRequest @Void ["tasks", _id] Nothing Nothing
+        let apiRequest = mkTodoistRequest @Void ["tasks", taskIdText] Nothing Nothing
         resp <- liftIO $ apiDelete config apiRequest
         case resp of
             Right _ -> pure ()
@@ -225,10 +226,11 @@ instance TodoistTaskM TodoistIO where
                 let TaskFilter {query, lang, limit} = initialFilter
                     filter' = TaskFilter {query, lang, cursor = cursorVal, limit}
                     apiRequest = mkTodoistRequest @Void ["tasks", "filter"] (Just $ toQueryParam filter') Nothing
-                resp <- liftIO $ apiGet (Proxy @(TodoistReturn TaskId)) config apiRequest
+                resp <- liftIO $ apiGet (Proxy @(TodoistReturn TaskResponse)) config apiRequest
                 case resp of
                     Right res -> do
-                        let newAcc = acc <> results res
+                        let taskIds = fmap (\TaskResponse {p_id} -> TaskId {getTaskId = p_id}) (results res)
+                        let newAcc = acc <> taskIds
                         case next_cursor res of
                             Nothing -> pure newAcc
                             Just c -> loop (Just $ T.pack c) newAcc
@@ -236,12 +238,12 @@ instance TodoistTaskM TodoistIO where
         loop Nothing []
 
     moveTask :: TaskId -> MoveTask -> TodoistIO TaskId
-    moveTask TaskId {..} moveTaskBody = TodoistIO $ do
+    moveTask TaskId {getTaskId = taskIdText} moveTaskBody = TodoistIO $ do
         config <- ask
-        let apiRequest = mkTodoistRequest @MoveTask ["tasks", _id, "move"] Nothing Nothing
-        resp <- liftIO $ apiPost (Just moveTaskBody) (JsonResponse (Proxy @TaskId)) config apiRequest
+        let apiRequest = mkTodoistRequest @MoveTask ["tasks", taskIdText, "move"] Nothing Nothing
+        resp <- liftIO $ apiPost (Just moveTaskBody) (JsonResponse (Proxy @TaskResponse)) config apiRequest
         case resp of
-            Right res -> pure res
+            Right TaskResponse {p_id} -> pure $ TaskId {getTaskId = p_id}
             Left err -> lift $ except (Left err)
 
     addTaskQuick :: AddTaskQuick -> TodoistIO ()
@@ -263,7 +265,7 @@ instance TodoistTaskM TodoistIO where
                     Nothing
         resp <- liftIO $ apiGet (Proxy @CompletedTasksQueryParamAPI) config apiRequest
         case resp of
-            Right res -> pure $ items res
+            Right res -> pure $ fmap (\(TaskCompletedItem tid) -> TaskId {getTaskId = tid}) (items res)
             Left err -> lift $ except (Left err)
 
     getCompletedTasksByCompletionDate :: CompletedTasksQueryParam -> TodoistIO [TaskId]
@@ -276,25 +278,29 @@ instance TodoistTaskM TodoistIO where
                     Nothing
         resp <- liftIO $ apiGet (Proxy @CompletedTasksQueryParamAPI) config apiRequest
         case resp of
-            Right res -> pure $ items res
+            Right res -> pure $ fmap (\(TaskCompletedItem tid) -> TaskId {getTaskId = tid}) (items res)
             Left err -> lift $ except (Left err)
 
     getTasksPaginated :: TaskParam -> TodoistIO ([TaskId], Maybe Text)
     getTasksPaginated taskparams = TodoistIO $ do
         config <- ask
         let apiRequest = mkTodoistRequest @Void ["tasks"] (Just $ toQueryParam taskparams) Nothing
-        resp <- liftIO $ apiGet (Proxy @(TodoistReturn TaskId)) config apiRequest
+        resp <- liftIO $ apiGet (Proxy @(TodoistReturn TaskResponse)) config apiRequest
         case resp of
-            Right res -> pure (results res, fmap T.pack (next_cursor res))
+            Right res -> do
+                let taskIds = fmap (\TaskResponse {p_id} -> TaskId {getTaskId = p_id}) (results res)
+                pure (taskIds, fmap T.pack (next_cursor res))
             Left err -> lift $ except (Left err)
 
     getTasksByFilterPaginated :: TaskFilter -> TodoistIO ([TaskId], Maybe Text)
     getTasksByFilterPaginated taskFilter = TodoistIO $ do
         config <- ask
         let apiRequest = mkTodoistRequest @Void ["tasks", "filter"] (Just $ toQueryParam taskFilter) Nothing
-        resp <- liftIO $ apiGet (Proxy @(TodoistReturn TaskId)) config apiRequest
+        resp <- liftIO $ apiGet (Proxy @(TodoistReturn TaskResponse)) config apiRequest
         case resp of
-            Right res -> pure (results res, fmap T.pack (next_cursor res))
+            Right res -> do
+                let taskIds = fmap (\TaskResponse {p_id} -> TaskId {getTaskId = p_id}) (results res)
+                pure (taskIds, fmap T.pack (next_cursor res))
             Left err -> lift $ except (Left err)
 
     getTasksWithLimit :: TaskParam -> Int -> TodoistIO [TaskId]

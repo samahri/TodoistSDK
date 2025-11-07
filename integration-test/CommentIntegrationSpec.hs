@@ -17,12 +17,14 @@ import Web.Todoist.Domain.Comment
     , CommentCreate
     , CommentId (..)
     , CommentParam (..)
+    , Content (..)
     , TodoistCommentM (..)
     , newComment
     , newCommentUpdate
     )
 import qualified Web.Todoist.Domain.Project as P
-import Web.Todoist.Domain.Task (NewTask (..), TaskId (..), TodoistTaskM (..))
+import Web.Todoist.Domain.Task (NewTask (..), TodoistTaskM (..))
+import Web.Todoist.Domain.Types (ProjectId (..), TaskId (..))
 import Web.Todoist.Internal.Config (TodoistConfig)
 import Web.Todoist.Internal.Error (TodoistError)
 import Web.Todoist.Runner (todoist)
@@ -81,15 +83,13 @@ commentOnProjectLifecycleSpec config = describe "Comment on project lifecycle (c
                     } = comment
 
             -- Verify comment ID matches
-            let CommentId {_id = expectedIdText} = commentId
-            liftIO $ retrievedId `shouldBe` expectedIdText
+            liftIO $ retrievedId `shouldBe` commentId
 
             -- Verify content matches
-            liftIO $ retrievedContent `shouldBe` commentContent
+            liftIO $ retrievedContent `shouldBe` Content commentContent
 
             -- Verify project ID matches and task ID is Nothing
-            let P.ProjectId {_id = expectedProjectId} = projectId
-            liftIO $ retrievedProjectId `shouldBe` Just expectedProjectId
+            liftIO $ retrievedProjectId `shouldBe` Just projectId
             liftIO $ retrievedTaskId `shouldBe` Nothing
 
             -- Test explicit delete (cleanup will handle if this fails)
@@ -117,15 +117,13 @@ commentOnTaskLifecycleSpec config = describe "Comment on task lifecycle (create,
                     } = comment
 
             -- Verify comment ID matches
-            let CommentId {_id = expectedIdText} = commentId
-            liftIO $ retrievedId `shouldBe` expectedIdText
+            liftIO $ retrievedId `shouldBe` commentId
 
             -- Verify content matches
-            liftIO $ retrievedContent `shouldBe` commentContent
+            liftIO $ retrievedContent `shouldBe` Content commentContent
 
             -- Verify task ID matches and project ID is Nothing
-            let TaskId {_id = expectedTaskId} = taskId
-            liftIO $ retrievedTaskId `shouldBe` Just expectedTaskId
+            liftIO $ retrievedTaskId `shouldBe` Just taskId
             liftIO $ retrievedProjectId `shouldBe` Nothing
 
             -- Test explicit delete (cleanup will handle if this fails)
@@ -142,7 +140,7 @@ updateCommentSpec config = describe "Update comment" $ do
             -- Verify initial state
             comment1 <- liftTodoist config (getComment commentId)
             let Comment {_content = initialContent} = comment1
-            liftIO $ initialContent `shouldBe` originalContent
+            liftIO $ initialContent `shouldBe` Content originalContent
 
             -- Update the comment
             let updatedContent = originalContent <> "-Updated"
@@ -152,12 +150,12 @@ updateCommentSpec config = describe "Update comment" $ do
 
             -- Verify the response contains updated value
             let Comment {_content = responseContent} = updatedComment
-            liftIO $ responseContent `shouldBe` updatedContent
+            liftIO $ responseContent `shouldBe` Content updatedContent
 
             -- Fetch the comment again to verify persistence
             comment2 <- liftTodoist config (getComment commentId)
             let Comment {_content = persistedContent} = comment2
-            liftIO $ persistedContent `shouldBe` updatedContent
+            liftIO $ persistedContent `shouldBe` Content updatedContent
 
 getCommentsSpec :: TodoistConfig -> Spec
 getCommentsSpec config = describe "Get multiple comments" $ do
@@ -173,7 +171,7 @@ getCommentsSpec config = describe "Get multiple comments" $ do
 
         withTestProjectComments config projectName commentContents $ \projectId commentIds -> do
             -- Get all comments for this project
-            let P.ProjectId {_id = projIdText} = projectId
+            let ProjectId {getProjectId = projIdText} = projectId
             let commentParam =
                     CommentParam
                         { project_id = Just projIdText
@@ -190,7 +188,7 @@ getCommentsSpec config = describe "Get multiple comments" $ do
             liftIO $ commentCount `shouldSatisfy` (\n -> n >= (3 :: Int))
 
             -- Extract comment IDs and contents from results
-            let commentIdsResult = L.map (\(Comment {_id = cid}) -> CommentId {_id = cid}) comments
+            let commentIdsResult = L.map (\(Comment {_id = cid}) -> cid) comments
             let commentContentsResult = L.map (\(Comment {_content = content}) -> content) comments
 
             -- Verify all 3 comment IDs are present
@@ -200,14 +198,14 @@ getCommentsSpec config = describe "Get multiple comments" $ do
             liftIO $ (expectedId3 `L.elem` commentIdsResult) `shouldBe` True
 
             -- Verify all 3 comment contents are present
-            liftIO $ (commentContent1 `L.elem` commentContentsResult) `shouldBe` True
-            liftIO $ (commentContent2 `L.elem` commentContentsResult) `shouldBe` True
-            liftIO $ (commentContent3 `L.elem` commentContentsResult) `shouldBe` True
+            liftIO $ (Content commentContent1 `L.elem` commentContentsResult) `shouldBe` True
+            liftIO $ (Content commentContent2 `L.elem` commentContentsResult) `shouldBe` True
+            liftIO $ (Content commentContent3 `L.elem` commentContentsResult) `shouldBe` True
 
             -- Verify each comment has the correct project_id
             forM_ comments $ \(Comment {_project_id = commentProjId, _task_id = commentTaskId}) -> do
                 case (commentProjId, commentTaskId) of
-                    (Just pid, Nothing) -> liftIO $ pid `shouldBe` projIdText
+                    (Just pid, Nothing) -> liftIO $ pid `shouldBe` ProjectId projIdText
                     _ -> pure () -- Skip comments that don't match our filter
 
 getSingleCommentSpec :: TodoistConfig -> Spec
@@ -228,12 +226,10 @@ getSingleCommentSpec config = describe "Get single comment by ID" $ do
                     , _project_id = retrievedProjectId
                     } = comment
 
-            let CommentId {_id = expectedIdText} = commentId
-            liftIO $ retrievedId `shouldBe` expectedIdText
-            liftIO $ retrievedContent `shouldBe` commentContent
+            liftIO $ retrievedId `shouldBe` commentId
+            liftIO $ retrievedContent `shouldBe` Content commentContent
 
-            let P.ProjectId {_id = expectedProjectId} = projectId
-            liftIO $ retrievedProjectId `shouldBe` Just expectedProjectId
+            liftIO $ retrievedProjectId `shouldBe` Just projectId
 
 {- | Create a test project and comment, run an action with the comment ID, then clean up
 Uses bracket to ensure cleanup happens even if the action fails
@@ -243,7 +239,7 @@ withTestProjectComment ::
     TodoistConfig ->
     Text -> -- project name
     Text -> -- comment content
-    (P.ProjectId -> CommentId -> ExceptT TodoistError IO a) ->
+    (ProjectId -> CommentId -> ExceptT TodoistError IO a) ->
     IO ()
 withTestProjectComment config projectName commentContent action = do
     let createResources = do
@@ -251,11 +247,10 @@ withTestProjectComment config projectName commentContent action = do
             projectId <- liftTodoist config (P.addProject $ runBuilder (P.newProject projectName) mempty)
 
             liftIO $ putStrLn $ "Creating test comment: " <> show commentContent
-            let P.ProjectId {_id = projIdText} = projectId
+            let ProjectId {getProjectId = projIdText} = projectId
             let commentCreate = buildTestCommentForProject commentContent projIdText
             createdComment <- liftTodoist config (addComment commentCreate)
-            let Comment {_id = commentIdText} = createdComment
-            let commentId = CommentId {_id = commentIdText}
+            let Comment {_id = commentId} = createdComment
 
             pure (projectId, commentId)
 
@@ -287,17 +282,16 @@ withTestTaskComment config projectName taskContent commentContent action = do
             projectId <- liftTodoist config (P.addProject $ runBuilder (P.newProject projectName) mempty)
 
             liftIO $ putStrLn $ "Creating test task: " <> show taskContent
-            let P.ProjectId {_id = projIdText} = projectId
+            let ProjectId {getProjectId = projIdText} = projectId
             let taskCreate = buildTestTask taskContent projIdText
             newTaskResult <- liftTodoist config (addTask taskCreate)
             let NewTask {_id = newTaskIdText} = newTaskResult
-            let taskId = TaskId {_id = newTaskIdText}
+            let taskId = TaskId {getTaskId = newTaskIdText}
 
             liftIO $ putStrLn $ "Creating test comment: " <> show commentContent
             let commentCreate = buildTestCommentForTask commentContent newTaskIdText
             createdComment <- liftTodoist config (addComment commentCreate)
-            let Comment {_id = commentIdText} = createdComment
-            let commentId = CommentId {_id = commentIdText}
+            let Comment {_id = commentId} = createdComment
 
             pure (projectId, taskId, commentId)
 
@@ -322,7 +316,7 @@ withTestProjectComments ::
     TodoistConfig ->
     Text -> -- project name
     [Text] -> -- comment contents
-    (P.ProjectId -> [CommentId] -> ExceptT TodoistError IO a) ->
+    (ProjectId -> [CommentId] -> ExceptT TodoistError IO a) ->
     IO ()
 withTestProjectComments config projectName commentContents action = do
     let createResources = do
@@ -330,14 +324,14 @@ withTestProjectComments config projectName commentContents action = do
             projectId <- liftTodoist config (P.addProject $ runBuilder (P.newProject projectName) mempty)
 
             liftIO $ putStrLn $ "Creating " <> show (L.length commentContents) <> " test comments"
-            let P.ProjectId {_id = projIdText} = projectId
+            let ProjectId {getProjectId = projIdText} = projectId
             commentIds <-
                 mapM
                     ( \content -> do
                         let commentCreate = buildTestCommentForProject content projIdText
                         createdComment <- liftTodoist config (addComment commentCreate)
-                        let Comment {_id = commentIdText} = createdComment
-                        pure $ CommentId {_id = commentIdText}
+                        let Comment {_id = commentId} = createdComment
+                        pure commentId
                     )
                     commentContents
 

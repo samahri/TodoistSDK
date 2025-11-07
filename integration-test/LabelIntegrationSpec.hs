@@ -9,7 +9,7 @@ import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Except (ExceptT)
 import Data.Bool (Bool (..))
 import Data.Foldable (traverse_)
-import Data.Function (($))
+import Data.Function (($), (.))
 import Data.Functor (Functor (..))
 import Data.List (elem, length)
 import Data.Maybe (Maybe (..))
@@ -93,7 +93,7 @@ getLabelsSpec config =
             label2Name <- pack <$> generateUniqueName "Label2"
             label3Name <- pack <$> generateUniqueName "Label3"
 
-            withMultipleTestLabels config [label1Name, label2Name, label3Name] $ \labelIds -> do
+            withMultipleTestLabels config [label1Name, label2Name, label3Name] $ \_ -> do
                 -- Get labels
                 let params = LabelParam {_cursor = Nothing, _limit = Nothing}
                 labels <- liftTodoist config (getLabels params)
@@ -144,7 +144,7 @@ sharedLabelsSpec config =
             -- Create a label to work with
             labelName <- pack <$> generateUniqueName "SharedTest"
 
-            withTestLabel config labelName $ \labelId -> do
+            withTestLabel config labelName $ \_ -> do
                 -- Rename shared label
                 let renameReq = SharedLabelRename {_name = labelName, _new_name = labelName <> "-Renamed"}
                 liftTodoist config (renameSharedLabels renameReq)

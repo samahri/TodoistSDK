@@ -13,8 +13,10 @@ import Web.Todoist.Domain.Comment
     , CommentId (..)
     , CommentParam (..)
     , CommentUpdate
+    , Content (..)
     , TodoistCommentM (..)
     )
+import Web.Todoist.Domain.Types (ProjectId (..), TaskId (..), Uid (..))
 import Web.Todoist.Internal.Config (TodoistConfig)
 import Web.Todoist.Internal.Error (TodoistError (HttpError))
 import Web.Todoist.Internal.HTTP
@@ -38,11 +40,12 @@ import Data.Function (($))
 import Data.Functor (fmap)
 import Data.Maybe (Maybe (Just, Nothing))
 import Data.Proxy (Proxy (Proxy))
+import Data.Semigroup ((<>))
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Traversable (traverse)
 import Data.Void (Void)
-import Prelude (IO, (<>))
+import System.IO (IO)
 
 {- | Convert CommentResponse to Comment
 Validates that at least one of task_id or project_id is present
@@ -54,12 +57,12 @@ commentResponseToComment CommentResponse {..} =
         _ ->
             Right $
                 Comment
-                    { _id = p_id
-                    , _content = p_content
-                    , _poster_id = p_posted_uid
-                    , _posted_at = p_posted_at
-                    , _task_id = p_item_id
-                    , _project_id = p_project_id
+                    { _id = CommentId p_id
+                    , _content = Content p_content
+                    , _poster_id = fmap Uid p_posted_uid
+                    , _posted_at = fmap Uid p_posted_at
+                    , _task_id = fmap TaskId p_item_id
+                    , _project_id = fmap ProjectId p_project_id
                     , _attachment = p_file_attachment
                     }
 
@@ -118,9 +121,9 @@ instance TodoistCommentM TodoistIO where
 
     -- \| Get a single comment by ID
     getComment :: CommentId -> TodoistIO Comment
-    getComment CommentId {..} = TodoistIO $ do
+    getComment CommentId {getCommentId = commentIdText} = TodoistIO $ do
         config <- ask
-        let apiRequest = mkTodoistRequest @Void ["comments", _id] Nothing Nothing
+        let apiRequest = mkTodoistRequest @Void ["comments", commentIdText] Nothing Nothing
         resp <- liftIO $ apiGet (Proxy @CommentResponse) config apiRequest
         case resp of
             Right res ->
@@ -131,9 +134,9 @@ instance TodoistCommentM TodoistIO where
 
     -- \| Update a comment
     updateComment :: CommentId -> CommentUpdate -> TodoistIO Comment
-    updateComment CommentId {..} update = TodoistIO $ do
+    updateComment CommentId {getCommentId = commentIdText} update = TodoistIO $ do
         config <- ask
-        let apiRequest = mkTodoistRequest @CommentUpdate ["comments", _id] Nothing Nothing
+        let apiRequest = mkTodoistRequest @CommentUpdate ["comments", commentIdText] Nothing Nothing
         resp <- liftIO $ apiPost (Just update) (JsonResponse (Proxy @CommentResponse)) config apiRequest
         case resp of
             Right res ->
@@ -144,9 +147,9 @@ instance TodoistCommentM TodoistIO where
 
     -- \| Delete a comment
     deleteComment :: CommentId -> TodoistIO ()
-    deleteComment CommentId {..} = TodoistIO $ do
+    deleteComment CommentId {getCommentId = commentIdText} = TodoistIO $ do
         config <- ask
-        let apiRequest = mkTodoistRequest @Void ["comments", _id] Nothing Nothing
+        let apiRequest = mkTodoistRequest @Void ["comments", commentIdText] Nothing Nothing
         resp <- liftIO $ apiDelete config apiRequest
         case resp of
             Right _ -> pure ()
