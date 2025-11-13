@@ -73,13 +73,7 @@ import Web.Todoist.Domain.Label
     ( Label (..)
     , LabelId (..)
     )
-import Web.Todoist.Domain.Project
-    ( Collaborator (..)
-    , Project (..)
-    , ProjectCreate
-    , ProjectUpdate (..)
-    , newProject
-    )
+import Web.Todoist.Domain.Project (CanAssignTasks (..), Collaborator (..), IsArchived (..), IsShared (..), Project (..), ProjectCreate, ProjectUpdate (..), newProject)
 import Web.Todoist.Domain.Section
     ( Section (..)
     , SectionCreate
@@ -95,7 +89,18 @@ import Web.Todoist.Domain.Task
     , NewTask (..)
     , Task (..)
     )
-import Web.Todoist.Domain.Types (ProjectId (..), TaskId (..), Uid (..), ViewStyle (..), Name (..), Color (..), IsFavorite (..), Order (..))
+import Web.Todoist.Domain.Types
+    ( Color (..)
+    , Description (..)
+    , IsCollapsed (..)
+    , IsFavorite (..)
+    , Name (..)
+    , Order (..)
+    , ProjectId (..)
+    , TaskId (..)
+    , Uid (..)
+    , ViewStyle (..)
+    )
 import Web.Todoist.Internal.Types
     ( Action (..)
     , CollaboratorRole (..)
@@ -161,16 +166,16 @@ sampleProjectResponse =
 sampleProject :: Project
 sampleProject =
     Project
-        { _id = "2203306141"
-        , _name = "Test Project"
-        , _description = "A test project for unit testing"
-        , _order = 1
-        , _color = "blue"
-        , _is_collapsed = False
-        , _is_shared = False
-        , _is_favorite = True
-        , _is_archived = False
-        , _can_assign_tasks = False
+        { _id = ProjectId "2203306141"
+        , _name = Name "Test Project"
+        , _description = Description "A test project for unit testing"
+        , _order = Order 1
+        , _color = Color "blue"
+        , _is_collapsed = IsCollapsed False
+        , _is_shared = IsShared False
+        , _is_favorite = IsFavorite True
+        , _is_archived = IsArchived False
+        , _can_assign_tasks = CanAssignTasks False
         , _view_style = List
         , _created_at = Just "2023-06-15T10:30:00Z"
         , _updated_at = Just "2023-06-20T14:45:00Z"
@@ -211,7 +216,7 @@ sampleProjectIdJson = BSL.pack "{\"id\":\"2203306141\"}"
 
 -- | Sample list of projects for getAllProjects
 sampleProjects :: [Project]
-sampleProjects = [sampleProject, sampleProject {_id = "2203306142", _name = "Second Project"}]
+sampleProjects = [sampleProject, sampleProject {_id = ProjectId "2203306142", _name = Name "Second Project"}]
 
 -- | JSON for TodoistReturn [ProjectResponse] (getAllProjects response)
 sampleProjectsJson :: ByteString
@@ -242,7 +247,7 @@ sampleCollaborator :: Collaborator
 sampleCollaborator =
     Collaborator
         { _id = "user123"
-        , _name = "John Doe"
+        , _name = Name "John Doe"
         , _email = "john@example.com"
         }
 
@@ -250,7 +255,7 @@ sampleCollaborator =
 sampleCollaborators :: [Collaborator]
 sampleCollaborators =
     [ sampleCollaborator
-    , sampleCollaborator {_id = "user456", _name = "Jane Smith", _email = "jane@example.com"}
+    , sampleCollaborator {_id = "user456", _name = Name "Jane Smith", _email = "jane@example.com"}
     ]
 
 -- | JSON for TodoistReturn [Collaborator]
@@ -282,10 +287,10 @@ sampleProjectCreateJson =
 sampleProjectUpdate :: ProjectUpdate
 sampleProjectUpdate =
     ProjectUpdate
-        { _name = Just "Updated Project Name"
-        , _description = Just "Updated description"
-        , _color = Just "red"
-        , _is_favorite = Just True
+        { _name = Just (Name "Updated Project Name")
+        , _description = Just (Description "Updated description")
+        , _color = Just (Color "red")
+        , _is_favorite = Just (IsFavorite True)
         , _view_style = Just List
         }
 
@@ -305,10 +310,10 @@ sampleProjectUpdateJson =
 samplePartialProjectUpdate :: ProjectUpdate
 samplePartialProjectUpdate =
     ProjectUpdate
-        { _name = Just "New Name"
+        { _name = Just (Name "New Name")
         , _description = Nothing
         , _color = Nothing
-        , _is_favorite = Just True
+        , _is_favorite = Just (IsFavorite True)
         , _view_style = Nothing
         }
 

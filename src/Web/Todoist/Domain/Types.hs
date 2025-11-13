@@ -11,6 +11,8 @@ module Web.Todoist.Domain.Types
     , Color (..)
     , Order (..)
     , IsFavorite (..)
+    , Description (..)
+    , IsCollapsed (..)
     , parseViewStyle
     ) where
 
@@ -29,17 +31,17 @@ import Data.Aeson
     , (.=)
     )
 import Data.Aeson.Types (Parser)
+import Data.Bool (Bool)
 import Data.Eq (Eq)
 import Data.Function (($))
 import Data.Functor ((<$>))
+import Data.Int (Int)
 import qualified Data.List as L
 import Data.Text (Text)
 import qualified Data.Text as T
 import GHC.Base (undefined)
 import GHC.Generics (Generic)
 import Text.Show (Show)
-import Data.Int (Int)
-import Data.Bool (Bool)
 
 data ViewStyle = List | Board | Calendar deriving (Show, Eq)
 
@@ -157,3 +159,23 @@ instance FromJSON IsFavorite where
 instance ToJSON IsFavorite where
     toJSON :: IsFavorite -> Value
     toJSON (IsFavorite txt) = toJSON txt
+
+newtype Description = Description {getDescription :: Text} deriving (Show, Eq, Generic)
+
+instance FromJSON Description where
+    parseJSON :: Value -> Parser Description
+    parseJSON v = Description <$> parseJSON v
+
+instance ToJSON Description where
+    toJSON :: Description -> Value
+    toJSON (Description txt) = toJSON txt
+
+newtype IsCollapsed = IsCollapsed {getIsCollapsed :: Bool} deriving (Show, Eq, Generic)
+
+instance FromJSON IsCollapsed where
+    parseJSON :: Value -> Parser IsCollapsed
+    parseJSON v = IsCollapsed <$> parseJSON v
+
+instance ToJSON IsCollapsed where
+    toJSON :: IsCollapsed -> Value
+    toJSON (IsCollapsed txt) = toJSON txt

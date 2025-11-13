@@ -16,6 +16,9 @@ module Web.Todoist.Domain.Project
     , newProject
     , emptyProjectUpdate
     , emptyPaginationParam
+    , IsShared (..)
+    , IsArchived (..)
+    , CanAssignTasks (..)
     ) where
 
 import Web.Todoist.Builder (Initial, seed)
@@ -27,7 +30,16 @@ import Web.Todoist.Builder.Has
     , HasViewStyle (..)
     , HasWorkspaceId (..)
     )
-import Web.Todoist.Domain.Types (ProjectId (..), ViewStyle (..))
+import Web.Todoist.Domain.Types
+    ( Color (..)
+    , Description (..)
+    , IsCollapsed (..)
+    , IsFavorite (..)
+    , Name (..)
+    , Order (..)
+    , ProjectId (..)
+    , ViewStyle (..)
+    )
 import Web.Todoist.Internal.Types (Params, ProjectPermissions)
 import Web.Todoist.QueryParam (QueryParam (..))
 
@@ -40,10 +52,12 @@ import Data.Aeson
     , fieldLabelModifier
     , genericParseJSON
     , genericToJSON
+    , omitNothingFields
     )
 import Data.Aeson.Types (Parser)
-import Data.Bool (Bool (False))
+import Data.Bool (Bool (False, True))
 import Data.Eq (Eq)
+import Data.Functor ((<$>))
 import Data.Int (Int)
 import qualified Data.List as L
 import Data.Maybe (Maybe (Just, Nothing), maybe)
@@ -55,16 +69,16 @@ import GHC.Generics (Generic)
 import Text.Show (Show)
 
 data Project = Project
-    { _id :: Text
-    , _name :: Text
-    , _description :: Text
-    , _order :: Int
-    , _color :: Text
-    , _is_collapsed :: Bool
-    , _is_shared :: Bool
-    , _is_favorite :: Bool
-    , _is_archived :: Bool
-    , _can_assign_tasks :: Bool
+    { _id :: ProjectId
+    , _name :: Name
+    , _description :: Description
+    , _order :: Order
+    , _color :: Color
+    , _is_collapsed :: IsCollapsed
+    , _is_shared :: IsShared
+    , _is_favorite :: IsFavorite
+    , _is_archived :: IsArchived
+    , _can_assign_tasks :: CanAssignTasks
     , _view_style :: ViewStyle
     , _created_at :: Maybe Text
     , _updated_at :: Maybe Text
@@ -72,11 +86,11 @@ data Project = Project
     deriving (Show, Eq)
 
 data ProjectCreate = ProjectCreate
-    { _name :: Text
-    , _description :: Maybe Text
-    , _parentId :: Maybe Text
-    , -- , _color :: Text or Int Default: {"name":"charcoal","hex":"#808080","database_index":47}
-      _is_favorite :: Bool
+    { _name :: Name
+    , _description :: Maybe Description
+    , _parentId :: Maybe ParentId
+    , _color :: Maybe Color -- Default: {"name":"charcoal","hex":"#808080","database_index":47}
+    , _is_favorite :: IsFavorite
     , _view_style :: Maybe ViewStyle
     , _workspace_id :: Maybe Int
     }
@@ -84,7 +98,7 @@ data ProjectCreate = ProjectCreate
 
 instance ToJSON ProjectCreate where
     toJSON :: ProjectCreate -> Value
-    toJSON = genericToJSON defaultOptions {fieldLabelModifier = L.drop 1}
+    toJSON = genericToJSON defaultOptions {fieldLabelModifier = L.drop 1, omitNothingFields = True}
 
 instance FromJSON ProjectCreate where
     parseJSON :: Value -> Parser ProjectCreate
@@ -92,11 +106,11 @@ instance FromJSON ProjectCreate where
 
 instance HasDescription ProjectCreate where
     hasDescription :: Text -> ProjectCreate -> ProjectCreate
-    hasDescription desc ProjectCreate {..} = ProjectCreate {_description = Just desc, ..}
+    hasDescription desc ProjectCreate {..} = ProjectCreate {_description = Just (Description desc), ..}
 
 instance HasParentId ProjectCreate where
     hasParentId :: Text -> ProjectCreate -> ProjectCreate
-    hasParentId pid ProjectCreate {..} = ProjectCreate {_parentId = Just pid, ..}
+    hasParentId pid ProjectCreate {..} = ProjectCreate {_parentId = Just (ParentIdStr (Data.Text.unpack pid)), ..}
 
 instance HasViewStyle ProjectCreate where
     hasViewStyle :: ViewStyle -> ProjectCreate -> ProjectCreate
@@ -110,17 +124,17 @@ instance HasWorkspaceId ProjectCreate where
 All fields are optional to support partial updates
 -}
 data ProjectUpdate = ProjectUpdate
-    { _name :: Maybe Text
-    , _description :: Maybe Text
-    , _color :: Maybe Text -- Note: API accepts string or integer, using Text for now
-    , _is_favorite :: Maybe Bool
+    { _name :: Maybe Name
+    , _description :: Maybe Description
+    , _color :: Maybe Color -- Note: API accepts string or integer, using Text for now
+    , _is_favorite :: Maybe IsFavorite
     , _view_style :: Maybe ViewStyle
     }
     deriving (Show, Eq, Generic)
 
 instance ToJSON ProjectUpdate where
     toJSON :: ProjectUpdate -> Value
-    toJSON = genericToJSON defaultOptions {fieldLabelModifier = L.drop 1}
+    toJSON = genericToJSON defaultOptions {fieldLabelModifier = L.drop 1, omitNothingFields = True}
 
 instance FromJSON ProjectUpdate where
     parseJSON :: Value -> Parser ProjectUpdate
@@ -128,11 +142,11 @@ instance FromJSON ProjectUpdate where
 
 instance HasName ProjectUpdate where
     hasName :: Text -> ProjectUpdate -> ProjectUpdate
-    hasName name ProjectUpdate {..} = ProjectUpdate {_name = Just name, ..}
+    hasName name ProjectUpdate {..} = ProjectUpdate {_name = Just (Name name), ..}
 
 instance HasDescription ProjectUpdate where
     hasDescription :: Text -> ProjectUpdate -> ProjectUpdate
-    hasDescription desc ProjectUpdate {..} = ProjectUpdate {_description = Just desc, ..}
+    hasDescription desc ProjectUpdate {..} = ProjectUpdate {_description = Just (Description desc), ..}
 
 instance HasViewStyle ProjectUpdate where
     hasViewStyle :: ViewStyle -> ProjectUpdate -> ProjectUpdate
@@ -140,17 +154,18 @@ instance HasViewStyle ProjectUpdate where
 
 instance HasIsFavorite ProjectUpdate where
     hasIsFavorite :: Bool -> ProjectUpdate -> ProjectUpdate
-    hasIsFavorite fav ProjectUpdate {..} = ProjectUpdate {_is_favorite = Just fav, ..}
+    hasIsFavorite fav ProjectUpdate {..} = ProjectUpdate {_is_favorite = Just (IsFavorite fav), ..}
 
 -- projects
 newProject :: Text -> Initial ProjectCreate
 newProject name =
     seed
         ProjectCreate
-            { _name = name
+            { _name = Name name
             , _description = Nothing
             , _parentId = Nothing
-            , _is_favorite = False
+            , _color = Nothing
+            , _is_favorite = IsFavorite False
             , _view_style = Nothing
             , _workspace_id = Nothing
             }
@@ -171,7 +186,7 @@ emptyProjectUpdate =
 
 data Collaborator = Collaborator
     { _id :: Text
-    , _name :: Text
+    , _name :: Name
     , _email :: Text
     }
     deriving (Show, Eq, Generic)
@@ -241,3 +256,43 @@ class (Monad m) => TodoistProjectM m where
 
     -- | Get all project collaborators with custom page size (fetches all pages automatically)
     getProjectCollaboratorsWithLimit :: ProjectId -> Int -> m [Collaborator]
+
+newtype IsShared = IsShared {getIsShared :: Bool} deriving (Show, Eq, Generic)
+
+instance FromJSON IsShared where
+    parseJSON :: Value -> Parser IsShared
+    parseJSON v = IsShared <$> parseJSON v
+
+instance ToJSON IsShared where
+    toJSON :: IsShared -> Value
+    toJSON (IsShared txt) = toJSON txt
+
+newtype IsArchived = IsArchived {getIsArchived :: Bool} deriving (Show, Eq, Generic)
+
+instance FromJSON IsArchived where
+    parseJSON :: Value -> Parser IsArchived
+    parseJSON v = IsArchived <$> parseJSON v
+
+instance ToJSON IsArchived where
+    toJSON :: IsArchived -> Value
+    toJSON (IsArchived txt) = toJSON txt
+
+newtype CanAssignTasks = CanAssignTasks {getCanAssignTasks :: Bool} deriving (Show, Eq, Generic)
+
+instance FromJSON CanAssignTasks where
+    parseJSON :: Value -> Parser CanAssignTasks
+    parseJSON v = CanAssignTasks <$> parseJSON v
+
+instance ToJSON CanAssignTasks where
+    toJSON :: CanAssignTasks -> Value
+    toJSON (CanAssignTasks txt) = toJSON txt
+
+newtype Email = Email {getEmail :: Text} deriving (Show, Eq, Generic)
+
+instance FromJSON Email where
+    parseJSON :: Value -> Parser Email
+    parseJSON v = Email <$> parseJSON v
+
+instance ToJSON Email where
+    toJSON :: Email -> Value
+    toJSON (Email txt) = toJSON txt

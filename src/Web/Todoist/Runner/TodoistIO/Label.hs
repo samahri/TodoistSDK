@@ -31,7 +31,7 @@ import Web.Todoist.Domain.Label
     , SharedLabelRename
     , TodoistLabelM (..)
     )
-import Web.Todoist.Domain.Types (Name (..), Color (..), IsFavorite (..), Order (..))
+import Web.Todoist.Domain.Types (Color (..), IsFavorite (..), Name (..), Order (..))
 import Web.Todoist.Internal.Config (TodoistConfig)
 import Web.Todoist.Internal.Error (TodoistError)
 import Web.Todoist.Internal.HTTP (PostResponse (..), apiDelete, apiGet, apiPost)

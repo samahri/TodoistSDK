@@ -14,7 +14,15 @@ import Web.Todoist.Domain.Project
     , newProject
     )
 import qualified Web.Todoist.Domain.Project as P
-import Web.Todoist.Domain.Types (ProjectId (..))
+import Web.Todoist.Domain.Types
+    ( Color (..)
+    , Description (..)
+    , IsFavorite (..)
+    , Name (..)
+    , Order (..)
+    , ProjectId (..)
+    , getName
+    )
 import Web.Todoist.Internal.Config (TodoistConfig)
 import Web.Todoist.Internal.Error (TodoistError)
 import Web.Todoist.Internal.Types
@@ -91,8 +99,7 @@ projectLifecycleSpec config = describe "Project lifecycle (create, get, delete)"
                     } = project
 
             -- Verify the project details match expected values
-            let ProjectId {getProjectId = pidId} = projectId
-            liftIO $ projId `shouldBe` pidId
+            liftIO $ projId `shouldBe` projectId
             liftIO $ projName `shouldBe` expectedName
 
             -- Verify description field matches testProject
@@ -129,7 +136,7 @@ archiveUnarchiveSpec config = describe "Project archive/unarchive lifecycle" $ d
 
             -- Verify project is archived by getting it
             P.Project {_is_archived = isArchived} <- liftTodoist config (getProject projectId)
-            liftIO $ isArchived `shouldBe` True
+            liftIO $ isArchived `shouldBe` P.IsArchived True
 
             -- Unarchive the project
             unarchivedId <- liftTodoist config (unarchiveProject projectId)
@@ -140,7 +147,7 @@ archiveUnarchiveSpec config = describe "Project archive/unarchive lifecycle" $ d
 
             -- Verify project is no longer archived
             P.Project {_is_archived = isStillArchived} <- liftTodoist config (getProject projectId)
-            liftIO $ isStillArchived `shouldBe` False
+            liftIO $ isStillArchived `shouldBe` P.IsArchived False
 
 getAllProjectsSpec :: TodoistConfig -> Spec
 getAllProjectsSpec config = describe "Get all projects" $ do
@@ -164,7 +171,7 @@ getAllProjectsSpec config = describe "Get all projects" $ do
 
                     -- Filter to only our test projects
                     let testPrefix = pack baseName
-                    let ourProjects = L.filter (\(P.Project {_name = n}) -> testPrefix `isInfixOf` n) allProjects
+                    let ourProjects = L.filter (\(P.Project {_name = n}) -> testPrefix `isInfixOf` getName n) allProjects
 
                     -- Verify we got exactly 3 projects
                     let projectCount = L.length ourProjects
@@ -174,14 +181,14 @@ getAllProjectsSpec config = describe "Get all projects" $ do
                     let projectNamesResult = L.map (\(P.Project {_name = n}) -> n) ourProjects
 
                     -- Verify all 3 project names are present
-                    liftIO $ (projectName1 `L.elem` projectNamesResult) `shouldBe` True
-                    liftIO $ (projectName2 `L.elem` projectNamesResult) `shouldBe` True
-                    liftIO $ (projectName3 `L.elem` projectNamesResult) `shouldBe` True
+                    liftIO $ (Name projectName1 `L.elem` projectNamesResult) `shouldBe` True
+                    liftIO $ (Name projectName2 `L.elem` projectNamesResult) `shouldBe` True
+                    liftIO $ (Name projectName3 `L.elem` projectNamesResult) `shouldBe` True
 
                     -- Verify each project has the expected properties
-                    let project1Maybe = L.find (\(P.Project {_name = n}) -> n == projectName1) ourProjects
-                    let project2Maybe = L.find (\(P.Project {_name = n}) -> n == projectName2) ourProjects
-                    let project3Maybe = L.find (\(P.Project {_name = n}) -> n == projectName3) ourProjects
+                    let project1Maybe = L.find (\(P.Project {_name = n}) -> n == Name projectName1) ourProjects
+                    let project2Maybe = L.find (\(P.Project {_name = n}) -> n == Name projectName2) ourProjects
+                    let project3Maybe = L.find (\(P.Project {_name = n}) -> n == Name projectName3) ourProjects
 
                     -- Verify all projects were found
                     case (project1Maybe, project2Maybe, project3Maybe) of
@@ -190,18 +197,14 @@ getAllProjectsSpec config = describe "Get all projects" $ do
                             , Just (P.Project {_id = id3, _name = name3})
                             ) -> do
                                 -- Verify project IDs match
-                                let ProjectId {getProjectId = pid1} = projectId1
-                                let ProjectId {getProjectId = pid2} = projectId2
-                                let ProjectId {getProjectId = pid3} = projectId3
-
-                                liftIO $ id1 `shouldBe` pid1
-                                liftIO $ id2 `shouldBe` pid2
-                                liftIO $ id3 `shouldBe` pid3
+                                liftIO $ id1 `shouldBe` projectId1
+                                liftIO $ id2 `shouldBe` projectId2
+                                liftIO $ id3 `shouldBe` projectId3
 
                                 -- Verify project names match
-                                liftIO $ name1 `shouldBe` projectName1
-                                liftIO $ name2 `shouldBe` projectName2
-                                liftIO $ name3 `shouldBe` projectName3
+                                liftIO $ name1 `shouldBe` Name projectName1
+                                liftIO $ name2 `shouldBe` Name projectName2
+                                liftIO $ name3 `shouldBe` Name projectName3
                         _ -> do
                             liftIO $ putStrLn "Failed to find all 3 projects in the filtered list"
                             liftIO $ False `shouldBe` True
@@ -225,7 +228,7 @@ getProjectCollaboratorsSpec config = describe "Get project collaborators" $ do
                     T.null collabId `shouldBe` False
 
                     -- Verify _name is non-empty
-                    T.null collabName `shouldBe` False
+                    T.null (getName collabName) `shouldBe` False
 
                     -- Verify _email is non-empty and contains '@'
                     T.null collabEmail `shouldBe` False
@@ -293,18 +296,18 @@ updateProjectSpec config = describe "Update project" $ do
             project1 <- liftTodoist config (getProject projectId)
             liftIO $ do
                 let P.Project {P._name = proj1Name, P._description = proj1Desc, P._is_favorite = proj1Fav} = project1
-                proj1Name `shouldBe` originalName
-                proj1Desc `shouldBe` originalDescription
-                proj1Fav `shouldBe` False -- default from newProject
+                proj1Name `shouldBe` Name originalName
+                proj1Desc `shouldBe` Description originalDescription
+                proj1Fav `shouldBe` IsFavorite False -- default from newProject
 
             -- Update the project (change name, description, and favorite status)
             let updatedName = originalName <> "-Updated"
             let projectUpdate =
                     ProjectUpdate
-                        { _name = Just updatedName
-                        , _description = Just updatedDescription
+                        { _name = Just (Name updatedName)
+                        , _description = Just (Description updatedDescription)
                         , _color = Nothing -- don't change color
-                        , _is_favorite = Just True
+                        , _is_favorite = Just (IsFavorite True)
                         , _view_style = Nothing -- don't change view style
                         }
 
@@ -317,9 +320,9 @@ updateProjectSpec config = describe "Update project" $ do
                         , P._description = updatedProjDesc
                         , P._is_favorite = updatedProjFav
                         } = updatedProject
-                updatedProjName `shouldBe` updatedName
-                updatedProjDesc `shouldBe` updatedDescription
-                updatedProjFav `shouldBe` True
+                updatedProjName `shouldBe` Name updatedName
+                updatedProjDesc `shouldBe` Description updatedDescription
+                updatedProjFav `shouldBe` IsFavorite True
 
             -- Fetch the project again to double-check persistence
             project2 <- liftTodoist config (getProject projectId)
@@ -331,9 +334,9 @@ updateProjectSpec config = describe "Update project" $ do
                         , P._view_style = proj2ViewStyle
                         } = project2
                 let P.Project {P._view_style = proj1ViewStyle} = project1
-                proj2Name `shouldBe` updatedName
-                proj2Desc `shouldBe` updatedDescription
-                proj2Fav `shouldBe` True
+                proj2Name `shouldBe` Name updatedName
+                proj2Desc `shouldBe` Description updatedDescription
+                proj2Fav `shouldBe` IsFavorite True
                 -- Verify unchanged fields remain unchanged
                 proj2ViewStyle `shouldBe` proj1ViewStyle
 
@@ -358,7 +361,7 @@ updateProjectSpec config = describe "Update project" $ do
                         { _name = Nothing
                         , _description = Nothing
                         , _color = Nothing
-                        , _is_favorite = Just True
+                        , _is_favorite = Just (IsFavorite True)
                         , _view_style = Nothing
                         }
 
@@ -367,9 +370,9 @@ updateProjectSpec config = describe "Update project" $ do
             -- Verify only is_favorite changed
             liftIO $ do
                 let P.Project {P._is_favorite = updatedFav, P._name = updatedName, P._description = updatedDesc} = updatedProject
-                updatedFav `shouldBe` True
+                updatedFav `shouldBe` IsFavorite True
                 -- Other fields should remain unchanged
-                updatedName `shouldBe` projectName
+                updatedName `shouldBe` Name projectName
                 updatedDesc `shouldBe` originalDescription
 
 {- | Create a test project from a ProjectCreate, run an action with its ID, then delete it

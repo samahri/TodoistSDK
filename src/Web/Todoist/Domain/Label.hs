@@ -40,8 +40,8 @@ import qualified Data.Text as T
 import GHC.Generics (Generic)
 import Text.Show (Show, show)
 import Web.Todoist.Builder (Initial, seed)
-import Web.Todoist.Domain.Types (Name (..), Color (..), IsFavorite (..), Order (..))
 import Web.Todoist.Builder.Has (HasColor (..), HasIsFavorite (..), HasName (..), HasOrder (..))
+import Web.Todoist.Domain.Types (Color (..), IsFavorite (..), Name (..), Order (..))
 import Web.Todoist.Internal.Types (Params)
 import Web.Todoist.QueryParam (QueryParam (..))
 

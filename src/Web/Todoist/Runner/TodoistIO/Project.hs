@@ -8,7 +8,10 @@ module Web.Todoist.Runner.TodoistIO.Project
     ) where
 
 import Web.Todoist.Domain.Project
-    ( Collaborator
+    ( CanAssignTasks (..)
+    , Collaborator
+    , IsArchived (..)
+    , IsShared (..)
     , PaginationParam (..)
     , Project (..)
     , ProjectCreate
@@ -16,7 +19,16 @@ import Web.Todoist.Domain.Project
     , TodoistProjectM (..)
     , emptyPaginationParam
     )
-import Web.Todoist.Domain.Types (ProjectId (..), parseViewStyle)
+import Web.Todoist.Domain.Types
+    ( Color (..)
+    , Description (..)
+    , IsCollapsed (..)
+    , IsFavorite (..)
+    , Name (..)
+    , Order (..)
+    , ProjectId (..)
+    , parseViewStyle
+    )
 import Web.Todoist.Internal.Config (TodoistConfig)
 import Web.Todoist.Internal.Error (TodoistError)
 import Web.Todoist.Internal.HTTP (PostResponse (..), apiDelete, apiGet, apiPost)
@@ -207,16 +219,16 @@ projectResponseToProject ProjectResponse {..} =
     let (CreatedAt createdAt) = p_created_at
         (UpdatedAt updatedAt) = p_updated_at
      in Project
-            { _id = p_id
-            , _name = p_name
-            , _description = p_description
-            , _order = p_child_order
-            , _color = p_color
-            , _is_collapsed = p_is_collapsed
-            , _is_shared = p_is_shared
-            , _is_favorite = p_is_favorite
-            , _is_archived = p_is_archived
-            , _can_assign_tasks = p_can_assign_tasks
+            { _id = ProjectId p_id
+            , _name = Name p_name
+            , _description = Description p_description
+            , _order = Order p_child_order
+            , _color = Color p_color
+            , _is_collapsed = IsCollapsed p_is_collapsed
+            , _is_shared = IsShared p_is_shared
+            , _is_favorite = IsFavorite p_is_favorite
+            , _is_archived = IsArchived p_is_archived
+            , _can_assign_tasks = CanAssignTasks p_can_assign_tasks
             , _view_style = parseViewStyle p_view_style
             , _created_at = createdAt
             , _updated_at = updatedAt

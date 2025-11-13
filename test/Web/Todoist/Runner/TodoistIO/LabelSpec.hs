@@ -12,7 +12,7 @@ import Data.Text (Text)
 import Test.Hspec (Spec, describe, it, shouldBe, shouldSatisfy)
 
 import Web.Todoist.Domain.Label (Label (..), LabelId (..))
-import Web.Todoist.Domain.Types (Name (..), Color (..), IsFavorite (..), Order (..))
+import Web.Todoist.Domain.Types (Color (..), IsFavorite (..), Name (..), Order (..))
 import Web.Todoist.Internal.Types (LabelResponse (..), TodoistReturn (..))
 import Web.Todoist.TestHelpers
     ( sampleLabel

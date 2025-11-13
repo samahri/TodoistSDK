@@ -8,7 +8,16 @@ import Web.Todoist.Domain.Project
     , ProjectCreate
     , ProjectUpdate (..)
     )
-import Web.Todoist.Domain.Types (ProjectId (..), ViewStyle (..), parseViewStyle)
+import Web.Todoist.Domain.Types
+    ( Color (..)
+    , Description (..)
+    , IsFavorite (..)
+    , Name (..)
+    , Order (..)
+    , ProjectId (..)
+    , ViewStyle (..)
+    , parseViewStyle
+    )
 import Web.Todoist.Internal.Types
     ( Action (..)
     , CollaboratorRole (..)
@@ -299,9 +308,9 @@ jsonParsingUpdateSpec = describe "ProjectUpdate JSON parsing" $ do
         let decoded = decode sampleProjectUpdateJson :: Maybe ProjectUpdate
         decoded `shouldSatisfy` isJust
         let ProjectUpdate {_name = name, _description = desc, _is_favorite = isFav} = fromJust decoded
-        name `shouldBe` Just "Updated Project Name"
-        desc `shouldBe` Just "Updated description"
-        isFav `shouldBe` Just True
+        name `shouldBe` Just (Name "Updated Project Name")
+        desc `shouldBe` Just (Description "Updated description")
+        isFav `shouldBe` Just (IsFavorite True)
 
 jsonPartialUpdateSpec :: Spec
 jsonPartialUpdateSpec = describe "Partial ProjectUpdate" $ do
@@ -319,8 +328,8 @@ jsonPartialUpdateSpec = describe "Partial ProjectUpdate" $ do
                 , _is_favorite = isFav
                 , _view_style = viewStyle
                 } = fromJust decoded
-        name `shouldBe` Just "New Name"
+        name `shouldBe` Just (Name "New Name")
         desc `shouldBe` Nothing
         color `shouldBe` Nothing
-        isFav `shouldBe` Just True
+        isFav `shouldBe` Just (IsFavorite True)
         viewStyle `shouldBe` Nothing

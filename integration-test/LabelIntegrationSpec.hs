@@ -45,7 +45,7 @@ import Web.Todoist.Domain.Label
     , renameSharedLabels
     , updateLabel
     )
-import Web.Todoist.Domain.Types (Name (..), Color (..), IsFavorite (..), Order (..))
+import Web.Todoist.Domain.Types (Color (..), IsFavorite (..), Name (..), Order (..))
 import Web.Todoist.Internal.Error (TodoistError)
 import Web.Todoist.Runner (todoist)
 import Web.Todoist.Runner.TodoistIO (TodoistConfig)

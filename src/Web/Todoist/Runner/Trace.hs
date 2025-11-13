@@ -45,7 +45,14 @@ import Web.Todoist.Domain.Task
     , TaskParam
     , TodoistTaskM (..)
     )
-import Web.Todoist.Domain.Types (ProjectId (ProjectId), TaskId, Name (..), Color (..), IsFavorite (..), Order (..))
+import Web.Todoist.Domain.Types
+    ( Color (..)
+    , IsFavorite (..)
+    , Name (..)
+    , Order (..)
+    , ProjectId (ProjectId)
+    , TaskId
+    )
 
 import Control.Applicative (Applicative, pure)
 import Control.Monad (Functor, Monad)
@@ -149,7 +156,7 @@ instance TodoistProjectM Trace where
     getProjectCollaborators :: ProjectId -> Trace [Collaborator]
     getProjectCollaborators _ = Trace $ do
         tell [ProjectOp GetProjectCollaborators]
-        pure [Collaborator "" "" ""]
+        pure [Collaborator "" (Name "") ""]
 
     addProject :: ProjectCreate -> Trace ProjectId
     addProject _ = Trace $ do
