@@ -45,6 +45,7 @@ import Web.Todoist.Domain.Label
     , renameSharedLabels
     , updateLabel
     )
+import Web.Todoist.Domain.Types (Name (..), Color (..), IsFavorite (..), Order (..))
 import Web.Todoist.Internal.Error (TodoistError)
 import Web.Todoist.Runner (todoist)
 import Web.Todoist.Runner.TodoistIO (TodoistConfig)
@@ -72,7 +73,7 @@ labelLifecycleSpec config =
                 -- Get label and verify fields
                 label <- liftTodoist config (getLabel labelId)
                 let Label {_name = labName} = label
-                liftIO $ labName `shouldBe` labelName
+                liftIO $ labName `shouldBe` Name labelName
 
                 -- Delete label
                 liftTodoist config (deleteLabel labelId)
@@ -80,9 +81,8 @@ labelLifecycleSpec config =
                 -- Verify deletion by checking label is not in active labels list
                 let params = LabelParam {_cursor = Nothing, _limit = Nothing}
                 labels <- liftTodoist config (getLabels params)
-                let LabelId {getLabelId = expectedId} = labelId
-                    labelIds = fmap (\(Label {_id = lid}) -> lid) labels
-                liftIO $ expectedId `elem` labelIds `shouldBe` False
+                let labelIds = fmap (\(Label {_id = lid}) -> lid) labels
+                liftIO $ labelId `elem` labelIds `shouldBe` False
 
 getLabelsSpec :: TodoistConfig -> Spec
 getLabelsSpec config =
@@ -100,9 +100,9 @@ getLabelsSpec config =
 
                 -- Verify count and names
                 let labelNames = fmap (\(Label {_name = n}) -> n) labels
-                liftIO $ label1Name `elem` labelNames `shouldBe` True
-                liftIO $ label2Name `elem` labelNames `shouldBe` True
-                liftIO $ label3Name `elem` labelNames `shouldBe` True
+                liftIO $ Name label1Name `elem` labelNames `shouldBe` True
+                liftIO $ Name label2Name `elem` labelNames `shouldBe` True
+                liftIO $ Name label3Name `elem` labelNames `shouldBe` True
 
 updateLabelSpec :: TodoistConfig -> Spec
 updateLabelSpec config =
@@ -115,20 +115,19 @@ updateLabelSpec config =
                 let newName = labelName <> "-Updated"
                     update =
                         LabelUpdate
-                            { _name = Just newName
+                            { _name = Just (Name newName)
                             , _order = Nothing
-                            , _color = Just "berry_red"
-                            , _is_favorite = Just True
+                            , _color = Just (Color "berry_red")
+                            , _is_favorite = Just (IsFavorite True)
                             }
                 updatedLabel <- liftTodoist config (updateLabel labelId update)
 
                 -- Verify update
                 let Label {_name = updatedName, _id = updatedId, _color = updatedColor, _is_favorite = updatedFav} = updatedLabel
-                    LabelId {getLabelId = expectedId} = labelId
-                liftIO $ updatedName `shouldBe` newName
-                liftIO $ updatedId `shouldBe` expectedId
-                liftIO $ updatedColor `shouldBe` "berry_red"
-                liftIO $ updatedFav `shouldBe` True
+                liftIO $ updatedName `shouldBe` Name newName
+                liftIO $ updatedId `shouldBe` labelId
+                liftIO $ updatedColor `shouldBe` Color "berry_red"
+                liftIO $ updatedFav `shouldBe` IsFavorite True
 
 sharedLabelsSpec :: TodoistConfig -> Spec
 sharedLabelsSpec config =
@@ -146,11 +145,11 @@ sharedLabelsSpec config =
 
             withTestLabel config labelName $ \_ -> do
                 -- Rename shared label
-                let renameReq = SharedLabelRename {_name = labelName, _new_name = labelName <> "-Renamed"}
+                let renameReq = SharedLabelRename {_name = Name labelName, _new_name = Name (labelName <> "-Renamed")}
                 liftTodoist config (renameSharedLabels renameReq)
 
                 -- Remove shared label
-                let removeReq = SharedLabelRemove {_name = labelName <> "-Renamed"}
+                let removeReq = SharedLabelRemove {_name = Name (labelName <> "-Renamed")}
                 liftTodoist config (removeSharedLabels removeReq)
 
                 -- If we got here without errors, operations succeeded

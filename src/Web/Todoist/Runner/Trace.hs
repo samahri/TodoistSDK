@@ -45,7 +45,7 @@ import Web.Todoist.Domain.Task
     , TaskParam
     , TodoistTaskM (..)
     )
-import Web.Todoist.Domain.Types (ProjectId (ProjectId), TaskId)
+import Web.Todoist.Domain.Types (ProjectId (ProjectId), TaskId, Name (..), Color (..), IsFavorite (..), Order (..))
 
 import Control.Applicative (Applicative, pure)
 import Control.Monad (Functor, Monad)
@@ -283,7 +283,7 @@ instance TodoistLabelM Trace where
     getLabel :: LabelId -> Trace Label
     getLabel _ = Trace $ do
         tell [LabelOp GetLabel]
-        pure $ Label "" "" "" Nothing False
+        pure $ Label (LabelId "") (Name "") (Color "") Nothing (IsFavorite False)
 
     addLabel :: LabelCreate -> Trace LabelId
     addLabel _ = Trace $ do
@@ -293,7 +293,7 @@ instance TodoistLabelM Trace where
     updateLabel :: LabelId -> LabelUpdate -> Trace Label
     updateLabel _ _ = Trace $ do
         tell [LabelOp UpdateLabel]
-        pure $ Label "" "" "" Nothing False
+        pure $ Label (LabelId "") (Name "") (Color "") Nothing (IsFavorite False)
 
     deleteLabel :: LabelId -> Trace ()
     deleteLabel _ = Trace $ do

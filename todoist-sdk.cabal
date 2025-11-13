@@ -30,24 +30,6 @@ source-repository head
 library todoist-sdk-internal
   hs-source-dirs:     src/internal
   exposed-modules:
-    Web.Todoist.Domain.Project
-    Web.Todoist.Domain.Task
-    Web.Todoist.Domain.Comment
-    Web.Todoist.Domain.Section
-    Web.Todoist.Domain.Label
-    Web.Todoist.Domain.Types
-    Web.Todoist.Builder.Has
-    Web.Todoist.Builder
-    Web.Todoist.QueryParam
-    Web.Todoist.Runner
-    Web.Todoist.Runner.TodoistIO
-    Web.Todoist.Runner.TodoistIO.Core
-    Web.Todoist.Runner.TodoistIO.Project
-    Web.Todoist.Runner.TodoistIO.Task
-    Web.Todoist.Runner.TodoistIO.Comment
-    Web.Todoist.Runner.TodoistIO.Section
-    Web.Todoist.Runner.TodoistIO.Label
-    Web.Todoist.Runner.Trace
     Web.Todoist.Internal.Config
     Web.Todoist.Internal.Error
     Web.Todoist.Internal.HTTP

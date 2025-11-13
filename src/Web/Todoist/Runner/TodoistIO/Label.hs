@@ -31,6 +31,7 @@ import Web.Todoist.Domain.Label
     , SharedLabelRename
     , TodoistLabelM (..)
     )
+import Web.Todoist.Domain.Types (Name (..), Color (..), IsFavorite (..), Order (..))
 import Web.Todoist.Internal.Config (TodoistConfig)
 import Web.Todoist.Internal.Error (TodoistError)
 import Web.Todoist.Internal.HTTP (PostResponse (..), apiDelete, apiGet, apiPost)
@@ -43,11 +44,11 @@ import Web.Todoist.Runner.TodoistIO.Core (TodoistIO (..))
 labelResponseToLabel :: LabelResponse -> Label
 labelResponseToLabel LabelResponse {..} =
     Label
-        { _id = p_id
-        , _name = p_name
-        , _color = p_color
-        , _order = p_order
-        , _is_favorite = p_is_favorite
+        { _id = LabelId p_id
+        , _name = Name p_name
+        , _color = Color p_color
+        , _order = fmap Order p_order
+        , _is_favorite = IsFavorite p_is_favorite
         }
 
 instance TodoistLabelM TodoistIO where

@@ -71,6 +71,7 @@ import Web.Todoist.Domain.Comment
     )
 import Web.Todoist.Domain.Label
     ( Label (..)
+    , LabelId (..)
     )
 import Web.Todoist.Domain.Project
     ( Collaborator (..)
@@ -94,7 +95,7 @@ import Web.Todoist.Domain.Task
     , NewTask (..)
     , Task (..)
     )
-import Web.Todoist.Domain.Types (ProjectId (..), TaskId (..), Uid (..), ViewStyle (..))
+import Web.Todoist.Domain.Types (ProjectId (..), TaskId (..), Uid (..), ViewStyle (..), Name (..), Color (..), IsFavorite (..), Order (..))
 import Web.Todoist.Internal.Types
     ( Action (..)
     , CollaboratorRole (..)
@@ -808,11 +809,11 @@ sampleLabelResponse =
 sampleLabel :: Label
 sampleLabel =
     Label
-        { _id = "label123"
-        , _name = "Test Label"
-        , _color = "charcoal"
-        , _order = Just 1
-        , _is_favorite = False
+        { _id = LabelId "label123"
+        , _name = Name "Test Label"
+        , _color = Color "charcoal"
+        , _order = Just (Order 1)
+        , _is_favorite = IsFavorite False
         }
 
 -- | JSON for single LabelResponse

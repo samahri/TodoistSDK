@@ -25,10 +25,10 @@ module Web.Todoist.Domain.Label
 
 import Control.Applicative ((<$>))
 import Control.Monad (Monad)
-import Data.Aeson (FromJSON (..), ToJSON (..), genericToJSON)
+import Data.Aeson (FromJSON (..), ToJSON (..), Value, genericToJSON)
 import qualified Data.Aeson as A
 import Data.Aeson.Types (Parser)
-import Data.Bool (Bool (False, True))
+import Data.Bool (Bool (..))
 import Data.Eq (Eq)
 import Data.Function (($))
 import Data.Int (Int)
@@ -40,6 +40,7 @@ import qualified Data.Text as T
 import GHC.Generics (Generic)
 import Text.Show (Show, show)
 import Web.Todoist.Builder (Initial, seed)
+import Web.Todoist.Domain.Types (Name (..), Color (..), IsFavorite (..), Order (..))
 import Web.Todoist.Builder.Has (HasColor (..), HasIsFavorite (..), HasName (..), HasOrder (..))
 import Web.Todoist.Internal.Types (Params)
 import Web.Todoist.QueryParam (QueryParam (..))
@@ -49,29 +50,29 @@ newtype LabelId = LabelId {getLabelId :: Text}
     deriving (Eq, Show, Generic)
 
 instance ToJSON LabelId where
-    toJSON :: LabelId -> A.Value
+    toJSON :: LabelId -> Value
     toJSON (LabelId txt) = A.object ["id" A..= txt]
 
 instance FromJSON LabelId where
-    parseJSON :: A.Value -> Parser LabelId
+    parseJSON :: Value -> Parser LabelId
     parseJSON = A.withObject "LabelId" $ \obj ->
         LabelId <$> obj A..: "id"
 
 data Label = Label
-    { _id :: Text
-    , _name :: Text
-    , _color :: Text
-    , _order :: Maybe Int
-    , _is_favorite :: Bool
+    { _id :: LabelId
+    , _name :: Name
+    , _color :: Color
+    , _order :: Maybe Order
+    , _is_favorite :: IsFavorite
     }
     deriving (Show, Generic)
 
 -- | Request body for creating a new Label
 data LabelCreate = LabelCreate
-    { _name :: Text
-    , _order :: Maybe Int
-    , _color :: Maybe Text -- Can be string or integer per API, we'll use Text
-    , _is_favorite :: Maybe Bool
+    { _name :: Name
+    , _order :: Maybe Order
+    , _color :: Maybe Color -- Can be string or integer per API, we'll use Text
+    , _is_favorite :: Maybe IsFavorite
     }
     deriving (Show, Generic)
 
@@ -81,10 +82,10 @@ instance ToJSON LabelCreate where
 
 -- | Request body for updating a Label (partial updates)
 data LabelUpdate = LabelUpdate
-    { _name :: Maybe Text
-    , _order :: Maybe Int
-    , _color :: Maybe Text
-    , _is_favorite :: Maybe Bool
+    { _name :: Maybe Name
+    , _order :: Maybe Order
+    , _color :: Maybe Color
+    , _is_favorite :: Maybe IsFavorite
     }
     deriving (Show, Generic)
 
@@ -126,7 +127,7 @@ instance QueryParam SharedLabelParam where
 
 -- | Request body for removing a shared label
 newtype SharedLabelRemove = SharedLabelRemove
-    { _name :: Text
+    { _name :: Name
     }
     deriving (Show, Generic)
 
@@ -136,8 +137,8 @@ instance ToJSON SharedLabelRemove where
 
 -- | Request body for renaming a shared label
 data SharedLabelRename = SharedLabelRename
-    { _name :: Text
-    , _new_name :: Text
+    { _name :: Name
+    , _new_name :: Name
     }
     deriving (Show, Generic)
 
@@ -182,7 +183,7 @@ newLabel :: Text -> Initial LabelCreate
 newLabel name =
     seed
         LabelCreate
-            { _name = name
+            { _name = Name name
             , _order = Nothing
             , _color = Nothing
             , _is_favorite = Nothing
@@ -210,32 +211,32 @@ emptySharedLabelParam = SharedLabelParam {_omit_personal = Nothing, _cursor = No
 -- Builder instances for ergonomic construction
 instance HasName LabelCreate where
     hasName :: Text -> LabelCreate -> LabelCreate
-    hasName name LabelCreate {..} = LabelCreate {_name = name, ..}
+    hasName name LabelCreate {..} = LabelCreate {_name = Name name, ..}
 
 instance HasOrder LabelCreate where
     hasOrder :: Int -> LabelCreate -> LabelCreate
-    hasOrder order LabelCreate {..} = LabelCreate {_order = Just order, ..}
+    hasOrder order LabelCreate {..} = LabelCreate {_order = Just (Order order), ..}
 
 instance HasColor LabelCreate where
     hasColor :: Text -> LabelCreate -> LabelCreate
-    hasColor color LabelCreate {..} = LabelCreate {_color = Just color, ..}
+    hasColor color LabelCreate {..} = LabelCreate {_color = Just (Color color), ..}
 
 instance HasIsFavorite LabelCreate where
     hasIsFavorite :: Bool -> LabelCreate -> LabelCreate
-    hasIsFavorite fav LabelCreate {..} = LabelCreate {_is_favorite = Just fav, ..}
+    hasIsFavorite fav LabelCreate {..} = LabelCreate {_is_favorite = Just (IsFavorite fav), ..}
 
 instance HasName LabelUpdate where
     hasName :: Text -> LabelUpdate -> LabelUpdate
-    hasName name LabelUpdate {..} = LabelUpdate {_name = Just name, ..}
+    hasName name LabelUpdate {..} = LabelUpdate {_name = Just (Name name), ..}
 
 instance HasOrder LabelUpdate where
     hasOrder :: Int -> LabelUpdate -> LabelUpdate
-    hasOrder order LabelUpdate {..} = LabelUpdate {_order = Just order, ..}
+    hasOrder order LabelUpdate {..} = LabelUpdate {_order = Just (Order order), ..}
 
 instance HasColor LabelUpdate where
     hasColor :: Text -> LabelUpdate -> LabelUpdate
-    hasColor color LabelUpdate {..} = LabelUpdate {_color = Just color, ..}
+    hasColor color LabelUpdate {..} = LabelUpdate {_color = Just (Color color), ..}
 
 instance HasIsFavorite LabelUpdate where
     hasIsFavorite :: Bool -> LabelUpdate -> LabelUpdate
-    hasIsFavorite fav LabelUpdate {..} = LabelUpdate {_is_favorite = Just fav, ..}
+    hasIsFavorite fav LabelUpdate {..} = LabelUpdate {_is_favorite = Just (IsFavorite fav), ..}

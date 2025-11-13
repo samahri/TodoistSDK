@@ -7,6 +7,10 @@ module Web.Todoist.Domain.Types
     , ProjectId (..)
     , TaskId (..)
     , Uid (..)
+    , Name (..)
+    , Color (..)
+    , Order (..)
+    , IsFavorite (..)
     , parseViewStyle
     ) where
 
@@ -34,6 +38,8 @@ import qualified Data.Text as T
 import GHC.Base (undefined)
 import GHC.Generics (Generic)
 import Text.Show (Show)
+import Data.Int (Int)
+import Data.Bool (Bool)
 
 data ViewStyle = List | Board | Calendar deriving (Show, Eq)
 
@@ -74,7 +80,6 @@ instance FromJSON Attachment where
     parseJSON :: Value -> Parser Attachment
     parseJSON = genericParseJSON defaultOptions {fieldLabelModifier = L.drop 1}
 
--- TODO: DOCUMENTATION - Add Haddock documentation for all exported types
 newtype ProjectId = ProjectId
     { getProjectId :: Text
     }
@@ -112,3 +117,43 @@ instance FromJSON Uid where
 instance ToJSON Uid where
     toJSON :: Uid -> Value
     toJSON (Uid txt) = toJSON txt
+
+newtype Name = Name {getName :: Text} deriving (Show, Eq, Generic)
+
+instance FromJSON Name where
+    parseJSON :: Value -> Parser Name
+    parseJSON v = Name <$> parseJSON v
+
+instance ToJSON Name where
+    toJSON :: Name -> Value
+    toJSON (Name txt) = toJSON txt
+
+newtype Color = Color {getColor :: Text} deriving (Show, Eq, Generic)
+
+instance FromJSON Color where
+    parseJSON :: Value -> Parser Color
+    parseJSON v = Color <$> parseJSON v
+
+instance ToJSON Color where
+    toJSON :: Color -> Value
+    toJSON (Color txt) = toJSON txt
+
+newtype Order = Order {getOrder :: Int} deriving (Show, Eq, Generic)
+
+instance FromJSON Order where
+    parseJSON :: Value -> Parser Order
+    parseJSON v = Order <$> parseJSON v
+
+instance ToJSON Order where
+    toJSON :: Order -> Value
+    toJSON (Order txt) = toJSON txt
+
+newtype IsFavorite = IsFavorite {getIsFavorite :: Bool} deriving (Show, Eq, Generic)
+
+instance FromJSON IsFavorite where
+    parseJSON :: Value -> Parser IsFavorite
+    parseJSON v = IsFavorite <$> parseJSON v
+
+instance ToJSON IsFavorite where
+    toJSON :: IsFavorite -> Value
+    toJSON (IsFavorite txt) = toJSON txt

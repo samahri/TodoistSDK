@@ -12,6 +12,7 @@ import Data.Text (Text)
 import Test.Hspec (Spec, describe, it, shouldBe, shouldSatisfy)
 
 import Web.Todoist.Domain.Label (Label (..), LabelId (..))
+import Web.Todoist.Domain.Types (Name (..), Color (..), IsFavorite (..), Order (..))
 import Web.Todoist.Internal.Types (LabelResponse (..), TodoistReturn (..))
 import Web.Todoist.TestHelpers
     ( sampleLabel
@@ -86,8 +87,8 @@ spec = do
                     , _order = labOrder
                     , _is_favorite = labFavorite
                     } = sampleLabel
-            labId `shouldBe` ("label123" :: Text)
-            labName `shouldBe` ("Test Label" :: Text)
-            labColor `shouldBe` ("charcoal" :: Text)
-            labOrder `shouldBe` Just 1
-            labFavorite `shouldBe` False
+            labId `shouldBe` LabelId "label123"
+            labName `shouldBe` Name "Test Label"
+            labColor `shouldBe` Color "charcoal"
+            labOrder `shouldBe` Just (Order 1)
+            labFavorite `shouldBe` IsFavorite False
