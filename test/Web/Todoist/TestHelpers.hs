@@ -73,7 +73,16 @@ import Web.Todoist.Domain.Label
     ( Label (..)
     , LabelId (..)
     )
-import Web.Todoist.Domain.Project (CanAssignTasks (..), Collaborator (..), IsArchived (..), IsShared (..), Project (..), ProjectCreate, ProjectUpdate (..), newProject)
+import Web.Todoist.Domain.Project
+    ( CanAssignTasks (..)
+    , Collaborator (..)
+    , IsArchived (..)
+    , IsShared (..)
+    , Project (..)
+    , ProjectCreate
+    , ProjectUpdate (..)
+    , newProject
+    )
 import Web.Todoist.Domain.Section
     ( Section (..)
     , SectionCreate
@@ -96,6 +105,7 @@ import Web.Todoist.Domain.Types
     , IsFavorite (..)
     , Name (..)
     , Order (..)
+    , ParentId (..)
     , ProjectId (..)
     , TaskId (..)
     , Uid (..)
@@ -113,7 +123,6 @@ import Web.Todoist.Internal.Types
     , FileAttachment (..)
     , LabelResponse (..)
     , NewTaskResponse (..)
-    , ParentId (..)
     , ProjectPermissions (..)
     , ProjectResponse (..)
     , Role (..)
@@ -122,6 +131,7 @@ import Web.Todoist.Internal.Types
     , TaskResponse (..)
     , UpdatedAt (..)
     )
+import qualified Web.Todoist.Internal.Types as Internal
 
 import Data.Bool (Bool (..))
 import Data.ByteString.Lazy (ByteString)
@@ -156,7 +166,7 @@ sampleProjectResponse =
         , p_public_key = "test-public-key"
         , p_access = Nothing
         , p_role = Role Nothing
-        , p_parent_id = ParentId Nothing
+        , p_parent_id = Internal.ParentId {p_parent_id = Nothing}
         , p_inbox_project = False
         , p_is_collapsed = False
         , p_is_shared = False
@@ -457,23 +467,23 @@ sampleTaskResponse =
 sampleTask :: Task
 sampleTask =
     Task
-        { _id = "7654321098"
-        , _content = "Test Task Content"
-        , _description = "This is a test task description"
-        , _project_id = "2203306141"
-        , _section_id = Just "section123"
-        , _parent_id = Just "parent456"
+        { _id = TaskId "7654321098"
+        , _content = Content "Test Task Content"
+        , _description = Description "This is a test task description"
+        , _project_id = ProjectId "2203306141"
+        , _section_id = Just (SectionId {_id = "section123"})
+        , _parent_id = Just (ParentId "parent456")
         , _labels = ["urgent", "work"]
         , _priority = 3
         , _due = Just sampleDue
         , _deadline = Just sampleDeadline
         , _duration = Just sampleDuration
-        , _is_collapsed = False
-        , _order = 1
-        , _assignee_id = Just "assignee789"
-        , _assigner_id = Just "56092663"
+        , _is_collapsed = IsCollapsed False
+        , _order = Order 1
+        , _assignee_id = Just (Uid "assignee789")
+        , _assigner_id = Just (Uid "56092663")
         , _completed_at = Nothing
-        , _creator_id = "56092663"
+        , _creator_id = Uid "56092663"
         , _created_at = "2025-11-01T10:00:00Z"
         , _updated_at = "2025-11-03T14:30:00Z"
         }
@@ -541,11 +551,11 @@ sampleNewTask :: NewTask
 sampleNewTask =
     NewTask
         { _user_id = "56092663"
-        , _id = "9876543210"
-        , _project_id = "2203306141"
+        , _id = TaskId "9876543210"
+        , _project_id = ProjectId "2203306141"
         , _section_id = Nothing
         , _parent_id = Nothing
-        , _added_by_uid = Just "56092663"
+        , _added_by_uid = Just (Uid "56092663")
         , _assigned_by_uid = Nothing
         , _responsible_uid = Nothing
         , _labels = ["new"]
@@ -555,12 +565,12 @@ sampleNewTask =
         , _completed_at = Nothing
         , _updated_at = Just "2025-11-04T09:00:00Z"
         , _priority = 1
-        , _child_order = 0
-        , _content = "New Task"
-        , _description = "A newly created task"
+        , _child_order = Order 0
+        , _content = Content "New Task"
+        , _description = Description "A newly created task"
         , _note_count = 0
-        , _day_order = 1
-        , _is_collapsed = False
+        , _day_order = Order 1
+        , _is_collapsed = IsCollapsed False
         }
 
 -- | JSON representation of a valid NewTaskResponse
@@ -758,11 +768,11 @@ sampleSectionResponseJson =
 sampleSection :: Section
 sampleSection =
     Section
-        { _id = "section123"
-        , _name = "Test Section"
-        , _project_id = "project789"
-        , _is_collapsed = False
-        , _order = 1
+        { _id = SectionId {_id = "section123"}
+        , _name = Name "Test Section"
+        , _project_id = ProjectId "project789"
+        , _is_collapsed = IsCollapsed False
+        , _order = Order 1
         }
 
 -- | Sample SectionCreate
@@ -773,7 +783,7 @@ sampleSectionCreate = runBuilder (newSection "New Section" "project789") mempty
 sampleSectionUpdate :: SectionUpdate
 sampleSectionUpdate =
     SectionUpdate
-        { _name = Just "Updated Section"
+        { _name = Just (Name "Updated Section")
         }
 
 -- | JSON for TodoistReturn [SectionResponse] (getSections response)

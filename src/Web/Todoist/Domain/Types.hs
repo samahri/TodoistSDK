@@ -13,6 +13,8 @@ module Web.Todoist.Domain.Types
     , IsFavorite (..)
     , Description (..)
     , IsCollapsed (..)
+    , Content (..)
+    , ParentId (..)
     , parseViewStyle
     ) where
 
@@ -25,10 +27,8 @@ import Data.Aeson
     , fieldLabelModifier
     , genericParseJSON
     , genericToJSON
-    , object
     , withObject
     , (.:)
-    , (.=)
     )
 import Data.Aeson.Types (Parser)
 import Data.Bool (Bool)
@@ -95,7 +95,7 @@ instance FromJSON ProjectId where
 
 instance ToJSON ProjectId where
     toJSON :: ProjectId -> Value
-    toJSON (ProjectId txt) = object ["id" .= txt]
+    toJSON (ProjectId txt) = toJSON txt
 
 newtype TaskId = TaskId
     { getTaskId :: Text
@@ -179,3 +179,26 @@ instance FromJSON IsCollapsed where
 instance ToJSON IsCollapsed where
     toJSON :: IsCollapsed -> Value
     toJSON (IsCollapsed txt) = toJSON txt
+
+newtype Content = Content {getContent :: Text} deriving (Show, Eq, Generic)
+
+instance ToJSON Content where
+    toJSON :: Content -> Value
+    toJSON (Content txt) = toJSON txt
+
+instance FromJSON Content where
+    parseJSON :: Value -> Parser Content
+    parseJSON v = Content <$> parseJSON v
+
+newtype ParentId = ParentId
+    { getParentId :: Text
+    }
+    deriving (Show, Eq, Generic)
+
+instance FromJSON ParentId where
+    parseJSON :: Value -> Parser ParentId
+    parseJSON v = ParentId <$> parseJSON v
+
+instance ToJSON ParentId where
+    toJSON :: ParentId -> Value
+    toJSON (ParentId txt) = toJSON txt

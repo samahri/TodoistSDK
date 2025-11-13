@@ -76,7 +76,17 @@ import Data.Text (Text)
 import qualified Data.Text
 import GHC.Generics (Generic)
 import Text.Show (Show)
-import Web.Todoist.Domain.Types (TaskId)
+import Web.Todoist.Domain.Section (SectionId (..))
+import Web.Todoist.Domain.Types
+    ( Content (..)
+    , Description (..)
+    , IsCollapsed
+    , Order (..)
+    , ParentId (..)
+    , ProjectId (..)
+    , TaskId
+    , Uid
+    )
 
 -- | Duration unit for tasks
 data DurationUnit = Minute | Day
@@ -140,23 +150,23 @@ instance ToJSON Due where
     toJSON = genericToJSON defaultOptions {fieldLabelModifier = L.drop 1}
 
 data Task = Task
-    { _id :: Text
-    , _content :: Text
-    , _description :: Text
-    , _project_id :: Text
-    , _section_id :: Maybe Text
-    , _parent_id :: Maybe Text
+    { _id :: TaskId
+    , _content :: Content
+    , _description :: Description
+    , _project_id :: ProjectId
+    , _section_id :: Maybe SectionId
+    , _parent_id :: Maybe ParentId
     , _labels :: [Text]
     , _priority :: Int
     , _due :: Maybe Due
     , _deadline :: Maybe Deadline
     , _duration :: Maybe Duration
-    , _is_collapsed :: Bool
-    , _order :: Int
-    , _assignee_id :: Maybe Text
-    , _assigner_id :: Maybe Text
+    , _is_collapsed :: IsCollapsed
+    , _order :: Order
+    , _assignee_id :: Maybe Uid
+    , _assigner_id :: Maybe Uid
     , _completed_at :: Maybe Text
-    , _creator_id :: Text
+    , _creator_id :: Uid
     , _created_at :: Text
     , _updated_at :: Text
     }
@@ -172,13 +182,13 @@ instance ToJSON Task where
 
 data NewTask = NewTask
     { _user_id :: Text
-    , _id :: Text
-    , _project_id :: Text
-    , _section_id :: Maybe Text
-    , _parent_id :: Maybe Text
-    , _added_by_uid :: Maybe Text
-    , _assigned_by_uid :: Maybe Text
-    , _responsible_uid :: Maybe Text
+    , _id :: TaskId
+    , _project_id :: ProjectId
+    , _section_id :: Maybe SectionId
+    , _parent_id :: Maybe ParentId
+    , _added_by_uid :: Maybe Uid
+    , _assigned_by_uid :: Maybe Uid
+    , _responsible_uid :: Maybe Uid
     , _labels :: [Text]
     , _checked :: Bool
     , _is_deleted :: Bool
@@ -186,12 +196,12 @@ data NewTask = NewTask
     , _completed_at :: Maybe Text
     , _updated_at :: Maybe Text
     , _priority :: Int
-    , _child_order :: Int
-    , _content :: Text
-    , _description :: Text
+    , _child_order :: Order
+    , _content :: Content
+    , _description :: Description
     , _note_count :: Int
-    , _day_order :: Int
-    , _is_collapsed :: Bool
+    , _day_order :: Order
+    , _is_collapsed :: IsCollapsed
     }
     deriving (Show, Generic)
 
@@ -204,9 +214,9 @@ instance ToJSON NewTask where
     toJSON = genericToJSON defaultOptions {fieldLabelModifier = L.drop 1}
 
 data MoveTask = MoveTask
-    { _project_id :: Maybe Text
-    , _section_id :: Maybe Text
-    , _parent_id :: Maybe Text
+    { _project_id :: Maybe ProjectId
+    , _section_id :: Maybe SectionId
+    , _parent_id :: Maybe ParentId
     }
     deriving (Show, Generic)
 
@@ -229,15 +239,15 @@ newMoveTask =
 
 instance HasProjectId MoveTask where
     hasProjectId :: Text -> MoveTask -> MoveTask
-    hasProjectId projId MoveTask {..} = MoveTask {_project_id = Just projId, ..}
+    hasProjectId projId MoveTask {..} = MoveTask {_project_id = Just (ProjectId projId), ..}
 
 instance HasSectionId MoveTask where
     hasSectionId :: Text -> MoveTask -> MoveTask
-    hasSectionId secId MoveTask {..} = MoveTask {_section_id = Just secId, ..}
+    hasSectionId secId MoveTask {..} = MoveTask {_section_id = Just (SectionId {_id = secId}), ..}
 
 instance HasParentId MoveTask where
     hasParentId :: Text -> MoveTask -> MoveTask
-    hasParentId parId MoveTask {..} = MoveTask {_parent_id = Just parId, ..}
+    hasParentId parId MoveTask {..} = MoveTask {_parent_id = Just (ParentId parId), ..}
 
 emptyMoveTask :: MoveTask
 emptyMoveTask =
@@ -267,12 +277,12 @@ addTaskQuickText text =
         }
 
 data TaskCreate = TaskCreate
-    { _content :: Text
-    , _description :: Maybe Text
-    , _project_id :: Maybe Text
-    , _section_id :: Maybe Text
-    , _parent_id :: Maybe Text
-    , _order :: Maybe Int
+    { _content :: Content
+    , _description :: Maybe Description
+    , _project_id :: Maybe ProjectId
+    , _section_id :: Maybe SectionId
+    , _parent_id :: Maybe ParentId
+    , _order :: Maybe Order
     , _labels :: Maybe [Text]
     , _priority :: Maybe Int
     , _assignee_id :: Maybe Int
@@ -288,13 +298,13 @@ data TaskCreate = TaskCreate
 
 instance ToJSON TaskCreate where
     toJSON :: TaskCreate -> Value
-    toJSON = genericToJSON defaultOptions {fieldLabelModifier = L.drop 1}
+    toJSON = genericToJSON defaultOptions {fieldLabelModifier = L.drop 1, omitNothingFields = True}
 
 newTask :: Text -> Initial TaskCreate
 newTask content =
     seed
         TaskCreate
-            { _content = content
+            { _content = Content content
             , _description = Nothing
             , _project_id = Nothing
             , _section_id = Nothing
@@ -314,23 +324,23 @@ newTask content =
 
 instance HasDescription TaskCreate where
     hasDescription :: Text -> TaskCreate -> TaskCreate
-    hasDescription desc TaskCreate {..} = TaskCreate {_description = Just desc, ..}
+    hasDescription desc TaskCreate {..} = TaskCreate {_description = Just (Description desc), ..}
 
 instance HasContent TaskCreate where
     hasContent :: Text -> TaskCreate -> TaskCreate
-    hasContent content TaskCreate {..} = TaskCreate {_content = content, ..}
+    hasContent content TaskCreate {..} = TaskCreate {_content = Content content, ..}
 
 instance HasSectionId TaskCreate where
     hasSectionId :: Text -> TaskCreate -> TaskCreate
-    hasSectionId sid TaskCreate {..} = TaskCreate {_section_id = Just sid, ..}
+    hasSectionId sid TaskCreate {..} = TaskCreate {_section_id = Just (SectionId {_id = sid}), ..}
 
 instance HasParentId TaskCreate where
     hasParentId :: Text -> TaskCreate -> TaskCreate
-    hasParentId pid TaskCreate {..} = TaskCreate {_parent_id = Just pid, ..}
+    hasParentId pid TaskCreate {..} = TaskCreate {_parent_id = Just (ParentId pid), ..}
 
 instance HasOrder TaskCreate where
     hasOrder :: Int -> TaskCreate -> TaskCreate
-    hasOrder order TaskCreate {..} = TaskCreate {_order = Just order, ..}
+    hasOrder order TaskCreate {..} = TaskCreate {_order = Just (Order order), ..}
 
 instance HasLabels TaskCreate where
     hasLabels :: [Text] -> TaskCreate -> TaskCreate
@@ -374,11 +384,11 @@ instance HasDeadlineDate TaskCreate where
 
 instance HasProjectId TaskCreate where
     hasProjectId :: Text -> TaskCreate -> TaskCreate
-    hasProjectId projId TaskCreate {..} = TaskCreate {_project_id = Just projId, ..}
+    hasProjectId projId TaskCreate {..} = TaskCreate {_project_id = Just (ProjectId projId), ..}
 
 data TaskPatch = TaskPatch
-    { _content :: Maybe Text
-    , _description :: Maybe Text
+    { _content :: Maybe Content
+    , _description :: Maybe Description
     , _labels :: Maybe [Text]
     , _priority :: Maybe Int
     , _due_string :: Maybe Text
@@ -418,11 +428,11 @@ instance ToJSON TaskPatch where
 
 instance HasDescription TaskPatch where
     hasDescription :: Text -> TaskPatch -> TaskPatch
-    hasDescription desc TaskPatch {..} = TaskPatch {_description = Just desc, ..}
+    hasDescription desc TaskPatch {..} = TaskPatch {_description = Just (Description desc), ..}
 
 instance HasContent TaskPatch where
     hasContent :: Text -> TaskPatch -> TaskPatch
-    hasContent content TaskPatch {..} = TaskPatch {_content = Just content, ..}
+    hasContent content TaskPatch {..} = TaskPatch {_content = Just (Content content), ..}
 
 instance HasLabels TaskPatch where
     hasLabels :: [Text] -> TaskPatch -> TaskPatch

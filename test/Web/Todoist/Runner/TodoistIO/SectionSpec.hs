@@ -12,6 +12,7 @@ import Data.Bool (Bool (False))
 import Data.Function (($))
 import Data.String (String)
 import Web.Todoist.Domain.Section (Section (..), SectionId (..))
+import Web.Todoist.Domain.Types (IsCollapsed (..), Name (..), Order (..), ProjectId (..))
 import Web.Todoist.Internal.Types (SectionResponse (..), TodoistReturn (..))
 import Web.Todoist.TestHelpers
     ( sampleSection
@@ -80,8 +81,8 @@ spec = do
                     , _order = secOrder
                     , _is_collapsed = secCollapsed
                     } = sampleSection
-            secId `shouldBe` ("section123" :: Text)
-            secName `shouldBe` ("Test Section" :: Text)
-            secProjId `shouldBe` ("project789" :: Text)
-            secOrder `shouldBe` 1
-            secCollapsed `shouldBe` False
+            secId `shouldBe` SectionId {_id = "section123"}
+            secName `shouldBe` Name "Test Section"
+            secProjId `shouldBe` ProjectId "project789"
+            secOrder `shouldBe` Order 1
+            secCollapsed `shouldBe` IsCollapsed False

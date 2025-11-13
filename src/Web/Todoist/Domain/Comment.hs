@@ -104,7 +104,7 @@ import qualified Data.Text as T
 import qualified Data.Tuple as L
 import GHC.Generics (Generic)
 import Text.Show (Show (..))
-import Web.Todoist.Domain.Types (Attachment, ProjectId (..), TaskId (..), Uid)
+import Web.Todoist.Domain.Types (Attachment, Content (..), ProjectId (..), TaskId (..), Uid)
 
 -- | Newtype wrapper for Comment ID
 newtype CommentId = CommentId {getCommentId :: Text}
@@ -117,16 +117,6 @@ instance ToJSON CommentId where
 instance FromJSON CommentId where
     parseJSON :: Value -> Parser CommentId
     parseJSON v = CommentId <$> parseJSON v
-
-newtype Content = Content {getContent :: Text} deriving (Show, Eq, Generic)
-
-instance ToJSON Content where
-    toJSON :: Content -> Value
-    toJSON (Content txt) = toJSON txt
-
-instance FromJSON Content where
-    parseJSON :: Value -> Parser Content
-    parseJSON v = Content <$> parseJSON v
 
 -- | Comment domain type
 data Comment = Comment

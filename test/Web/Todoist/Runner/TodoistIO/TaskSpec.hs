@@ -5,6 +5,8 @@
 
 module Web.Todoist.Runner.TodoistIO.TaskSpec (spec) where
 
+import Web.Todoist.Domain.Section (SectionId (..))
+import qualified Web.Todoist.Domain.Section as Section
 import Web.Todoist.Domain.Task
     ( Deadline (..)
     , Due (..)
@@ -12,6 +14,15 @@ import Web.Todoist.Domain.Task
     , DurationUnit (..)
     , NewTask (..)
     , Task (..)
+    )
+import Web.Todoist.Domain.Types
+    ( Content (..)
+    , Description (..)
+    , Order (..)
+    , ParentId (..)
+    , ProjectId (..)
+    , TaskId (..)
+    , Uid (..)
     )
 import Web.Todoist.Internal.Types
     ( DeadlineResponse (..)
@@ -198,16 +209,16 @@ taskConversionSpec = describe "taskResponseToTask conversion" $ do
         -- We can't directly test the conversion function since it's not exported
         -- But we can verify our sample data is correctly structured
         let task :: Task = sampleTask
-        task._id `shouldBe` ("7654321098" :: Text)
-        task._content `shouldBe` ("Test Task Content" :: Text)
-        task._description `shouldBe` ("This is a test task description" :: Text)
-        task._project_id `shouldBe` ("2203306141" :: Text)
-        task._section_id `shouldBe` Just ("section123" :: Text)
-        task._parent_id `shouldBe` Just ("parent456" :: Text)
+        task._id `shouldBe` TaskId "7654321098"
+        task._content `shouldBe` Content "Test Task Content"
+        task._description `shouldBe` Description "This is a test task description"
+        task._project_id `shouldBe` ProjectId "2203306141"
+        task._section_id `shouldBe` Just (SectionId "section123")
+        task._parent_id `shouldBe` Just (ParentId "parent456")
         task._labels `shouldBe` (["urgent", "work"] :: [Text])
         task._priority `shouldBe` (3 :: Int)
-        task._order `shouldBe` (1 :: Int)
-        task._creator_id `shouldBe` ("56092663" :: Text)
+        task._order `shouldBe` Order 1
+        task._creator_id `shouldBe` Uid "56092663"
         task._created_at `shouldBe` ("2025-11-01T10:00:00Z" :: Text)
         task._updated_at `shouldBe` ("2025-11-03T14:30:00Z" :: Text)
 
@@ -216,8 +227,8 @@ taskConversionSpec = describe "taskResponseToTask conversion" $ do
         task._due `shouldSatisfy` isJust
         task._deadline `shouldSatisfy` isJust
         task._duration `shouldSatisfy` isJust
-        task._assignee_id `shouldBe` Just ("assignee789" :: Text)
-        task._assigner_id `shouldBe` Just ("56092663" :: Text)
+        task._assignee_id `shouldBe` Just (Uid "assignee789")
+        task._assigner_id `shouldBe` Just (Uid "56092663")
 
     it "verifies Due conversion" $ do
         let due :: Due = sampleDue
@@ -274,17 +285,17 @@ newTaskConversionSpec = describe "newTaskResponseToNewTask conversion" $ do
     it "verifies sample NewTask domain model structure" $ do
         let newTask :: NewTask = sampleNewTask
         newTask._user_id `shouldBe` ("56092663" :: Text)
-        newTask._id `shouldBe` ("9876543210" :: Text)
-        newTask._project_id `shouldBe` ("2203306141" :: Text)
-        newTask._section_id `shouldBe` (Nothing :: Maybe Text)
-        newTask._parent_id `shouldBe` (Nothing :: Maybe Text)
+        newTask._id `shouldBe` TaskId "9876543210"
+        newTask._project_id `shouldBe` ProjectId "2203306141"
+        newTask._section_id `shouldBe` (Nothing :: Maybe SectionId)
+        newTask._parent_id `shouldBe` (Nothing :: Maybe ParentId)
         newTask._labels `shouldBe` (["new"] :: [Text])
         newTask._priority `shouldBe` (1 :: Int)
-        newTask._content `shouldBe` ("New Task" :: Text)
-        newTask._description `shouldBe` ("A newly created task" :: Text)
+        newTask._content `shouldBe` Content "New Task"
+        newTask._description `shouldBe` Description "A newly created task"
         newTask._checked `shouldBe` False
         newTask._is_deleted `shouldBe` False
-        newTask._child_order `shouldBe` (0 :: Int)
+        newTask._child_order `shouldBe` Order 0
 
     it "handles optional fields correctly" $ do
         let newTask :: NewTask = sampleNewTask

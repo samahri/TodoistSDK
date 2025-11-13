@@ -28,6 +28,7 @@ import Web.Todoist.Domain.Section
     , SectionUpdate
     , TodoistSectionM (..)
     )
+import Web.Todoist.Domain.Types (IsCollapsed (..), Name (..), Order (..), ProjectId (..))
 import Web.Todoist.Internal.Config (TodoistConfig)
 import Web.Todoist.Internal.Error (TodoistError)
 import Web.Todoist.Internal.HTTP (PostResponse (..), apiDelete, apiGet, apiPost)
@@ -40,11 +41,11 @@ import Web.Todoist.Runner.TodoistIO.Core (TodoistIO (..))
 sectionResponseToSection :: SectionResponse -> Section
 sectionResponseToSection SectionResponse {..} =
     Section
-        { _id = p_id
-        , _name = p_name
-        , _project_id = p_project_id
-        , _is_collapsed = p_is_collapsed
-        , _order = p_section_order
+        { _id = SectionId {_id = p_id}
+        , _name = Name p_name
+        , _project_id = ProjectId p_project_id
+        , _is_collapsed = IsCollapsed p_is_collapsed
+        , _order = Order p_section_order
         }
 
 instance TodoistSectionM TodoistIO where

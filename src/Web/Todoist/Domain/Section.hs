@@ -44,6 +44,7 @@ import Data.Monoid ((<>))
 import Text.Show (Show (..))
 import Web.Todoist.Builder (Initial, seed)
 import Web.Todoist.Builder.Has (HasName (..), HasOrder (..))
+import Web.Todoist.Domain.Types (IsCollapsed, Name (..), Order (..), ProjectId (..), getProjectId)
 import Web.Todoist.QueryParam (QueryParam (..))
 
 -- | Unique identifier for a Section
@@ -54,23 +55,27 @@ instance FromJSON SectionId where
     parseJSON :: Value -> Parser SectionId
     parseJSON = genericParseJSON A.defaultOptions {A.fieldLabelModifier = L.drop 1}
 
+instance ToJSON SectionId where
+    toJSON :: SectionId -> Value
+    toJSON (SectionId txt) = toJSON txt
+
 {- | Simplified domain representation of a Section (5 essential fields)
 Note: API returns 11 fields, but we only expose the essential ones
 -}
 data Section = Section
-    { _id :: Text
-    , _name :: Text
-    , _project_id :: Text
-    , _is_collapsed :: Bool
-    , _order :: Int -- Maps from section_order in API
+    { _id :: SectionId
+    , _name :: Name
+    , _project_id :: ProjectId
+    , _is_collapsed :: IsCollapsed
+    , _order :: Order -- Maps from section_order in API
     }
     deriving (Show, Generic)
 
 -- | Request body for creating a new Section
 data SectionCreate = SectionCreate
-    { _name :: Text
-    , _project_id :: Text
-    , _order :: Maybe Int
+    { _name :: Name
+    , _project_id :: ProjectId
+    , _order :: Maybe Order
     }
     deriving (Show, Generic)
 
@@ -82,7 +87,7 @@ instance ToJSON SectionCreate where
 Uses omitNothingFields to only send fields that are set
 -}
 newtype SectionUpdate = SectionUpdate
-    { _name :: Maybe Text
+    { _name :: Maybe Name
     }
     deriving (Show, Generic)
 
@@ -92,7 +97,7 @@ instance ToJSON SectionUpdate where
 
 -- | Query parameters for filtering and paginating sections
 data SectionParam = SectionParam
-    { project_id :: Maybe Text
+    { project_id :: Maybe ProjectId
     , cursor :: Maybe Text
     , limit :: Maybe Int
     }
@@ -102,7 +107,7 @@ instance QueryParam SectionParam where
     toQueryParam :: SectionParam -> [(Text, Text)]
     toQueryParam SectionParam {..} =
         let projectIdParam = case project_id of
-                Just pid -> [("project_id", pid)]
+                Just pid -> [("project_id", getProjectId pid)]
                 Nothing -> []
             cursorParam = case cursor of
                 Just c -> [("cursor", c)]
@@ -139,8 +144,8 @@ newSection :: Text -> Text -> Initial SectionCreate
 newSection name projectId =
     seed
         SectionCreate
-            { _name = name
-            , _project_id = projectId
+            { _name = Name name
+            , _project_id = ProjectId projectId
             , _order = Nothing
             }
 
@@ -165,12 +170,12 @@ emptySectionParam =
 -- Builder instances for ergonomic construction
 instance HasName SectionCreate where
     hasName :: Text -> SectionCreate -> SectionCreate
-    hasName name SectionCreate {..} = SectionCreate {_name = name, ..}
+    hasName name SectionCreate {..} = SectionCreate {_name = Name name, ..}
 
 instance HasOrder SectionCreate where
     hasOrder :: Int -> SectionCreate -> SectionCreate
-    hasOrder order SectionCreate {..} = SectionCreate {_order = Just order, ..}
+    hasOrder order SectionCreate {..} = SectionCreate {_order = Just (Order order), ..}
 
 instance HasName SectionUpdate where
     hasName :: Text -> SectionUpdate -> SectionUpdate
-    hasName name SectionUpdate {} = SectionUpdate {_name = Just name, ..}
+    hasName name SectionUpdate {} = SectionUpdate {_name = Just (Name name), ..}

@@ -286,10 +286,11 @@ withTestTaskComment config projectName taskContent commentContent action = do
             let taskCreate = buildTestTask taskContent projIdText
             newTaskResult <- liftTodoist config (addTask taskCreate)
             let NewTask {_id = newTaskIdText} = newTaskResult
-            let taskId = TaskId {getTaskId = newTaskIdText}
+            let taskId = newTaskIdText
+                TaskId {getTaskId = taskIdText} = taskId
 
             liftIO $ putStrLn $ "Creating test comment: " <> show commentContent
-            let commentCreate = buildTestCommentForTask commentContent newTaskIdText
+            let commentCreate = buildTestCommentForTask commentContent taskIdText
             createdComment <- liftTodoist config (addComment commentCreate)
             let Comment {_id = commentId} = createdComment
 

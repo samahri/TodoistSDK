@@ -6,6 +6,7 @@
 -- | TodoistTaskM instance for the TodoistIO monad
 module Web.Todoist.Runner.TodoistIO.Task () where
 
+import Web.Todoist.Domain.Section (SectionId (..))
 import Web.Todoist.Domain.Task
     ( AddTaskQuick
     , CompletedTasksQueryParam
@@ -24,7 +25,16 @@ import Web.Todoist.Domain.Task
     , TaskPatch
     , TodoistTaskM (..)
     )
-import Web.Todoist.Domain.Types (TaskId (..))
+import Web.Todoist.Domain.Types
+    ( Content (..)
+    , Description (..)
+    , IsCollapsed (..)
+    , Order (..)
+    , ParentId (..)
+    , ProjectId (..)
+    , TaskId (..)
+    , Uid (..)
+    )
 import Web.Todoist.Internal.Config (TodoistConfig)
 import Web.Todoist.Internal.Error (TodoistError)
 import Web.Todoist.Internal.HTTP (PostResponse (..), apiDelete, apiGet, apiPost)
@@ -97,23 +107,23 @@ dueResponseToDue DueResponse {..} =
 taskResponseToTask :: TaskResponse -> Task
 taskResponseToTask TaskResponse {..} =
     Task
-        { _id = p_id
-        , _content = p_content
-        , _description = p_description
-        , _project_id = p_project_id
-        , _section_id = p_section_id
-        , _parent_id = p_parent_id
+        { _id = TaskId p_id
+        , _content = Content p_content
+        , _description = Description p_description
+        , _project_id = ProjectId p_project_id
+        , _section_id = fmap (\sid -> SectionId {_id = sid}) p_section_id
+        , _parent_id = fmap ParentId p_parent_id
         , _labels = p_labels
         , _priority = p_priority
         , _due = fmap dueResponseToDue p_due
         , _deadline = fmap deadlineResponseToDeadline p_deadline
         , _duration = fmap durationResponseToDuration p_duration
-        , _is_collapsed = p_is_collapsed
-        , _order = p_child_order
-        , _assignee_id = p_responsible_uid
-        , _assigner_id = p_assigned_by_uid
+        , _is_collapsed = IsCollapsed p_is_collapsed
+        , _order = Order p_child_order
+        , _assignee_id = fmap Uid p_responsible_uid
+        , _assigner_id = fmap Uid p_assigned_by_uid
         , _completed_at = p_completed_at
-        , _creator_id = p_user_id
+        , _creator_id = Uid p_user_id
         , _created_at = fromMaybe "" p_added_at
         , _updated_at = fromMaybe "" p_updated_at
         }
@@ -123,13 +133,13 @@ newTaskResponseToNewTask :: NewTaskResponse -> NewTask
 newTaskResponseToNewTask NewTaskResponse {..} =
     NewTask
         { _user_id = p_user_id
-        , _id = p_id
-        , _project_id = p_project_id
-        , _section_id = p_section_id
-        , _parent_id = p_parent_id
-        , _added_by_uid = p_added_by_uid
-        , _assigned_by_uid = p_assigned_by_uid
-        , _responsible_uid = p_responsible_uid
+        , _id = TaskId p_id
+        , _project_id = ProjectId p_project_id
+        , _section_id = fmap (\sid -> SectionId {_id = sid}) p_section_id
+        , _parent_id = fmap ParentId p_parent_id
+        , _added_by_uid = fmap Uid p_added_by_uid
+        , _assigned_by_uid = fmap Uid p_assigned_by_uid
+        , _responsible_uid = fmap Uid p_responsible_uid
         , _labels = p_labels
         , _checked = p_checked
         , _is_deleted = p_is_deleted
@@ -137,12 +147,12 @@ newTaskResponseToNewTask NewTaskResponse {..} =
         , _completed_at = p_completed_at
         , _updated_at = p_updated_at
         , _priority = p_priority
-        , _child_order = p_child_order
-        , _content = p_content
-        , _description = p_description
+        , _child_order = Order p_child_order
+        , _content = Content p_content
+        , _description = Description p_description
         , _note_count = p_note_count
-        , _day_order = p_day_order
-        , _is_collapsed = p_is_collapsed
+        , _day_order = Order p_day_order
+        , _is_collapsed = IsCollapsed p_is_collapsed
         }
 
 instance TodoistTaskM TodoistIO where

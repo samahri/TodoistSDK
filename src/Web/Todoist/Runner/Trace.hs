@@ -47,6 +47,7 @@ import Web.Todoist.Domain.Task
     )
 import Web.Todoist.Domain.Types
     ( Color (..)
+    , IsCollapsed (..)
     , IsFavorite (..)
     , Name (..)
     , Order (..)
@@ -62,32 +63,6 @@ import Data.Function (($))
 import Data.Maybe (Maybe (Nothing))
 import Data.Text (Text)
 import Text.Show (Show)
-
--- emptyTask :: NewTask
--- emptyTask =
---     NewTask
---         { _user_id = ""
---         , _id = ""
---         , _project_id = ""
---         , _section_id = Nothing
---         , _parent_id = Nothing
---         , _added_by_uid = Nothing
---         , _assigned_by_uid = Nothing
---         , _responsible_uid = Nothing
---         , _labels = []
---         , _checked = False
---         , _is_deleted = False
---         , added_at = Nothing
---         , _completed_at = Nothing
---         , _updated_at = Nothing
---         , _priority = 0
---         , _child_order = 0
---         , _content = ""
---         , _description = ""
---         , _note_count = 0
---         , _day_order = 0
---         , _is_collapsed = False
---         }
 
 data Op
     = ProjectOp ProjectOp
@@ -259,7 +234,7 @@ instance TodoistSectionM Trace where
     getSection :: SectionId -> Trace Section
     getSection _ = Trace $ do
         tell [SectionOp GetSection]
-        pure $ Section "" "" "" False 0
+        pure $ Section (SectionId "") (Name "") (ProjectId "") (IsCollapsed False) (Order 0)
 
     addSection :: SectionCreate -> Trace SectionId
     addSection _ = Trace $ do
@@ -269,7 +244,7 @@ instance TodoistSectionM Trace where
     updateSection :: SectionId -> SectionUpdate -> Trace Section
     updateSection _ _ = Trace $ do
         tell [SectionOp UpdateSection]
-        pure $ Section "" "" "" False 0
+        pure $ Section (SectionId "") (Name "") (ProjectId "") (IsCollapsed False) (Order 0)
 
     deleteSection :: SectionId -> Trace ()
     deleteSection _ = Trace $ do

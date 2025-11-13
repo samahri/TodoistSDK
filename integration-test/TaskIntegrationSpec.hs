@@ -35,7 +35,7 @@ import Web.Todoist.Domain.Task
     , taskFilterWithQuery
     )
 import qualified Web.Todoist.Domain.Task as T
-import Web.Todoist.Domain.Types (ProjectId (..), TaskId (..))
+import Web.Todoist.Domain.Types (Content (..), Description (..), ProjectId (..), TaskId (..))
 import Web.Todoist.Internal.Config (TodoistConfig)
 import Web.Todoist.Internal.Error (TodoistError)
 import Web.Todoist.Runner (todoist)
@@ -96,18 +96,16 @@ taskLifecycleSpec config = describe "Task lifecycle (create, get, delete)" $ do
                     } = task
 
             -- Verify task ID matches
-            let TaskId {getTaskId = expectedIdText} = taskId
-            liftIO $ retrievedId `shouldBe` expectedIdText
+            liftIO $ retrievedId `shouldBe` taskId
 
             -- Verify content matches
-            liftIO $ retrievedContent `shouldBe` taskContent
+            liftIO $ retrievedContent `shouldBe` Content taskContent
 
             -- Verify description was set
-            liftIO $ retrievedDescription `shouldBe` "Test task description for integration testing"
+            liftIO $ retrievedDescription `shouldBe` Description "Test task description for integration testing"
 
             -- Verify project ID matches
-            let ProjectId {getProjectId = expectedProjectId} = projectId
-            liftIO $ retrievedProjectId `shouldBe` expectedProjectId
+            liftIO $ retrievedProjectId `shouldBe` projectId
 
             -- Test explicit delete (cleanup will handle if this fails)
             liftTodoist config (deleteTask taskId)
@@ -181,7 +179,7 @@ getTasksSpec config = describe "Get multiple tasks" $ do
             liftIO $ taskCount `shouldBe` (3 :: Int)
 
             -- Extract task IDs and contents from results
-            let taskIdsResult = L.map (\(Task {_id = tid}) -> TaskId {getTaskId = tid}) tasks
+            let taskIdsResult = L.map (\(Task {_id = tid}) -> tid) tasks
             let taskContentsResult = L.map (\(Task {_content = content}) -> content) tasks
 
             -- Verify all 3 task IDs are present
@@ -191,13 +189,13 @@ getTasksSpec config = describe "Get multiple tasks" $ do
             liftIO $ (expectedId3 `L.elem` taskIdsResult) `shouldBe` True
 
             -- Verify all 3 task contents are present
-            liftIO $ (taskContent1 `L.elem` taskContentsResult) `shouldBe` True
-            liftIO $ (taskContent2 `L.elem` taskContentsResult) `shouldBe` True
-            liftIO $ (taskContent3 `L.elem` taskContentsResult) `shouldBe` True
+            liftIO $ (Content taskContent1 `L.elem` taskContentsResult) `shouldBe` True
+            liftIO $ (Content taskContent2 `L.elem` taskContentsResult) `shouldBe` True
+            liftIO $ (Content taskContent3 `L.elem` taskContentsResult) `shouldBe` True
 
             -- Verify each task has the correct project_id
             forM_ tasks $ \(Task {_project_id = taskProjId}) -> do
-                liftIO $ taskProjId `shouldBe` projIdText
+                liftIO $ taskProjId `shouldBe` projectId
 
 updateTaskSpec :: TodoistConfig -> Spec
 updateTaskSpec config = describe "Update task" $ do
@@ -215,8 +213,8 @@ updateTaskSpec config = describe "Update task" $ do
                     , _priority = initialPriority
                     } = task1
 
-            liftIO $ initialContent `shouldBe` originalContent
-            liftIO $ initialDescription `shouldBe` "Test task description for integration testing"
+            liftIO $ initialContent `shouldBe` Content originalContent
+            liftIO $ initialDescription `shouldBe` Description "Test task description for integration testing"
             liftIO $ initialPriority `shouldBe` 1 -- default priority
 
             -- Update the task
@@ -241,8 +239,8 @@ updateTaskSpec config = describe "Update task" $ do
                     , _priority = responsePriority
                     } = updatedNewTask
 
-            liftIO $ responseContent `shouldBe` updatedContent
-            liftIO $ responseDescription `shouldBe` updatedDescription
+            liftIO $ responseContent `shouldBe` Content updatedContent
+            liftIO $ responseDescription `shouldBe` Description updatedDescription
             liftIO $ responsePriority `shouldBe` updatedPriority
 
             -- Fetch the task again to verify persistence
@@ -254,13 +252,12 @@ updateTaskSpec config = describe "Update task" $ do
                     , _project_id = persistedProjectId
                     } = task2
 
-            liftIO $ persistedContent `shouldBe` updatedContent
-            liftIO $ persistedDescription `shouldBe` updatedDescription
+            liftIO $ persistedContent `shouldBe` Content updatedContent
+            liftIO $ persistedDescription `shouldBe` Description updatedDescription
             liftIO $ persistedPriority `shouldBe` updatedPriority
 
             -- Verify project_id unchanged
-            let ProjectId {getProjectId = expectedProjectId} = projectId
-            liftIO $ persistedProjectId `shouldBe` expectedProjectId
+            liftIO $ persistedProjectId `shouldBe` projectId
 
     it "supports partial updates (only updating specific fields)" $ do
         -- Generate unique names
@@ -433,8 +430,7 @@ moveTaskSpec config = describe "Move task between projects" $ do
             -- Verify task is in project 1
             task1 <- liftTodoist config (getTask taskId)
             let Task {_project_id = originalProjectId} = task1
-            let ProjectId {getProjectId = project1IdText} = project1Id
-            liftIO $ originalProjectId `shouldBe` project1IdText
+            liftIO $ originalProjectId `shouldBe` project1Id
 
             -- Move task to project 2
             let ProjectId {getProjectId = project2IdText} = project2Id
@@ -450,7 +446,7 @@ moveTaskSpec config = describe "Move task between projects" $ do
             -- Verify task is now in project 2
             task2 <- liftTodoist config (getTask taskId)
             let Task {_project_id = newProjectId} = task2
-            liftIO $ newProjectId `shouldBe` project2IdText
+            liftIO $ newProjectId `shouldBe` project2Id
 
             -- Clean up project 2 (task will be deleted by withTestTask cleanup)
             liftTodoist config (P.deleteProject project2Id)
@@ -475,7 +471,7 @@ withTestTask config projectName taskContent action = do
             let taskCreate = buildTestTask taskContent projIdText
             newTaskResult <- liftTodoist config (addTask taskCreate)
             let NewTask {_id = newTaskIdText} = newTaskResult
-            let taskId = TaskId {getTaskId = newTaskIdText}
+            let taskId = newTaskIdText
 
             pure (projectId, taskId)
 
@@ -512,7 +508,7 @@ withTestTasks config projectName taskContents action = do
                         let taskCreate = buildTestTask content projIdText
                         newTaskResult <- liftTodoist config (addTask taskCreate)
                         let NewTask {_id = newTaskIdText} = newTaskResult
-                        pure $ TaskId {getTaskId = newTaskIdText}
+                        pure newTaskIdText
                     )
                     taskContents
 

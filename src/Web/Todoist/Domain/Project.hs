@@ -1,11 +1,9 @@
-{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE UndecidableInstances #-}
 
--- TODO: Create Web.Todoist.Types module for shared data types (ProjectId, TaskId, etc.)
 module Web.Todoist.Domain.Project
     ( TodoistProjectM (..)
     , Project (..)
@@ -43,6 +41,7 @@ import Web.Todoist.Domain.Types
 import Web.Todoist.Internal.Types (Params, ProjectPermissions)
 import Web.Todoist.QueryParam (QueryParam (..))
 
+import Control.Applicative ((<|>))
 import Control.Monad (Monad)
 import Data.Aeson
     ( FromJSON (parseJSON)
@@ -88,7 +87,7 @@ data Project = Project
 data ProjectCreate = ProjectCreate
     { _name :: Name
     , _description :: Maybe Description
-    , _parentId :: Maybe ParentId
+    , _parent_id :: Maybe ParentId
     , _color :: Maybe Color -- Default: {"name":"charcoal","hex":"#808080","database_index":47}
     , _is_favorite :: IsFavorite
     , _view_style :: Maybe ViewStyle
@@ -110,7 +109,7 @@ instance HasDescription ProjectCreate where
 
 instance HasParentId ProjectCreate where
     hasParentId :: Text -> ProjectCreate -> ProjectCreate
-    hasParentId pid ProjectCreate {..} = ProjectCreate {_parentId = Just (ParentIdStr (Data.Text.unpack pid)), ..}
+    hasParentId pid ProjectCreate {..} = ProjectCreate {_parent_id = Just (ParentIdStr (Data.Text.unpack pid)), ..}
 
 instance HasViewStyle ProjectCreate where
     hasViewStyle :: ViewStyle -> ProjectCreate -> ProjectCreate
@@ -163,7 +162,7 @@ newProject name =
         ProjectCreate
             { _name = Name name
             , _description = Nothing
-            , _parentId = Nothing
+            , _parent_id = Nothing
             , _color = Nothing
             , _is_favorite = IsFavorite False
             , _view_style = Nothing
@@ -218,7 +217,16 @@ instance QueryParam PaginationParam where
 emptyPaginationParam :: PaginationParam
 emptyPaginationParam = PaginationParam {_cursor = Nothing, _limit = Nothing}
 
-data ParentId = ParentIdStr String | ParentIdInt Int deriving (Show, Generic, FromJSON, ToJSON)
+data ParentId = ParentIdStr String | ParentIdInt Int deriving (Show, Generic)
+
+instance ToJSON ParentId where
+    toJSON :: ParentId -> Value
+    toJSON (ParentIdStr s) = toJSON s
+    toJSON (ParentIdInt i) = toJSON i
+
+instance FromJSON ParentId where
+    parseJSON :: Value -> Parser ParentId
+    parseJSON v = (ParentIdStr <$> parseJSON v) <|> (ParentIdInt <$> parseJSON v)
 
 class (Monad m) => TodoistProjectM m where
     -- | Get all projects (automatically fetches all pages)

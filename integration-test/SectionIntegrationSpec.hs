@@ -37,7 +37,7 @@ import Web.Todoist.Domain.Section
     , newSection
     , updateSection
     )
-import Web.Todoist.Domain.Types (ProjectId (..))
+import Web.Todoist.Domain.Types (Name (..), ProjectId (..))
 import Web.Todoist.Internal.Error (TodoistError)
 import Web.Todoist.Runner (todoist)
 import Web.Todoist.Runner.TodoistIO (TodoistConfig)
@@ -65,19 +65,17 @@ sectionLifecycleSpec config =
                 -- Get section and verify fields
                 section <- liftTodoist config (getSection sectionId)
                 let Section {_name = secName, _project_id = secProjectId} = section
-                    ProjectId {getProjectId = projId} = projectId
-                liftIO $ secName `shouldBe` sectionName
-                liftIO $ secProjectId `shouldBe` projId
+                liftIO $ secName `shouldBe` Name sectionName
+                liftIO $ secProjectId `shouldBe` projectId
 
                 -- Delete section
                 liftTodoist config (deleteSection sectionId)
 
                 -- Verify deletion by checking section is not in active sections list
-                let params = SectionParam {project_id = Just projId, cursor = Nothing, limit = Nothing}
+                let params = SectionParam {project_id = Just projectId, cursor = Nothing, limit = Nothing}
                 sections <- liftTodoist config (getSections params)
-                let SectionId {_id = expectedId} = sectionId
-                    sectionIds = fmap (\(Section {_id = sid}) -> sid) sections
-                liftIO $ expectedId `elem` sectionIds `shouldBe` False
+                let sectionIds = fmap (\(Section {_id = sid}) -> sid) sections
+                liftIO $ sectionId `elem` sectionIds `shouldBe` False
 
 getSectionsSpec :: TodoistConfig -> Spec
 getSectionsSpec config =
@@ -98,14 +96,14 @@ getSectionsSpec config =
                 sectionId3 <- liftTodoist config (addSection $ runBuilder (newSection section3Name projId) mempty)
 
                 -- Get sections for project
-                let params = SectionParam {project_id = Just projId, cursor = Nothing, limit = Nothing}
+                let params = SectionParam {project_id = Just projectId, cursor = Nothing, limit = Nothing}
                 sections <- liftTodoist config (getSections params)
 
                 -- Verify count and names
                 let sectionNames = fmap (\(Section {_name = n}) -> n) sections
-                liftIO $ section1Name `elem` sectionNames `shouldBe` True
-                liftIO $ section2Name `elem` sectionNames `shouldBe` True
-                liftIO $ section3Name `elem` sectionNames `shouldBe` True
+                liftIO $ Name section1Name `elem` sectionNames `shouldBe` True
+                liftIO $ Name section2Name `elem` sectionNames `shouldBe` True
+                liftIO $ Name section3Name `elem` sectionNames `shouldBe` True
 
                 -- Cleanup
                 liftTodoist config (deleteSection sectionId1)
@@ -122,14 +120,13 @@ updateSectionSpec config =
             withTestProjectAndSection config projectName sectionName $ \_ sectionId -> do
                 -- Update section name
                 let newName = sectionName <> "-Updated"
-                    update = SectionUpdate {_name = Just newName}
+                    update = SectionUpdate {_name = Just (Name newName)}
                 updatedSection <- liftTodoist config (updateSection sectionId update)
 
                 -- Verify update
                 let Section {_name = updatedName, _id = updatedId} = updatedSection
-                    SectionId {_id = expectedId} = sectionId
-                liftIO $ updatedName `shouldBe` newName
-                liftIO $ updatedId `shouldBe` expectedId
+                liftIO $ updatedName `shouldBe` Name newName
+                liftIO $ updatedId `shouldBe` sectionId
 
 -- | Bracket helper for creating test project
 withTestProject :: TodoistConfig -> Text -> (ProjectId -> ExceptT TodoistError IO a) -> IO ()
