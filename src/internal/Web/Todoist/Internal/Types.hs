@@ -3,7 +3,26 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE LambdaCase #-}
 
--- | Internal types used across the HTTP layer
+{- |
+Module      : Web.Todoist.Internal.Types
+Description : Internal HTTP response types for Todoist REST API
+Copyright   : (c) 2025 Sam S. Almahri
+License     : MIT
+Maintainer  : sam.salmahri@gmail.com
+
+Internal module defining HTTP response types that mirror the Todoist REST API
+JSON responses. These types use the @p_@ field prefix convention and are
+converted to domain types for public use.
+
+This module is part of the internal HTTP layer. End users should use the
+domain types from "Web.Todoist.Domain.*" modules instead.
+
+= Field Naming Convention
+
+HTTP response types use @p_@ prefix (e.g., @p_id@, @p_name@) which is dropped
+by 'jsonOpts' during serialization. This allows clean JSON field names while
+avoiding conflicts with domain types that use @_@ prefix.
+-}
 module Web.Todoist.Internal.Types
     ( TodoistReturn (..)
     , ProjectResponse (..)

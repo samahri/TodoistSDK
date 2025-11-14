@@ -6,7 +6,7 @@
 Module      : Web.Todoist.Domain.Comment
 Description : Comment API types and operations for Todoist REST API
 Copyright   : (c) 2025 Sam Saud Almahri
-License     : BSD-3-Clause
+License     : MIT
 Maintainer  : sam.salmahri@gmail.com
 
 This module provides types and operations for working with Todoist comments. Comments can be

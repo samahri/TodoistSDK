@@ -2,6 +2,37 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE RecordWildCards #-}
 
+{- |
+Module      : Web.Todoist.Domain.Label
+Description : Label API types and operations for Todoist REST API
+Copyright   : (c) 2025 Sam S. Almahri
+License     : MIT
+Maintainer  : sam.salmahri@gmail.com
+
+This module provides types and operations for working with Todoist labels.
+Labels are tags that can be applied to tasks for categorization and filtering.
+Supports both personal and shared labels.
+
+= Usage Example
+
+@
+import Web.Todoist.Domain.Label
+import Web.Todoist.Runner
+
+main :: IO ()
+main = do
+    let config = newTodoistConfig "your-api-token"
+
+    -- Create a label
+    let newLabel = newLabel "urgent"
+    label <- todoist config (addLabel newLabel)
+
+    -- Get all labels
+    labels <- todoist config (getLabels emptyLabelParam)
+@
+
+For more details, see: <https://developer.todoist.com/rest/v2/#labels>
+-}
 module Web.Todoist.Domain.Label
     ( -- * Types
       Label (..)

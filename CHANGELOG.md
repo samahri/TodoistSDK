@@ -22,7 +22,7 @@ and this project adheres to the
 - Builder pattern for ergonomic request construction
 - Cursor-based pagination support with automatic and manual modes
 - Comprehensive test suite (unit tests + integration tests)
-- BSD-3-Clause license
+- MIT license
 
 ### Known Limitations
 - REST API v2 is used (v1 is deprecated by Todoist)

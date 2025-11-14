@@ -2,6 +2,37 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE RecordWildCards #-}
 
+{- |
+Module      : Web.Todoist.Domain.Section
+Description : Section API types and operations for Todoist REST API
+Copyright   : (c) 2025 Sam S. Almahri
+License     : MIT
+Maintainer  : sam.salmahri@gmail.com
+
+This module provides types and operations for working with Todoist sections.
+Sections are used to organize tasks within a project into logical groups.
+
+= Usage Example
+
+@
+import Web.Todoist.Domain.Section
+import Web.Todoist.Runner
+
+main :: IO ()
+main = do
+    let config = newTodoistConfig "your-api-token"
+
+    -- Create a section in a project
+    let newSec = newSection "To Do" "project-id-123"
+    section <- todoist config (addSection newSec)
+
+    -- Get all sections in a project
+    let params = emptySectionParam {project_id = Just "project-id-123"}
+    sections <- todoist config (getSections params)
+@
+
+For more details, see: <https://developer.todoist.com/rest/v2/#sections>
+-}
 module Web.Todoist.Domain.Section
     ( -- * Types
       Section (..)

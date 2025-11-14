@@ -4,7 +4,7 @@
 Module      : Web.Todoist
 Description : Main entry point for the Todoist SDK
 Copyright   : (c) 2025 Sam S. Almahri
-License     : BSD-3-Clause
+License     : MIT
 Maintainer  : sam.salmahri@gmail.com
 
 This module provides a convenient single import for using the Todoist SDK.

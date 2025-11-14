@@ -4,6 +4,43 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE UndecidableInstances #-}
 
+{- |
+Module      : Web.Todoist.Domain.Project
+Description : Project API types and operations for Todoist REST API
+Copyright   : (c) 2025 Sam S. Almahri
+License     : MIT
+Maintainer  : sam.salmahri@gmail.com
+
+This module provides types and operations for working with Todoist projects.
+Projects are used to organize tasks into groups, support hierarchical nesting,
+and can be displayed in list, board, or calendar view.
+
+= Usage Example
+
+@
+import Web.Todoist.Domain.Project
+import Web.Todoist.Util.Builder
+import Web.Todoist.Runner
+
+main :: IO ()
+main = do
+    let config = newTodoistConfig "your-api-token"
+
+    -- Create a new project
+    let newProj = runBuilder (newProject "My Project")
+                  (setDescription "Project description" <> setViewStyle Board)
+    project <- todoist config (addProject newProj)
+
+    -- Get all projects
+    projects <- todoist config getAllProjects
+
+    -- Update a project
+    let update = runBuilder emptyProjectUpdate (setName "Updated Name")
+    updated <- todoist config (updateProject projectId update)
+@
+
+For more details, see: <https://developer.todoist.com/rest/v2/#projects>
+-}
 module Web.Todoist.Domain.Project
     ( TodoistProjectM (..)
     , Project (..)
@@ -68,6 +105,12 @@ import qualified Data.Text
 import GHC.Generics (Generic)
 import Text.Show (Show)
 
+{- | Project domain type representing a Todoist project
+
+Contains all project metadata including name, color, view style, and hierarchical
+information. Projects can be nested using parent_id and organized visually
+using order and view_style.
+-}
 data Project = Project
     { _id :: ProjectId
     , _name :: Name
@@ -85,6 +128,11 @@ data Project = Project
     }
     deriving (Show, Eq)
 
+{- | Request body for creating a new project
+
+All fields except name are optional. Use the builder pattern with 'newProject'
+for ergonomic construction.
+-}
 data ProjectCreate = ProjectCreate
     { _name :: Name
     , _description :: Maybe Description
@@ -233,16 +281,22 @@ class (Monad m) => TodoistProjectM m where
     -- | Get all projects (automatically fetches all pages)
     getAllProjects :: m [Project]
 
+    -- | Get a single project by ID
     getProject :: ProjectId -> m Project
 
+    -- | Get all collaborators for a project (automatically fetches all pages)
     getProjectCollaborators :: ProjectId -> m [Collaborator]
 
+    -- | Create a new project
     addProject :: ProjectCreate -> m ProjectId
 
+    -- | Delete a project and all its tasks
     deleteProject :: ProjectId -> m ()
 
+    -- | Archive a project (hides from active view but preserves data)
     archiveProject :: ProjectId -> m ProjectId
 
+    -- | Unarchive a previously archived project
     unarchiveProject :: ProjectId -> m ProjectId
 
     getProjectPermissions :: m ProjectPermissions

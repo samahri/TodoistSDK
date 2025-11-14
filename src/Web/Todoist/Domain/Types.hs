@@ -1,6 +1,19 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE InstanceSigs #-}
 
+{- |
+Module      : Web.Todoist.Domain.Types
+Description : Shared domain types and type classes
+Copyright   : (c) 2025 Sam S. Almahri
+License     : MIT
+Maintainer  : sam.salmahri@gmail.com
+
+This module provides shared types used across the Todoist SDK, including
+newtype wrappers for IDs and common fields, as well as core enums and data types.
+
+Most users will import "Web.Todoist" which re-exports these types rather than
+importing this module directly.
+-}
 module Web.Todoist.Domain.Types
     ( Attachment
     , ViewStyle (..)
@@ -43,6 +56,10 @@ import GHC.Base (undefined)
 import GHC.Generics (Generic)
 import Text.Show (Show)
 
+{- | Visual display style for projects
+
+Projects can be displayed as a list, board (Kanban-style), or calendar view.
+-}
 data ViewStyle = List | Board | Calendar deriving (Show, Eq)
 
 instance ToJSON ViewStyle where
@@ -82,6 +99,7 @@ instance FromJSON Attachment where
     parseJSON :: Value -> Parser Attachment
     parseJSON = genericParseJSON defaultOptions {fieldLabelModifier = L.drop 1}
 
+-- | Unique identifier for a Todoist project
 newtype ProjectId = ProjectId
     { getProjectId :: Text
     }
@@ -97,6 +115,7 @@ instance ToJSON ProjectId where
     toJSON :: ProjectId -> Value
     toJSON (ProjectId txt) = toJSON txt
 
+-- | Unique identifier for a Todoist task
 newtype TaskId = TaskId
     { getTaskId :: Text
     }
@@ -110,6 +129,7 @@ instance ToJSON TaskId where
     toJSON :: TaskId -> Value
     toJSON (TaskId txt) = toJSON txt
 
+-- | User ID in Todoist system
 newtype Uid = Uid {getUid :: Text} deriving (Show, Eq, Generic)
 
 instance FromJSON Uid where
@@ -120,6 +140,7 @@ instance ToJSON Uid where
     toJSON :: Uid -> Value
     toJSON (Uid txt) = toJSON txt
 
+-- | Display name for projects, tasks, or other entities
 newtype Name = Name {getName :: Text} deriving (Show, Eq, Generic)
 
 instance FromJSON Name where
@@ -130,6 +151,7 @@ instance ToJSON Name where
     toJSON :: Name -> Value
     toJSON (Name txt) = toJSON txt
 
+-- | Color identifier for visual categorization (e.g., \"red\", \"blue\", \"green\")
 newtype Color = Color {getColor :: Text} deriving (Show, Eq, Generic)
 
 instance FromJSON Color where
@@ -140,6 +162,7 @@ instance ToJSON Color where
     toJSON :: Color -> Value
     toJSON (Color txt) = toJSON txt
 
+-- | Sort order for items (lower numbers appear first)
 newtype Order = Order {getOrder :: Int} deriving (Show, Eq, Generic)
 
 instance FromJSON Order where
@@ -150,6 +173,7 @@ instance ToJSON Order where
     toJSON :: Order -> Value
     toJSON (Order txt) = toJSON txt
 
+-- | Flag indicating whether an item is marked as favorite
 newtype IsFavorite = IsFavorite {getIsFavorite :: Bool} deriving (Show, Eq, Generic)
 
 instance FromJSON IsFavorite where
@@ -160,6 +184,7 @@ instance ToJSON IsFavorite where
     toJSON :: IsFavorite -> Value
     toJSON (IsFavorite txt) = toJSON txt
 
+-- | Markdown-formatted description text
 newtype Description = Description {getDescription :: Text} deriving (Show, Eq, Generic)
 
 instance FromJSON Description where
@@ -170,6 +195,7 @@ instance ToJSON Description where
     toJSON :: Description -> Value
     toJSON (Description txt) = toJSON txt
 
+-- | Flag indicating whether a section or project is collapsed in the UI
 newtype IsCollapsed = IsCollapsed {getIsCollapsed :: Bool} deriving (Show, Eq, Generic)
 
 instance FromJSON IsCollapsed where
@@ -180,6 +206,7 @@ instance ToJSON IsCollapsed where
     toJSON :: IsCollapsed -> Value
     toJSON (IsCollapsed txt) = toJSON txt
 
+-- | Task or comment content text
 newtype Content = Content {getContent :: Text} deriving (Show, Eq, Generic)
 
 instance ToJSON Content where
@@ -190,6 +217,7 @@ instance FromJSON Content where
     parseJSON :: Value -> Parser Content
     parseJSON v = Content <$> parseJSON v
 
+-- | Parent project or task identifier for hierarchical relationships
 newtype ParentId = ParentId
     { getParentId :: Text
     }

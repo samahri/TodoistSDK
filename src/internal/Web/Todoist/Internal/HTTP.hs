@@ -3,7 +3,20 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
 
--- | HTTP client functions for Todoist REST API
+{- |
+Module      : Web.Todoist.Internal.HTTP
+Description : HTTP client functions for Todoist REST API
+Copyright   : (c) 2025 Sam S. Almahri
+License     : MIT
+Maintainer  : sam.salmahri@gmail.com
+
+Internal module providing low-level HTTP operations for the Todoist REST API.
+Uses the @req@ library to make authenticated HTTP requests (GET, POST, DELETE)
+and handles error responses.
+
+All functions return @Either TodoistError a@ to represent possible failures.
+HTTP exceptions are caught and converted to 'TodoistError' values.
+-}
 module Web.Todoist.Internal.HTTP
     ( apiGet
     , apiPost
@@ -40,7 +53,14 @@ data PostResponse a where
     -- | Parse JSON response into type 'a' (requires FromJSON constraint)
     JsonResponse :: (FromJSON a) => Proxy a -> PostResponse a
 
--- | Perform a GET request to the Todoist API
+{- | Perform a GET request to the Todoist API
+
+Makes an authenticated GET request to retrieve data from the API.
+Query parameters from the 'TodoistRequest' are added to the URL.
+
+Returns @Right a@ on success with parsed JSON response,
+or @Left TodoistError@ on failure.
+-}
 apiGet ::
     forall a b.
     (FromJSON a) => Proxy a -> TodoistConfig -> TodoistRequest b -> IO (Either TodoistError a)
@@ -57,9 +77,18 @@ apiGet _ config request = do
         params = mconcat $ L.map (\(key, val) -> (key =: val) :: Http.Option Http.Https) (_queryParams request)
         header' = getAuthHeader config <> params
 
-{- | Unified POST request function that handles all combinations of:
-  - Request body: Nothing (no body) or Just b (JSON body)
-  - Response handling: IgnoreResponse or JsonResponse (parse JSON)
+{- | Perform a POST request to the Todoist API
+
+Unified POST request function that handles all combinations of:
+
+- Request body: 'Nothing' (no body) or 'Just b' (JSON body)
+- Response handling: 'IgnoreResponse' or 'JsonResponse' (parse JSON)
+
+Returns @Right responseBody@ on success (or @Right ()@ if ignoring response),
+or @Left TodoistError@ on failure.
+
+The 'PostResponse' GADT ensures type safety between response handling strategy
+and return type.
 -}
 apiPost ::
     forall requestBody responseBody b.
@@ -93,7 +122,14 @@ apiPost maybeBody responseSpec config request =
                 Right response -> (pure . pure) $ Http.responseBody response
                 Left l -> pure $ handleException l
 
--- | Perform a DELETE request to the Todoist API
+{- | Perform a DELETE request to the Todoist API
+
+Makes an authenticated DELETE request to remove a resource.
+Always ignores the response body and returns @()@ on success.
+
+Returns @Right ()@ on successful deletion,
+or @Left TodoistError@ on failure.
+-}
 apiDelete :: forall b. TodoistConfig -> TodoistRequest b -> IO (Either TodoistError ())
 apiDelete config request = do
     let reqfn = Http.req Http.DELETE scheme Http.NoReqBody Http.ignoreResponse header'
@@ -106,7 +142,17 @@ apiDelete config request = do
         scheme = getScheme request
         header' = getAuthHeader config
 
--- | Build authentication and content-type headers for API requests
+{- | Build authentication and content-type headers for API requests
+
+Constructs HTTP headers for Todoist API requests:
+
+- @Authorization@: Bearer token authentication (redacted in logs)
+- @Content-Type@: @application\/json@
+- @Accept@: @application\/json@
+
+All API requests require these headers for proper authentication and
+content negotiation.
+-}
 getAuthHeader :: TodoistConfig -> Http.Option Http.Https
 getAuthHeader config =
     Http.headerRedacted "Authorization" ("Bearer " <> getAuthToken (authToken config))

@@ -187,71 +187,94 @@ modB f = Builder {bMods = Dual {getDual = Endo {appEndo = f}}}
 -- Setter Functions
 -- ============================================================================
 
+-- | Set the description field for projects or tasks
 setDescription :: (HasDescription s) => Text -> Builder s
 setDescription desc = modB (hasDescription desc)
 
+-- | Set the parent project or task ID for hierarchical organization
 setParentId :: (HasParentId s) => Text -> Builder s
 setParentId pid = modB (hasParentId pid)
 
+-- | Set the project ID to assign a task to a specific project
 setProjectId :: (HasProjectId s) => Text -> Builder s
 setProjectId pid = modB (hasProjectId pid)
 
+-- | Set the view style for a project (List, Board, or Calendar)
 setViewStyle :: (HasViewStyle s) => ViewStyle -> Builder s
 setViewStyle style = modB (hasViewStyle style)
 
+-- | Set the workspace ID for team/workspace assignment
 setWorkspaceId :: (HasWorkspaceId s) => Int -> Builder s
 setWorkspaceId wid = modB (hasWorkspaceId wid)
 
+-- | Set the name field for projects, sections, or labels
 setName :: (HasName s) => Text -> Builder s
 setName name = modB (hasName name)
 
+-- | Set whether an item is marked as favorite
 setIsFavorite :: (HasIsFavorite s) => Bool -> Builder s
 setIsFavorite fav = modB (hasIsFavorite fav)
 
+-- | Set the content (title/description) field for tasks
 setContent :: (HasContent s) => Text -> Builder s
 setContent content = modB (hasContent content)
 
+-- | Set the section ID to organize a task within a project section
 setSectionId :: (HasSectionId s) => Text -> Builder s
 setSectionId sid = modB (hasSectionId sid)
 
+-- | Set the sort order (lower numbers appear first)
 setOrder :: (HasOrder s) => Int -> Builder s
 setOrder order = modB (hasOrder order)
 
+-- | Set the list of label names to tag a task
 setLabels :: (HasLabels s) => [Text] -> Builder s
 setLabels labels = modB (hasLabels labels)
 
+-- | Set the priority level (1=urgent, 2=high, 3=normal, 4=low)
 setPriority :: (HasPriority s) => Int -> Builder s
 setPriority priority = modB (hasPriority priority)
 
+-- | Set the assignee user ID for task assignment
 setAssigneeId :: (HasAssigneeId s) => Int -> Builder s
 setAssigneeId aid = modB (hasAssigneeId aid)
 
+-- | Set a natural language due date string (e.g., \"tomorrow\", \"next Monday\")
 setDueString :: (HasDueString s) => Text -> Builder s
 setDueString dueStr = modB (hasDueString dueStr)
 
+-- | Set the due date in YYYY-MM-DD format
 setDueDate :: (HasDueDate s) => Text -> Builder s
 setDueDate dueDate = modB (hasDueDate dueDate)
 
+-- | Set the due datetime in RFC3339 format with timezone
 setDueDatetime :: (HasDueDatetime s) => Text -> Builder s
 setDueDatetime dueDatetime = modB (hasDueDatetime dueDatetime)
 
+-- | Set the language code for parsing natural language due strings
 setDueLang :: (HasDueLang s) => Text -> Builder s
 setDueLang dueLang = modB (hasDueLang dueLang)
 
+-- | Set the task duration amount (used with duration_unit)
 setDuration :: (HasDuration s) => Int -> Builder s
 setDuration duration = modB (hasDuration duration)
 
+-- | Set the task duration unit (\"minute\" or \"day\")
 setDurationUnit :: (HasDurationUnit s) => Text -> Builder s
 setDurationUnit durationUnit = modB (hasDurationUnit durationUnit)
 
+-- | Set the deadline date for a task
 setDeadlineDate :: (HasDeadlineDate s) => Text -> Builder s
 setDeadlineDate deadlineDate = modB (hasDeadlineDate deadlineDate)
 
+-- | Set an attachment for a comment
 setAttachment :: (HasAttachment s) => Attachment -> Builder s
 setAttachment attachment = modB (hasAttachment attachment)
 
+-- | Set the task ID for comments to associate a comment with a task
 setTaskId :: (HasTaskId s) => Text -> Builder s
 setTaskId tid = modB (hasTaskId tid)
 
+-- | Set the list of user IDs to notify about a comment
 setUidsToNotify :: (HasUidsToNotify s) => [Int] -> Builder s
 setUidsToNotify uids = modB (hasUidsToNotify uids)

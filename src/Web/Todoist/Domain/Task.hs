@@ -5,6 +5,42 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TupleSections #-}
 
+{- |
+Module      : Web.Todoist.Domain.Task
+Description : Task API types and operations for Todoist REST API
+Copyright   : (c) 2025 Sam S. Almahri
+License     : MIT
+Maintainer  : sam.salmahri@gmail.com
+
+This module provides types and operations for working with Todoist tasks.
+Tasks are the core items in Todoist, supporting due dates, priorities, labels,
+assignees, and hierarchical sub-tasks.
+
+= Usage Example
+
+@
+import Web.Todoist.Domain.Task
+import Web.Todoist.Util.Builder
+import Web.Todoist.Runner
+
+main :: IO ()
+main = do
+    let config = newTodoistConfig "your-api-token"
+
+    -- Create a new task
+    let newTask = runBuilder (newTask "Buy groceries")
+                  (setDescription "Milk, eggs, bread" <> setPriority 2)
+    task <- todoist config (addTask newTask)
+
+    -- Get all tasks
+    tasks <- todoist config (getTasks emptyTaskParam)
+
+    -- Complete a task
+    todoist config (closeTask taskId)
+@
+
+For more details, see: <https://developer.todoist.com/rest/v2/#tasks>
+-}
 module Web.Todoist.Domain.Task
     ( TodoistTaskM (..)
     , TaskParam (..)
@@ -150,6 +186,12 @@ instance ToJSON Due where
     toJSON :: Due -> Value
     toJSON = genericToJSON defaultOptions {fieldLabelModifier = L.drop 1}
 
+{- | Task domain type representing a Todoist task
+
+Contains all task metadata including content, project/section assignment,
+due dates, priority, labels, and completion status. Tasks can have sub-tasks
+using parent_id and support rich due date information with recurring patterns.
+-}
 data Task = Task
     { _id :: TaskId
     , _content :: Content
@@ -277,6 +319,11 @@ addTaskQuickText text =
         , _meta = False
         }
 
+{- | Request body for creating a new task
+
+Only content is required. Use 'newTask' with the builder pattern for
+ergonomic construction of tasks with optional fields.
+-}
 data TaskCreate = TaskCreate
     { _content :: Content
     , _description :: Maybe Description
@@ -387,6 +434,11 @@ instance HasProjectId TaskCreate where
     hasProjectId :: Text -> TaskCreate -> TaskCreate
     hasProjectId projId TaskCreate {..} = TaskCreate {_project_id = Just (ProjectId projId), ..}
 
+{- | Request body for updating an existing task (partial updates)
+
+All fields are optional (using Maybe). Only provided fields will be updated.
+Use 'emptyTaskPatch' with the builder pattern for updates.
+-}
 data TaskPatch = TaskPatch
     { _content :: Maybe Content
     , _description :: Maybe Description
@@ -495,21 +547,28 @@ class (Monad m) => TodoistTaskM m where
     -- | Get tasks (automatically fetches all pages)
     getTasks :: TaskParam -> m [Task]
 
+    -- | Get a single task by ID
     getTask :: TaskId -> m Task
 
+    -- | Create a new task
     addTask :: TaskCreate -> m NewTask -- todo: should return Task; TaskCreate should be named NewTask
 
+    -- | Update an existing task with partial changes
     updateTask :: TaskId -> TaskPatch -> m NewTask -- todo: should return Task
 
+    -- | Mark a task as completed
     closeTask :: TaskId -> m ()
 
+    -- | Reopen a previously completed task
     uncloseTask :: TaskId -> m ()
 
+    -- | Permanently delete a task
     deleteTask :: TaskId -> m ()
 
     -- | Get tasks by filter (automatically fetches all pages)
     getTasksByFilter :: TaskFilter -> m [TaskId]
 
+    -- | Move a task to a different project or section
     moveTask :: TaskId -> MoveTask -> m TaskId
 
     addTaskQuick :: AddTaskQuick -> m ()
