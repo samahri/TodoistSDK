@@ -3,7 +3,7 @@
 module Web.Todoist.BuilderSpec (spec) where
 
 import Test.Hspec (Spec, describe, it, shouldBe, shouldSatisfy)
-import Web.Todoist.Builder
+import Web.Todoist.Util.Builder
     ( Builder
     , runBuilder
     , setDescription

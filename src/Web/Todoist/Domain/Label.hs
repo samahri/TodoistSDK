@@ -39,11 +39,10 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import GHC.Generics (Generic)
 import Text.Show (Show, show)
-import Web.Todoist.Builder (Initial, seed)
-import Web.Todoist.Builder.Has (HasColor (..), HasIsFavorite (..), HasName (..), HasOrder (..))
+import Web.Todoist.Util.Builder (HasColor (..), HasIsFavorite (..), HasName (..), HasOrder (..), Initial, seed)
 import Web.Todoist.Domain.Types (Color (..), IsFavorite (..), Name (..), Order (..))
 import Web.Todoist.Internal.Types (Params)
-import Web.Todoist.QueryParam (QueryParam (..))
+import Web.Todoist.Util.QueryParam (QueryParam (..))
 
 -- | Unique identifier for a Label
 newtype LabelId = LabelId {getLabelId :: Text}

@@ -1,4 +1,4 @@
-module Web.Todoist.QueryParam
+module Web.Todoist.Util.QueryParam
     ( QueryParam (..)
     ) where
 

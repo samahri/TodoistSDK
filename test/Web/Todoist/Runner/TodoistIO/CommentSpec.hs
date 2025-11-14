@@ -5,7 +5,7 @@ module Web.Todoist.Runner.TodoistIO.CommentSpec (spec) where
 import Web.Todoist.Domain.Comment (Comment (..), CommentId (..), Content (..))
 import Web.Todoist.Domain.Types (ProjectId (..), TaskId (..), Uid (..))
 import Web.Todoist.Internal.Types (CommentResponse (..))
-import Web.Todoist.Runner.TodoistIO.Comment (commentResponseToComment)
+import Web.Todoist.Runner.IO.Interpreters (commentResponseToComment)
 import Web.Todoist.TestHelpers
     ( sampleCommentResponse
     , sampleCommentResponseJson

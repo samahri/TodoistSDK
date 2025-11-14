@@ -33,7 +33,7 @@ import System.IO (IO, putStrLn)
 import System.Random (randomRIO)
 import Test.Hspec (shouldBe)
 import Text.Show (Show, show)
-import Web.Todoist.Builder
+import Web.Todoist.Util.Builder
     ( runBuilder
     , setDescription
     , setProjectId

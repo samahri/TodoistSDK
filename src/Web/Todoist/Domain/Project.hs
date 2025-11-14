@@ -19,14 +19,15 @@ module Web.Todoist.Domain.Project
     , CanAssignTasks (..)
     ) where
 
-import Web.Todoist.Builder (Initial, seed)
-import Web.Todoist.Builder.Has
+import Web.Todoist.Util.Builder
     ( HasDescription (..)
     , HasIsFavorite (..)
     , HasName (..)
     , HasParentId (..)
     , HasViewStyle (..)
     , HasWorkspaceId (..)
+    , Initial
+    , seed
     )
 import Web.Todoist.Domain.Types
     ( Color (..)
@@ -39,7 +40,7 @@ import Web.Todoist.Domain.Types
     , ViewStyle (..)
     )
 import Web.Todoist.Internal.Types (Params, ProjectPermissions)
-import Web.Todoist.QueryParam (QueryParam (..))
+import Web.Todoist.Util.QueryParam (QueryParam (..))
 
 import Control.Applicative ((<|>))
 import Control.Monad (Monad)

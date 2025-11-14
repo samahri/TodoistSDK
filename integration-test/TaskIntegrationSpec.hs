@@ -14,7 +14,7 @@ import Helpers
     , liftTodoist
     )
 
-import Web.Todoist.Builder
+import Web.Todoist.Util.Builder
     ( runBuilder
     , setContent
     , setDescription

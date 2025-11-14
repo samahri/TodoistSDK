@@ -11,7 +11,7 @@ import Helpers
     , getTestConfig
     , liftTodoist
     )
-import Web.Todoist.Builder (runBuilder, setProjectId, setTaskId)
+import Web.Todoist.Util.Builder (runBuilder, setProjectId, setTaskId)
 import Web.Todoist.Domain.Comment
     ( Comment (..)
     , CommentCreate

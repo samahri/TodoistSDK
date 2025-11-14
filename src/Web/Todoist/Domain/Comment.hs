@@ -68,16 +68,17 @@ module Web.Todoist.Domain.Comment
     , TodoistCommentM (..)
     ) where
 
-import Web.Todoist.Builder (Initial, seed)
-import Web.Todoist.Builder.Has
+import Web.Todoist.Util.Builder
     ( HasAttachment (..)
     , HasContent (..)
     , HasProjectId (..)
     , HasTaskId (..)
     , HasUidsToNotify (..)
+    , Initial
+    , seed
     )
 import Web.Todoist.Internal.Types (FileAttachment, Params)
-import Web.Todoist.QueryParam (QueryParam (..))
+import Web.Todoist.Util.QueryParam (QueryParam (..))
 
 import Control.Applicative ((<$>))
 import Control.Monad (Monad)

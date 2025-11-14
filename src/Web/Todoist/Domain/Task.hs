@@ -32,8 +32,7 @@ module Web.Todoist.Domain.Task
     , taskFilterWithQuery
     ) where
 
-import Web.Todoist.Builder (Initial, seed)
-import Web.Todoist.Builder.Has
+import Web.Todoist.Util.Builder
     ( HasAssigneeId (..)
     , HasContent (..)
     , HasDeadlineDate (..)
@@ -50,9 +49,11 @@ import Web.Todoist.Builder.Has
     , HasPriority (..)
     , HasProjectId (..)
     , HasSectionId (..)
+    , Initial
+    , seed
     )
 import Web.Todoist.Internal.Types (Params)
-import Web.Todoist.QueryParam (QueryParam (..))
+import Web.Todoist.Util.QueryParam (QueryParam (..))
 
 import Control.Monad (Monad)
 import Data.Aeson

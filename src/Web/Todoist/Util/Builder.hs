@@ -1,8 +1,24 @@
 {-# LANGUAGE RankNTypes #-}
 
-module Web.Todoist.Builder
-    ( -- Setter functions
-      setDescription
+-- | Builder pattern for constructing domain types with optional fields.
+--
+-- This module provides a type-safe builder pattern for creating domain request types
+-- (like ProjectCreate, TaskCreate, etc.) with ergonomic field setting.
+--
+-- Example usage:
+--
+-- @
+-- let project = runBuilder (newProject \"My Project\")
+--               (setDescription \"A description\" <> setViewStyle Board)
+-- @
+module Web.Todoist.Util.Builder
+    ( -- * Builder Core Types
+      Builder
+    , Initial
+    , runBuilder
+    , seed
+      -- * Setter Functions
+    , setDescription
     , setParentId
     , setProjectId
     , setTaskId
@@ -25,38 +41,33 @@ module Web.Todoist.Builder
     , setDeadlineDate
     , setAttachment
     , setUidsToNotify
-    -- Core types and functions
-    , Initial -- Type exported for internal use only
-    , seed
-    , Builder -- Type exported with constructor for internal use
-    , runBuilder
-    ) where
-
-import Web.Todoist.Builder.Has
-    ( HasAssigneeId (..)
-    , HasAttachment (hasAttachment)
-    , HasContent (..)
-    , HasDeadlineDate (..)
+      -- * Type Classes (for implementing Has* instances)
     , HasDescription (..)
+    , HasParentId (..)
+    , HasProjectId (..)
+    , HasViewStyle (..)
+    , HasWorkspaceId (..)
+    , HasName (..)
+    , HasIsFavorite (..)
+    , HasContent (..)
+    , HasSectionId (..)
+    , HasOrder (..)
+    , HasLabels (..)
+    , HasPriority (..)
+    , HasAssigneeId (..)
+    , HasDueString (..)
     , HasDueDate (..)
     , HasDueDatetime (..)
     , HasDueLang (..)
-    , HasDueString (..)
     , HasDuration (..)
     , HasDurationUnit (..)
-    , HasIsFavorite (..)
-    , HasLabels (..)
-    , HasName (..)
-    , HasOrder (..)
-    , HasParentId (..)
-    , HasPriority (..)
-    , HasProjectId (..)
-    , HasSectionId (..)
+    , HasDeadlineDate (..)
     , HasTaskId (..)
     , HasUidsToNotify (..)
-    , HasViewStyle (..)
-    , HasWorkspaceId (..)
-    )
+    , HasAttachment (..)
+    , HasColor (..)
+    ) where
+
 import Web.Todoist.Domain.Types (Attachment, ViewStyle)
 
 import Data.Bool (Bool)
@@ -64,6 +75,89 @@ import Data.Int (Int)
 import Data.Monoid (Dual (..), Endo (..), Monoid (..))
 import Data.Semigroup (Semigroup (..))
 import Data.Text (Text)
+
+-- ============================================================================
+-- Type Classes
+-- ============================================================================
+
+class HasDescription p where
+    hasDescription :: Text -> p -> p
+
+class HasParentId p where
+    hasParentId :: Text -> p -> p
+
+class HasProjectId p where
+    hasProjectId :: Text -> p -> p
+
+class HasViewStyle p where
+    hasViewStyle :: ViewStyle -> p -> p
+
+class HasWorkspaceId p where
+    hasWorkspaceId :: Int -> p -> p
+
+-- | Type class for types that have a name field
+class HasName p where
+    hasName :: Text -> p -> p
+
+-- | Type class for types that have an is_favorite field
+class HasIsFavorite p where
+    hasIsFavorite :: Bool -> p -> p
+
+class HasContent p where
+    hasContent :: Text -> p -> p
+
+class HasSectionId p where
+    hasSectionId :: Text -> p -> p
+
+class HasOrder p where
+    hasOrder :: Int -> p -> p
+
+class HasLabels p where
+    hasLabels :: [Text] -> p -> p
+
+class HasPriority p where
+    hasPriority :: Int -> p -> p
+
+class HasAssigneeId p where
+    hasAssigneeId :: Int -> p -> p
+
+class HasDueString p where
+    hasDueString :: Text -> p -> p
+
+class HasDueDate p where
+    hasDueDate :: Text -> p -> p
+
+class HasDueDatetime p where
+    hasDueDatetime :: Text -> p -> p
+
+class HasDueLang p where
+    hasDueLang :: Text -> p -> p
+
+class HasDuration p where
+    hasDuration :: Int -> p -> p
+
+class HasDurationUnit p where
+    hasDurationUnit :: Text -> p -> p
+
+class HasDeadlineDate p where
+    hasDeadlineDate :: Text -> p -> p
+
+-- Comment-specific setters
+class HasTaskId p where
+    hasTaskId :: Text -> p -> p
+
+class HasUidsToNotify p where
+    hasUidsToNotify :: [Int] -> p -> p
+
+class HasAttachment p where
+    hasAttachment :: Attachment -> p -> p
+
+class HasColor p where
+    hasColor :: Text -> p -> p
+
+-- ============================================================================
+-- Builder Types and Functions
+-- ============================================================================
 
 -- Newtype for seed values (constructor NOT exported)
 newtype Initial s = Initial s
@@ -88,6 +182,10 @@ seed = Initial
 
 modB :: (s -> s) -> Builder s
 modB f = Builder {bMods = Dual {getDual = Endo {appEndo = f}}}
+
+-- ============================================================================
+-- Setter Functions
+-- ============================================================================
 
 setDescription :: (HasDescription s) => Text -> Builder s
 setDescription desc = modB (hasDescription desc)

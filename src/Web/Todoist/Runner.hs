@@ -18,7 +18,7 @@ import Web.Todoist.Domain.Section (TodoistSectionM)
 import Web.Todoist.Domain.Task (TodoistTaskM)
 import Web.Todoist.Internal.Config (Token (..))
 import Web.Todoist.Internal.Error (TodoistError)
-import Web.Todoist.Runner.TodoistIO
+import Web.Todoist.Runner.IO
     ( TodoistConfig (..)
     , TodoistIO (unTodoist)
     )

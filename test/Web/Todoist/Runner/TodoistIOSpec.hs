@@ -26,7 +26,7 @@ import Web.Todoist.Internal.Types
     , RoleActions (..)
     , TodoistReturn (..)
     )
-import Web.Todoist.Runner.TodoistIO (projectResponseToProject)
+import Web.Todoist.Runner.IO.Interpreters (projectResponseToProject)
 import Web.Todoist.TestHelpers
     ( sampleCollaborator
     , sampleCollaboratorsJson

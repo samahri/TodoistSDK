@@ -43,7 +43,6 @@ library todoist-sdk-internal
     OverloadedStrings
     NoImplicitPrelude
 
-  -- TODO: BUILD_CONFIG - Tighten dependency version constraints for better stability
   build-depends:
     , aeson         >=2.2.3.0   && <2.3
     , base          >=4.7       && <5
@@ -67,23 +66,19 @@ library todoist-sdk-internal
 library
   hs-source-dirs:     src
   exposed-modules:
+    Web.Todoist
     Web.Todoist.Domain.Project
     Web.Todoist.Domain.Task
     Web.Todoist.Domain.Comment
     Web.Todoist.Domain.Section
     Web.Todoist.Domain.Label
     Web.Todoist.Domain.Types
-    Web.Todoist.Builder.Has
-    Web.Todoist.Builder
-    Web.Todoist.QueryParam
+    Web.Todoist.Util.Builder
+    Web.Todoist.Util.QueryParam
     Web.Todoist.Runner
-    Web.Todoist.Runner.TodoistIO
-    Web.Todoist.Runner.TodoistIO.Core
-    Web.Todoist.Runner.TodoistIO.Project
-    Web.Todoist.Runner.TodoistIO.Task
-    Web.Todoist.Runner.TodoistIO.Comment
-    Web.Todoist.Runner.TodoistIO.Section
-    Web.Todoist.Runner.TodoistIO.Label
+    Web.Todoist.Runner.IO
+    Web.Todoist.Runner.IO.Core
+    Web.Todoist.Runner.IO.Interpreters
     Web.Todoist.Runner.Trace
 
   default-language:   Haskell2010
@@ -92,7 +87,6 @@ library
     OverloadedStrings
     NoImplicitPrelude
 
-  -- TODO: BUILD_CONFIG - Tighten dependency version constraints for better stability
   build-depends:
     , aeson                >=2.2.3.0   && <2.3
     , base                 >=4.7       && <5
@@ -200,7 +194,3 @@ test-suite integration-tests
     -threaded
     -rtsopts
     -with-rtsopts=-N
-
--- TODO: CI_CD - Add .github/workflows/ for automated testing
--- TODO: EXAMPLES - Move tutorials to examples/ and add more comprehensive examples
--- TODO: CONFIG - Add config/ directory for environment-specific settings

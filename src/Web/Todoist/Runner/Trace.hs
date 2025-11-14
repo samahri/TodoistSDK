@@ -27,11 +27,17 @@ import Web.Todoist.Domain.Label
     , TodoistLabelM (..)
     )
 import Web.Todoist.Domain.Project
-    ( Collaborator (Collaborator)
-    , Project
+    ( CanAssignTasks (..)
+    , Collaborator (Collaborator)
+    , IsArchived (..)
+    , IsShared (..)
+    , PaginationParam
+    , Project (..)
     , ProjectCreate
+    , ProjectUpdate
     , TodoistProjectM (..)
     )
+import Web.Todoist.Internal.Types (ProjectPermissions (ProjectPermissions))
 import Web.Todoist.Domain.Section
     ( Section (..)
     , SectionCreate
@@ -41,18 +47,28 @@ import Web.Todoist.Domain.Section
     , TodoistSectionM (..)
     )
 import Web.Todoist.Domain.Task
-    ( Task
+    ( AddTaskQuick
+    , CompletedTasksQueryParam
+    , MoveTask
+    , NewTask (..)
+    , Task (..)
+    , TaskCreate
+    , TaskFilter
     , TaskParam
+    , TaskPatch
     , TodoistTaskM (..)
     )
 import Web.Todoist.Domain.Types
     ( Color (..)
+    , Description (..)
     , IsCollapsed (..)
     , IsFavorite (..)
     , Name (..)
     , Order (..)
-    , ProjectId (ProjectId)
-    , TaskId
+    , ProjectId (..)
+    , TaskId (..)
+    , Uid (..)
+    , ViewStyle (..)
     )
 
 import Control.Applicative (Applicative, pure)
@@ -60,6 +76,7 @@ import Control.Monad (Functor, Monad)
 import Control.Monad.Trans.Writer (Writer, tell)
 import Data.Bool (Bool (False))
 import Data.Function (($))
+import Data.Int (Int)
 import Data.Maybe (Maybe (Nothing))
 import Data.Text (Text)
 import Text.Show (Show)
@@ -128,6 +145,11 @@ instance TodoistProjectM Trace where
         tell [ProjectOp GetAllProjects]
         pure []
 
+    getProject :: ProjectId -> Trace Project
+    getProject _ = Trace $ do
+        tell [ProjectOp GetAllProjects]
+        pure $ Project (ProjectId "") (Name "") (Description "") (Order 0) (Color "") (IsCollapsed False) (IsShared False) (IsFavorite False) (IsArchived False) (CanAssignTasks False) List Nothing Nothing
+
     getProjectCollaborators :: ProjectId -> Trace [Collaborator]
     getProjectCollaborators _ = Trace $ do
         tell [ProjectOp GetProjectCollaborators]
@@ -138,46 +160,71 @@ instance TodoistProjectM Trace where
         tell [ProjectOp AddProject]
         pure $ ProjectId ""
 
+    deleteProject :: ProjectId -> Trace ()
+    deleteProject _ = Trace $ do
+        tell [ProjectOp AddProject]
+        pure ()
+
+    archiveProject :: ProjectId -> Trace ProjectId
+    archiveProject pid = Trace $ do
+        tell [ProjectOp AddProject]
+        pure pid
+
+    unarchiveProject :: ProjectId -> Trace ProjectId
+    unarchiveProject pid = Trace $ do
+        tell [ProjectOp AddProject]
+        pure pid
+
+    getProjectPermissions :: Trace ProjectPermissions
+    getProjectPermissions = Trace $ do
+        tell [ProjectOp GetAllProjects]
+        pure $ ProjectPermissions [] []
+
+    updateProject :: ProjectId -> ProjectUpdate -> Trace Project
+    updateProject _ _ = Trace $ do
+        tell [ProjectOp AddProject]
+        pure $ Project (ProjectId "") (Name "") (Description "") (Order 0) (Color "") (IsCollapsed False) (IsShared False) (IsFavorite False) (IsArchived False) (CanAssignTasks False) List Nothing Nothing
+
+    getAllProjectsPaginated :: PaginationParam -> Trace ([Project], Maybe Text)
+    getAllProjectsPaginated _ = Trace $ do
+        tell [ProjectOp GetAllProjects]
+        pure ([], Nothing)
+
+    getProjectCollaboratorsPaginated :: ProjectId -> PaginationParam -> Trace ([Collaborator], Maybe Text)
+    getProjectCollaboratorsPaginated _ _ = Trace $ do
+        tell [ProjectOp GetProjectCollaborators]
+        pure ([], Nothing)
+
+    getAllProjectsWithLimit :: Int -> Trace [Project]
+    getAllProjectsWithLimit _ = Trace $ do
+        tell [ProjectOp GetAllProjects]
+        pure []
+
+    getProjectCollaboratorsWithLimit :: ProjectId -> Int -> Trace [Collaborator]
+    getProjectCollaboratorsWithLimit _ _ = Trace $ do
+        tell [ProjectOp GetProjectCollaborators]
+        pure []
+
 instance TodoistTaskM Trace where
     getTasks :: TaskParam -> Trace [Task]
     getTasks _ = Trace $ do
         tell [TaskOp GetTasks]
         pure []
 
-    -- getTask :: TaskId -> Trace Task
-    -- getTask tid = Trace $ do
-    --     tell [TaskOp GetTasks]
-    --     pure $ Task
-    --         { _id = tid
-    --         , _content = ""
-    --         , _description = ""
-    --         , _project_id = ""
-    --         , _section_id = Nothing
-    --         , _parent_id = Nothing
-    --         , _labels = Nothing
-    --         , _priority = 0
-    --         , _due = Nothing
-    --         , _deadline = Nothing
-    --         , _duration = Nothing
-    --         , _is_collapsed = False
-    --         , _order = 0
-    --         , _assignee_id = Nothing
-    --         , _assigner_id = Nothing
-    --         , _completed_at = Nothing
-    --         , _creator_id = ""
-    --         , _created_at = ""
-    --         , _updated_at = ""
-    --         }
+    getTask :: TaskId -> Trace Task
+    getTask tid = Trace $ do
+        tell [TaskOp GetTask]
+        pure $ Task tid (Content "") (Description "") (ProjectId "") Nothing Nothing [] 0 Nothing Nothing Nothing (IsCollapsed False) (Order 0) Nothing Nothing Nothing (Uid "") "" ""
 
-    -- addTask :: TaskCreate -> Trace NewTask
-    -- addTask _ = Trace $ do
-    --     tell [TaskOp AddTask]
-    --     pure emptyTask
+    addTask :: TaskCreate -> Trace NewTask
+    addTask _ = Trace $ do
+        tell [TaskOp AddTask]
+        pure $ NewTask "" (TaskId "") (ProjectId "") Nothing Nothing Nothing Nothing Nothing [] False False Nothing Nothing Nothing 0 (Order 0) (Content "") (Description "") 0 (Order 0) (IsCollapsed False)
 
-    -- updateTask :: TaskId -> TaskPatch -> Trace NewTask
-    -- updateTask _ _ = Trace $ do
-    --     tell [TaskOp UpdateTask]
-    --     pure emptyTask
+    updateTask :: TaskId -> TaskPatch -> Trace NewTask
+    updateTask _ _ = Trace $ do
+        tell [TaskOp UpdateTask]
+        pure $ NewTask "" (TaskId "") (ProjectId "") Nothing Nothing Nothing Nothing Nothing [] False False Nothing Nothing Nothing 0 (Order 0) (Content "") (Description "") 0 (Order 0) (IsCollapsed False)
 
     closeTask :: TaskId -> Trace ()
     closeTask _ = Trace $ do
@@ -193,6 +240,51 @@ instance TodoistTaskM Trace where
     deleteTask _ = Trace $ do
         tell [TaskOp DeleteTask]
         pure ()
+
+    getTasksByFilter :: TaskFilter -> Trace [TaskId]
+    getTasksByFilter _ = Trace $ do
+        tell [TaskOp GetTasks]
+        pure []
+
+    moveTask :: TaskId -> MoveTask -> Trace TaskId
+    moveTask tid _ = Trace $ do
+        tell [TaskOp UpdateTask]
+        pure tid
+
+    addTaskQuick :: AddTaskQuick -> Trace ()
+    addTaskQuick _ = Trace $ do
+        tell [TaskOp AddTask]
+        pure ()
+
+    getCompletedTasksByDueDate :: CompletedTasksQueryParam -> Trace [TaskId]
+    getCompletedTasksByDueDate _ = Trace $ do
+        tell [TaskOp GetTasks]
+        pure []
+
+    getCompletedTasksByCompletionDate :: CompletedTasksQueryParam -> Trace [TaskId]
+    getCompletedTasksByCompletionDate _ = Trace $ do
+        tell [TaskOp GetTasks]
+        pure []
+
+    getTasksPaginated :: TaskParam -> Trace ([TaskId], Maybe Text)
+    getTasksPaginated _ = Trace $ do
+        tell [TaskOp GetTasks]
+        pure ([], Nothing)
+
+    getTasksByFilterPaginated :: TaskFilter -> Trace ([TaskId], Maybe Text)
+    getTasksByFilterPaginated _ = Trace $ do
+        tell [TaskOp GetTasks]
+        pure ([], Nothing)
+
+    getTasksWithLimit :: TaskParam -> Int -> Trace [TaskId]
+    getTasksWithLimit _ _ = Trace $ do
+        tell [TaskOp GetTasks]
+        pure []
+
+    getTasksByFilterWithLimit :: TaskFilter -> Int -> Trace [TaskId]
+    getTasksByFilterWithLimit _ _ = Trace $ do
+        tell [TaskOp GetTasks]
+        pure []
 
 instance TodoistCommentM Trace where
     addComment :: CommentCreate -> Trace Comment

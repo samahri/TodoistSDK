@@ -61,7 +61,7 @@ module Web.Todoist.TestHelpers
     , sampleSharedLabelsJson
     ) where
 
-import Web.Todoist.Builder (runBuilder, setDescription)
+import Web.Todoist.Util.Builder (runBuilder, setDescription)
 import Web.Todoist.Domain.Comment
     ( Comment (..)
     , CommentCreate

@@ -33,7 +33,7 @@ import Web.Todoist.Internal.Types
     , TodoistReturn (..)
     )
 import qualified Web.Todoist.Internal.Types as IT
-import Web.Todoist.Runner.TodoistIO.Task ()
+import Web.Todoist.Runner.IO.Interpreters ()
 import Web.Todoist.TestHelpers
     ( sampleDeadline
     , sampleDeadlineResponse

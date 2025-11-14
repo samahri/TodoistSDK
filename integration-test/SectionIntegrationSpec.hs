@@ -23,7 +23,7 @@ import Helpers
 import System.IO (IO, putStrLn)
 import Test.Hspec (Spec, describe, it, pendingWith, runIO, shouldBe)
 import Text.Show (show)
-import Web.Todoist.Builder (runBuilder)
+import Web.Todoist.Util.Builder (runBuilder)
 import qualified Web.Todoist.Domain.Project as P
 import Web.Todoist.Domain.Section
     ( Section (..)
@@ -40,7 +40,7 @@ import Web.Todoist.Domain.Section
 import Web.Todoist.Domain.Types (Name (..), ProjectId (..))
 import Web.Todoist.Internal.Error (TodoistError)
 import Web.Todoist.Runner (todoist)
-import Web.Todoist.Runner.TodoistIO (TodoistConfig)
+import Web.Todoist.Runner.IO (TodoistConfig)
 
 spec :: Spec
 spec = do

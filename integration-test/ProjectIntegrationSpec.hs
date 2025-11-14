@@ -6,7 +6,7 @@ module ProjectIntegrationSpec (spec) where
 
 import Helpers (assertSucceeds, buildTestProject, generateUniqueName, getTestConfig, liftTodoist)
 
-import Web.Todoist.Builder (runBuilder, setDescription)
+import Web.Todoist.Util.Builder (runBuilder, setDescription)
 import Web.Todoist.Domain.Project
     ( ProjectCreate
     , ProjectUpdate (..)

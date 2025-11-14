@@ -2,7 +2,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 -- | Core TodoistIO type definition
-module Web.Todoist.Runner.TodoistIO.Core
+module Web.Todoist.Runner.IO.Core
     ( TodoistIO (..)
     ) where
 

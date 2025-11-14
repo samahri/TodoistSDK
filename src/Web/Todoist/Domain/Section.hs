@@ -42,10 +42,9 @@ import Data.Int (Int)
 import Data.Maybe (Maybe (..))
 import Data.Monoid ((<>))
 import Text.Show (Show (..))
-import Web.Todoist.Builder (Initial, seed)
-import Web.Todoist.Builder.Has (HasName (..), HasOrder (..))
+import Web.Todoist.Util.Builder (HasName (..), HasOrder (..), Initial, seed)
 import Web.Todoist.Domain.Types (IsCollapsed, Name (..), Order (..), ProjectId (..), getProjectId)
-import Web.Todoist.QueryParam (QueryParam (..))
+import Web.Todoist.Util.QueryParam (QueryParam (..))
 
 -- | Unique identifier for a Section
 newtype SectionId = SectionId {_id :: Text}
