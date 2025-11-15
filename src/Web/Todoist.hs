@@ -169,6 +169,7 @@ import Web.Todoist.Domain.Task
     , Task (..)
     , TaskParam (..)
     , TodoistTaskM (..)
+    , newTaskParam
     )
 
 import Web.Todoist.Domain.Comment
