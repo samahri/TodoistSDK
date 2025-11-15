@@ -1,7 +1,7 @@
 cabal-version:      2.2
 
 name:               todoist-sdk
-version:            0.1.0.1
+version:            0.1.0.0
 synopsis:           Unofficial Haskell SDK for the Todoist REST API
 description:
   TodoistSDK provides a type-safe, tagless-final interface to the Todoist REST API. It includes comprehensive coverage of Projects, Tasks, Comments, Sections, and Labels endpoints with both real HTTP and tracing interpreters for testing. The library uses mtl-style type classes for operation definitions and provides a clean builder pattern for request construction.
