@@ -61,7 +61,7 @@ module Web.Todoist
     , TaskParam (..)
     , NewTask (..)
     , MoveTask (..)
-    , emptyMoveTask
+    , newTaskParam
 
       -- * Comment Types
     , Comment (..)
@@ -169,7 +169,6 @@ import Web.Todoist.Domain.Task
     , Task (..)
     , TaskParam (..)
     , TodoistTaskM (..)
-    , emptyMoveTask
     )
 
 import Web.Todoist.Domain.Comment

@@ -53,7 +53,6 @@ module Web.Todoist.Domain.Task
     , NewTask (..) -- todo: remove child exports
     , MoveTask (..)
     , AddTaskQuick
-    , emptyMoveTask
     , addTaskQuickText
     , CompletedTasksQueryParamAPI (..)
     , TaskCompletedItem (..)
@@ -300,14 +299,6 @@ instance HasSectionId MoveTask where
 instance HasParentId MoveTask where
     hasParentId :: Text -> MoveTask -> MoveTask
     hasParentId parId MoveTask {..} = MoveTask {_parent_id = Just (ParentId parId), ..}
-
-emptyMoveTask :: MoveTask
-emptyMoveTask =
-    MoveTask
-        { _project_id = Nothing
-        , _section_id = Nothing
-        , _parent_id = Nothing
-        }
 
 data AddTaskQuick = AddTaskQuick
     { _text :: Text
