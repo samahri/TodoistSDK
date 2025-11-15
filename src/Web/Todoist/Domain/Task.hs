@@ -554,7 +554,7 @@ class (Monad m) => TodoistTaskM m where
     addTask :: TaskCreate -> m NewTask -- todo: should return Task; TaskCreate should be named NewTask
 
     -- | Update an existing task with partial changes
-    updateTask :: TaskId -> TaskPatch -> m NewTask -- todo: should return Task
+    updateTask :: TaskPatch -> TaskId -> m NewTask -- todo: should return Task
 
     -- | Mark a task as completed
     closeTask :: TaskId -> m ()
@@ -569,7 +569,7 @@ class (Monad m) => TodoistTaskM m where
     getTasksByFilter :: TaskFilter -> m [TaskId]
 
     -- | Move a task to a different project or section
-    moveTask :: TaskId -> MoveTask -> m TaskId
+    moveTask :: MoveTask -> TaskId -> m TaskId
 
     addTaskQuick :: AddTaskQuick -> m ()
 
@@ -589,7 +589,7 @@ class (Monad m) => TodoistTaskM m where
     getTasksByFilterPaginated :: TaskFilter -> m ([TaskId], Maybe Text)
 
     -- | Get all tasks with custom page size (fetches all pages automatically)
-    getTasksWithLimit :: TaskParam -> Int -> m [TaskId]
+    getTasksWithLimit :: Int -> TaskParam -> m [TaskId]
 
     -- | Get all tasks by filter with custom page size (fetches all pages automatically)
     getTasksByFilterWithLimit :: TaskFilter -> Int -> m [TaskId]

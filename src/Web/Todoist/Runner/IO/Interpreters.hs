@@ -376,8 +376,8 @@ instance TodoistProjectM TodoistIO where
             Right res -> pure res
             Left err -> lift $ except (Left err)
 
-    updateProject :: ProjectId -> ProjectUpdate -> TodoistIO Project
-    updateProject ProjectId {getProjectId = projectIdText} projectUpdate = TodoistIO $ do
+    updateProject :: ProjectUpdate -> ProjectId -> TodoistIO Project
+    updateProject projectUpdate ProjectId {getProjectId = projectIdText} = TodoistIO $ do
         config <- ask
         let apiRequest = mkTodoistRequest @ProjectUpdate ["projects", projectIdText] Nothing Nothing
         resp <-
@@ -397,8 +397,8 @@ instance TodoistProjectM TodoistIO where
             Left err -> lift $ except (Left err)
 
     getProjectCollaboratorsPaginated ::
-        ProjectId -> PaginationParam -> TodoistIO ([Collaborator], Maybe Text)
-    getProjectCollaboratorsPaginated ProjectId {getProjectId = projectIdText} params = TodoistIO $ do
+        PaginationParam -> ProjectId -> TodoistIO ([Collaborator], Maybe Text)
+    getProjectCollaboratorsPaginated params ProjectId {getProjectId = projectIdText} = TodoistIO $ do
         config <- ask
         let apiRequest =
                 mkTodoistRequest @Void
@@ -422,13 +422,13 @@ instance TodoistProjectM TodoistIO where
                     Just c -> loop (Just c) newAcc
         loop Nothing []
 
-    getProjectCollaboratorsWithLimit :: ProjectId -> Int -> TodoistIO [Collaborator]
-    getProjectCollaboratorsWithLimit projectId pageLimit = TodoistIO $ do
+    getProjectCollaboratorsWithLimit :: Int -> ProjectId -> TodoistIO [Collaborator]
+    getProjectCollaboratorsWithLimit pageLimit projectId = TodoistIO $ do
         let loop ::
                 Maybe Text -> [Collaborator] -> ReaderT TodoistConfig (ExceptT TodoistError IO) [Collaborator]
             loop cursor acc = do
                 let params = PaginationParam {cursor = cursor, limit = Just pageLimit}
-                (collaborators, nextCursor) <- unTodoist $ getProjectCollaboratorsPaginated projectId params
+                (collaborators, nextCursor) <- unTodoist $ getProjectCollaboratorsPaginated params projectId
                 let newAcc = acc <> collaborators
                 case nextCursor of
                     Nothing -> pure newAcc
@@ -476,8 +476,8 @@ instance TodoistTaskM TodoistIO where
             Right res -> pure (newTaskResponseToNewTask res)
             Left err -> lift $ except (Left err)
 
-    updateTask :: TaskId -> TaskPatch -> TodoistIO NewTask
-    updateTask TaskId {getTaskId = taskIdText} taskPatch = TodoistIO $ do
+    updateTask :: TaskPatch -> TaskId -> TodoistIO NewTask
+    updateTask taskPatch TaskId {getTaskId = taskIdText} = TodoistIO $ do
         config <- ask
         let apiRequest = mkTodoistRequest @TaskPatch ["tasks", taskIdText] Nothing Nothing
         resp <- liftIO $ apiPost (Just taskPatch) (JsonResponse (Proxy @NewTaskResponse)) config apiRequest
@@ -531,8 +531,8 @@ instance TodoistTaskM TodoistIO where
                     Left err -> lift $ except (Left err)
         loop Nothing []
 
-    moveTask :: TaskId -> MoveTask -> TodoistIO TaskId
-    moveTask TaskId {getTaskId = taskIdText} moveTaskBody = TodoistIO $ do
+    moveTask :: MoveTask -> TaskId -> TodoistIO TaskId
+    moveTask moveTaskBody TaskId {getTaskId = taskIdText} = TodoistIO $ do
         config <- ask
         let apiRequest = mkTodoistRequest @MoveTask ["tasks", taskIdText, "move"] Nothing Nothing
         resp <- liftIO $ apiPost (Just moveTaskBody) (JsonResponse (Proxy @TaskResponse)) config apiRequest
@@ -597,8 +597,8 @@ instance TodoistTaskM TodoistIO where
                 pure (taskIds, fmap T.pack (next_cursor res))
             Left err -> lift $ except (Left err)
 
-    getTasksWithLimit :: TaskParam -> Int -> TodoistIO [TaskId]
-    getTasksWithLimit baseParams pageLimit = TodoistIO $ do
+    getTasksWithLimit :: Int -> TaskParam -> TodoistIO [TaskId]
+    getTasksWithLimit pageLimit baseParams = TodoistIO $ do
         let loop :: Maybe Text -> [TaskId] -> ReaderT TodoistConfig (ExceptT TodoistError IO) [TaskId]
             loop cursorVal acc = do
                 let TaskParam {project_id, section_id, parent_id, task_ids} = baseParams
@@ -690,8 +690,8 @@ instance TodoistCommentM TodoistIO where
                     Right comment -> pure comment
             Left err -> lift $ except (Left err)
 
-    updateComment :: CommentId -> CommentUpdate -> TodoistIO Comment
-    updateComment CommentId {getCommentId = commentIdText} update = TodoistIO $ do
+    updateComment :: CommentUpdate -> CommentId -> TodoistIO Comment
+    updateComment update CommentId {getCommentId = commentIdText} = TodoistIO $ do
         config <- ask
         let apiRequest = mkTodoistRequest @CommentUpdate ["comments", commentIdText] Nothing Nothing
         resp <- liftIO $ apiPost (Just update) (JsonResponse (Proxy @CommentResponse)) config apiRequest
@@ -752,8 +752,8 @@ instance TodoistSectionM TodoistIO where
             Right res -> pure res
             Left err -> lift $ except (Left err)
 
-    updateSection :: SectionId -> SectionUpdate -> TodoistIO Section
-    updateSection SectionId {..} sectionUpdate = TodoistIO $ do
+    updateSection :: SectionUpdate -> SectionId -> TodoistIO Section
+    updateSection sectionUpdate SectionId {..} = TodoistIO $ do
         config <- ask
         let apiRequest = mkTodoistRequest @SectionUpdate ["sections", _id] Nothing Nothing
         resp <-
@@ -820,8 +820,8 @@ instance TodoistLabelM TodoistIO where
             Right res -> pure res
             Left err -> lift $ except (Left err)
 
-    updateLabel :: LabelId -> LabelUpdate -> TodoistIO Label
-    updateLabel LabelId {..} labelUpdate = TodoistIO $ do
+    updateLabel :: LabelUpdate -> LabelId -> TodoistIO Label
+    updateLabel labelUpdate LabelId {..} = TodoistIO $ do
         config <- ask
         let apiRequest = mkTodoistRequest @LabelUpdate ["labels", getLabelId] Nothing Nothing
         resp <-

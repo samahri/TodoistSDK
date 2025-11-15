@@ -9,11 +9,9 @@ import Web.Todoist.Domain.Project
     , ProjectUpdate (..)
     )
 import Web.Todoist.Domain.Types
-    ( Color (..)
-    , Description (..)
+    ( Description (..)
     , IsFavorite (..)
     , Name (..)
-    , Order (..)
     , ProjectId (..)
     , ViewStyle (..)
     , parseViewStyle

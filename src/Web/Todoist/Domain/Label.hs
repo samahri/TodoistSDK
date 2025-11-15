@@ -200,7 +200,7 @@ class (Monad m) => TodoistLabelM m where
     addLabel :: LabelCreate -> m LabelId
 
     -- | Update a label
-    updateLabel :: LabelId -> LabelUpdate -> m Label
+    updateLabel :: LabelUpdate -> LabelId -> m Label
 
     -- | Delete a label (removes from all tasks)
     deleteLabel :: LabelId -> m ()

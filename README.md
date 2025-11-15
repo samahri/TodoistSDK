@@ -134,7 +134,7 @@ project <- todoist config (addProject newProject)
 
 -- Update a project
 let update = runBuilder emptyProjectUpdate (setName "Updated Name")
-updated <- todoist config (updateProject projectId update)
+updated <- todoist config (updateProject update projectId)
 
 -- Delete a project
 todoist config (deleteProject projectId)
@@ -166,7 +166,7 @@ todoist config (closeTask taskId)
 
 -- Update a task
 let update = runBuilder emptyTaskPatch (setContent "Buy 2% milk")
-updated <- todoist config (updateTask taskId update)
+updated <- todoist config (updateTask update taskId)
 ```
 
 ### Working with Comments

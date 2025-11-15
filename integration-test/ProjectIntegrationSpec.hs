@@ -15,11 +15,9 @@ import Web.Todoist.Domain.Project
     )
 import qualified Web.Todoist.Domain.Project as P
 import Web.Todoist.Domain.Types
-    ( Color (..)
-    , Description (..)
+    ( Description (..)
     , IsFavorite (..)
     , Name (..)
-    , Order (..)
     , ProjectId (..)
     , getName
     )
@@ -311,7 +309,7 @@ updateProjectSpec config = describe "Update project" $ do
                         , _view_style = Nothing -- don't change view style
                         }
 
-            updatedProject <- liftTodoist config (updateProject projectId projectUpdate)
+            updatedProject <- liftTodoist config (updateProject projectUpdate projectId)
 
             -- Verify the response contains updated values
             liftIO $ do
@@ -365,7 +363,7 @@ updateProjectSpec config = describe "Update project" $ do
                         , _view_style = Nothing
                         }
 
-            updatedProject <- liftTodoist config (updateProject projectId partialUpdate)
+            updatedProject <- liftTodoist config (updateProject partialUpdate projectId)
 
             -- Verify only is_favorite changed
             liftIO $ do

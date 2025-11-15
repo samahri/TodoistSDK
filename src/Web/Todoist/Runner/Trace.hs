@@ -180,7 +180,7 @@ instance TodoistProjectM Trace where
         tell [ProjectOp GetAllProjects]
         pure $ ProjectPermissions [] []
 
-    updateProject :: ProjectId -> ProjectUpdate -> Trace Project
+    updateProject :: ProjectUpdate -> ProjectId -> Trace Project
     updateProject _ _ = Trace $ do
         tell [ProjectOp AddProject]
         pure $ Project (ProjectId "") (Name "") (Description "") (Order 0) (Color "") (IsCollapsed False) (IsShared False) (IsFavorite False) (IsArchived False) (CanAssignTasks False) List Nothing Nothing
@@ -190,7 +190,7 @@ instance TodoistProjectM Trace where
         tell [ProjectOp GetAllProjects]
         pure ([], Nothing)
 
-    getProjectCollaboratorsPaginated :: ProjectId -> PaginationParam -> Trace ([Collaborator], Maybe Text)
+    getProjectCollaboratorsPaginated :: PaginationParam -> ProjectId -> Trace ([Collaborator], Maybe Text)
     getProjectCollaboratorsPaginated _ _ = Trace $ do
         tell [ProjectOp GetProjectCollaborators]
         pure ([], Nothing)
@@ -200,7 +200,7 @@ instance TodoistProjectM Trace where
         tell [ProjectOp GetAllProjects]
         pure []
 
-    getProjectCollaboratorsWithLimit :: ProjectId -> Int -> Trace [Collaborator]
+    getProjectCollaboratorsWithLimit :: Int -> ProjectId -> Trace [Collaborator]
     getProjectCollaboratorsWithLimit _ _ = Trace $ do
         tell [ProjectOp GetProjectCollaborators]
         pure []
@@ -221,7 +221,7 @@ instance TodoistTaskM Trace where
         tell [TaskOp AddTask]
         pure $ NewTask "" (TaskId "") (ProjectId "") Nothing Nothing Nothing Nothing Nothing [] False False Nothing Nothing Nothing 0 (Order 0) (Content "") (Description "") 0 (Order 0) (IsCollapsed False)
 
-    updateTask :: TaskId -> TaskPatch -> Trace NewTask
+    updateTask :: TaskPatch -> TaskId -> Trace NewTask
     updateTask _ _ = Trace $ do
         tell [TaskOp UpdateTask]
         pure $ NewTask "" (TaskId "") (ProjectId "") Nothing Nothing Nothing Nothing Nothing [] False False Nothing Nothing Nothing 0 (Order 0) (Content "") (Description "") 0 (Order 0) (IsCollapsed False)
@@ -246,8 +246,8 @@ instance TodoistTaskM Trace where
         tell [TaskOp GetTasks]
         pure []
 
-    moveTask :: TaskId -> MoveTask -> Trace TaskId
-    moveTask tid _ = Trace $ do
+    moveTask :: MoveTask -> TaskId -> Trace TaskId
+    moveTask _ tid = Trace $ do
         tell [TaskOp UpdateTask]
         pure tid
 
@@ -276,7 +276,7 @@ instance TodoistTaskM Trace where
         tell [TaskOp GetTasks]
         pure ([], Nothing)
 
-    getTasksWithLimit :: TaskParam -> Int -> Trace [TaskId]
+    getTasksWithLimit :: Int -> TaskParam -> Trace [TaskId]
     getTasksWithLimit _ _ = Trace $ do
         tell [TaskOp GetTasks]
         pure []
@@ -307,7 +307,7 @@ instance TodoistCommentM Trace where
         tell [CommentOp GetComment]
         pure $ Comment (CommentId "") (Content "") Nothing Nothing Nothing Nothing Nothing
 
-    updateComment :: CommentId -> CommentUpdate -> Trace Comment
+    updateComment :: CommentUpdate -> CommentId -> Trace Comment
     updateComment _ _ = Trace $ do
         tell [CommentOp UpdateComment]
         pure $ Comment (CommentId "") (Content "") Nothing Nothing Nothing Nothing Nothing
@@ -333,7 +333,7 @@ instance TodoistSectionM Trace where
         tell [SectionOp AddSection]
         pure $ SectionId ""
 
-    updateSection :: SectionId -> SectionUpdate -> Trace Section
+    updateSection :: SectionUpdate -> SectionId -> Trace Section
     updateSection _ _ = Trace $ do
         tell [SectionOp UpdateSection]
         pure $ Section (SectionId "") (Name "") (ProjectId "") (IsCollapsed False) (Order 0)
@@ -364,7 +364,7 @@ instance TodoistLabelM Trace where
         tell [LabelOp AddLabel]
         pure $ LabelId ""
 
-    updateLabel :: LabelId -> LabelUpdate -> Trace Label
+    updateLabel :: LabelUpdate -> LabelId -> Trace Label
     updateLabel _ _ = Trace $ do
         tell [LabelOp UpdateLabel]
         pure $ Label (LabelId "") (Name "") (Color "") Nothing (IsFavorite False)

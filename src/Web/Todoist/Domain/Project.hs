@@ -36,7 +36,7 @@ main = do
 
     -- Update a project
     let update = runBuilder emptyProjectUpdate (setName "Updated Name")
-    updated <- todoist config (updateProject projectId update)
+    updated <- todoist config (updateProject update projectId)
 @
 
 For more details, see: <https://developer.todoist.com/rest/v2/#projects>
@@ -314,7 +314,7 @@ class (Monad m) => TodoistProjectM m where
     getProjectPermissions :: m ProjectPermissions
 
     -- | Update an existing project
-    updateProject :: ProjectId -> ProjectUpdate -> m Project
+    updateProject :: ProjectUpdate -> ProjectId -> m Project
 
     {- | Get projects with manual pagination control
     Returns a tuple of (results, next_cursor) for the requested page
@@ -324,13 +324,13 @@ class (Monad m) => TodoistProjectM m where
     {- | Get project collaborators with manual pagination control
     Returns a tuple of (results, next_cursor) for the requested page
     -}
-    getProjectCollaboratorsPaginated :: ProjectId -> PaginationParam -> m ([Collaborator], Maybe Text)
+    getProjectCollaboratorsPaginated :: PaginationParam -> ProjectId -> m ([Collaborator], Maybe Text)
 
     -- | Get all projects with custom page size (fetches all pages automatically)
     getAllProjectsWithLimit :: Int -> m [Project]
 
     -- | Get all project collaborators with custom page size (fetches all pages automatically)
-    getProjectCollaboratorsWithLimit :: ProjectId -> Int -> m [Collaborator]
+    getProjectCollaboratorsWithLimit :: Int -> ProjectId -> m [Collaborator]
 
 newtype IsShared = IsShared {getIsShared :: Bool} deriving (Show, Eq, Generic)
 

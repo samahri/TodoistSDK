@@ -6,7 +6,6 @@
 module Web.Todoist.Runner.TodoistIO.TaskSpec (spec) where
 
 import Web.Todoist.Domain.Section (SectionId (..))
-import qualified Web.Todoist.Domain.Section as Section
 import Web.Todoist.Domain.Task
     ( Deadline (..)
     , Due (..)

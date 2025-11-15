@@ -45,7 +45,7 @@ import Web.Todoist.Domain.Label
     , renameSharedLabels
     , updateLabel
     )
-import Web.Todoist.Domain.Types (Color (..), IsFavorite (..), Name (..), Order (..))
+import Web.Todoist.Domain.Types (Color (..), IsFavorite (..), Name (..))
 import Web.Todoist.Internal.Error (TodoistError)
 import Web.Todoist.Runner (todoist)
 import Web.Todoist.Runner.IO (TodoistConfig)
@@ -120,7 +120,7 @@ updateLabelSpec config =
                             , _color = Just (Color "berry_red")
                             , _is_favorite = Just (IsFavorite True)
                             }
-                updatedLabel <- liftTodoist config (updateLabel labelId update)
+                updatedLabel <- liftTodoist config (updateLabel update labelId)
 
                 -- Verify update
                 let Label {_name = updatedName, _id = updatedId, _color = updatedColor, _is_favorite = updatedFav} = updatedLabel

@@ -146,7 +146,7 @@ updateCommentSpec config = describe "Update comment" $ do
             let updatedContent = originalContent <> "-Updated"
             let commentUpdate = runBuilder (newCommentUpdate updatedContent) mempty
 
-            updatedComment <- liftTodoist config (updateComment commentId commentUpdate)
+            updatedComment <- liftTodoist config (updateComment commentUpdate commentId)
 
             -- Verify the response contains updated value
             let Comment {_content = responseContent} = updatedComment

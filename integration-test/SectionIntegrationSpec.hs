@@ -121,7 +121,7 @@ updateSectionSpec config =
                 -- Update section name
                 let newName = sectionName <> "-Updated"
                     update = SectionUpdate {_name = Just (Name newName)}
-                updatedSection <- liftTodoist config (updateSection sectionId update)
+                updatedSection <- liftTodoist config (updateSection update sectionId)
 
                 -- Verify update
                 let Section {_name = updatedName, _id = updatedId} = updatedSection

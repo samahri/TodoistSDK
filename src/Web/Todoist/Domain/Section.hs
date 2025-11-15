@@ -168,7 +168,7 @@ class (Monad m) => TodoistSectionM m where
     addSection :: SectionCreate -> m SectionId
 
     -- | Update a section
-    updateSection :: SectionId -> SectionUpdate -> m Section
+    updateSection :: SectionUpdate -> SectionId -> m Section
 
     -- | Delete a section (and all its tasks)
     deleteSection :: SectionId -> m ()

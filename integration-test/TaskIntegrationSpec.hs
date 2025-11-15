@@ -15,16 +15,13 @@ import Helpers
 
 import qualified Web.Todoist.Domain.Project as P
 import Web.Todoist.Domain.Task
-    ( CompletedTasksQueryParam (..)
-    , NewTask (..)
+    ( NewTask (..)
     , Task (..)
-    , TaskParam (..)
     , TodoistTaskM (..)
     , emptyTaskPatch
     , newCompletedTasksQueryParam
     , newMoveTask
     , newTaskFilter
-    , newTaskParam
     )
 import qualified Web.Todoist.Domain.Task as T
 import Web.Todoist.Domain.Types (Content (..), Description (..), ProjectId (..), TaskId (..))
@@ -220,7 +217,7 @@ updateTaskSpec config = describe "Update task" $ do
                             <> setPriority updatedPriority
                         )
 
-            updatedNewTask <- liftTodoist config (updateTask taskId taskPatch)
+            updatedNewTask <- liftTodoist config (updateTask taskPatch taskId)
 
             -- Verify the response contains updated values
             let NewTask
@@ -268,7 +265,7 @@ updateTaskSpec config = describe "Update task" $ do
                         emptyTaskPatch
                         (setPriority 4)
 
-            _ <- liftTodoist config (updateTask taskId taskPatch)
+            _ <- liftTodoist config (updateTask taskPatch taskId)
 
             -- Verify only priority changed
             task2 <- liftTodoist config (getTask taskId)
@@ -314,7 +311,7 @@ taskFilterSpec config = describe "Task filtering" $ do
                         emptyTaskPatch
                         (setDueDate "2025-11-03")
 
-            _ <- liftTodoist config (updateTask taskId taskPatch)
+            _ <- liftTodoist config (updateTask taskPatch taskId)
 
             -- Complete the task
             liftTodoist config (closeTask taskId)
@@ -386,7 +383,7 @@ moveTaskSpec config = describe "Move task between projects" $ do
             let ProjectId {getProjectId = project2IdText} = project2Id
             let moveTaskData = runBuilder newMoveTask (setProjectId project2IdText)
 
-            movedTaskId <- liftTodoist config (moveTask taskId moveTaskData)
+            movedTaskId <- liftTodoist config (moveTask moveTaskData taskId)
 
             -- Verify returned task ID matches
             let TaskId {getTaskId = expectedIdText} = taskId

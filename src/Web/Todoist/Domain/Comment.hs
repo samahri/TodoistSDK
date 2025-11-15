@@ -39,7 +39,7 @@ main = do
 
     -- Update a comment
     let update = runBuilder (newCommentUpdate "Updated text!") mempty
-    updatedComment <- todoist config (updateComment commentId update)
+    updatedComment <- todoist config (updateComment update commentId)
 @
 
 For more details on the Todoist Comments API, see:
@@ -242,7 +242,7 @@ class (Monad m) => TodoistCommentM m where
     getComment :: CommentId -> m Comment
 
     -- | Update a comment's content
-    updateComment :: CommentId -> CommentUpdate -> m Comment
+    updateComment :: CommentUpdate -> CommentId -> m Comment
 
     -- | Delete a comment
     deleteComment :: CommentId -> m ()
