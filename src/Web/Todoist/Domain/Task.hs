@@ -33,7 +33,7 @@ main = do
     taskId <- todoist config (addTask task)
 
     -- Get all tasks with builder pattern
-    let params = runBuilder newTaskParam (setProjectId "project-123" <> setLimit 50)
+    let params = runBuilder emptyTaskParam (setProjectId "project-123" <> setLimit 50)
     tasks <- todoist config (getTasks params)
 
     -- Complete a task
@@ -50,8 +50,8 @@ module Web.Todoist.Domain.Task
     , Deadline (..)
     , Duration (..)
     , DurationUnit (..)
-    , NewTask (..) -- todo: remove child exports
-    , MoveTask (..)
+    , NewTask (..)
+    , MoveTask
     , AddTaskQuick
     , addTaskQuickText
     , CompletedTasksQueryParamAPI (..)
@@ -61,9 +61,9 @@ module Web.Todoist.Domain.Task
     , TaskCreate
     , TaskPatch
     , newTask
-    , newMoveTask
+    , emptyMoveTask
     , emptyTaskPatch
-    , newTaskParam
+    , emptyTaskParam
     , newTaskFilter
     , newCompletedTasksQueryParam
     ) where
@@ -91,9 +91,7 @@ import Web.Todoist.Util.Builder
     , HasPriority (..)
     , HasProjectId (..)
     , HasSectionId (..)
-    -- , HasSince (..)
     , HasTaskIds (..)
-    -- , HasUntil (..)
     , Initial
     , seed
     )
@@ -125,11 +123,11 @@ import Web.Todoist.Domain.Section (SectionId (..))
 import Web.Todoist.Domain.Types
     ( Content (..)
     , Description (..)
-    , IsCollapsed
+    , IsCollapsed (..)
     , Order (..)
     , ParentId (..)
     , ProjectId (..)
-    , TaskId
+    , TaskId (..)
     , Uid
     )
 
@@ -279,8 +277,9 @@ instance FromJSON MoveTask where
     parseJSON :: Value -> Parser MoveTask
     parseJSON = genericParseJSON defaultOptions {fieldLabelModifier = L.drop 1}
 
-newMoveTask :: Initial MoveTask
-newMoveTask =
+-- | Create empty MoveTask for use with builder pattern
+emptyMoveTask :: Initial MoveTask
+emptyMoveTask =
     seed
         MoveTask
             { _project_id = Nothing
@@ -348,6 +347,7 @@ instance ToJSON TaskCreate where
     toJSON :: TaskCreate -> Value
     toJSON = genericToJSON defaultOptions {fieldLabelModifier = L.drop 1, omitNothingFields = True}
 
+-- | Create new TaskCreate with required content parameter
 newTask :: Text -> Initial TaskCreate
 newTask content =
     seed
@@ -689,9 +689,9 @@ newCompletedTasksQueryParam since until =
             , limit = 50
             }
 
--- | Create new TaskParam for use with builder pattern
-newTaskParam :: Initial TaskParam
-newTaskParam =
+-- | Create empty TaskParam for use with builder pattern
+emptyTaskParam :: Initial TaskParam
+emptyTaskParam =
     seed
         TaskParam
             { project_id = Nothing

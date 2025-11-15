@@ -20,7 +20,7 @@ import Web.Todoist.Domain.Task
     , TodoistTaskM (..)
     , emptyTaskPatch
     , newCompletedTasksQueryParam
-    , newMoveTask
+    , emptyMoveTask
     , newTaskFilter
     )
 import qualified Web.Todoist.Domain.Task as T
@@ -157,7 +157,7 @@ getTasksSpec config = describe "Get multiple tasks" $ do
         withTestTasks config projectName taskContents $ \projectId taskIds -> do
             -- Get all tasks for this project
             let ProjectId {getProjectId = projIdText} = projectId
-            let taskParam = runBuilder T.newTaskParam (setProjectId projIdText)
+            let taskParam = runBuilder T.emptyTaskParam (setProjectId projIdText)
 
             tasks <- liftTodoist config (getTasks taskParam)
 
@@ -381,7 +381,7 @@ moveTaskSpec config = describe "Move task between projects" $ do
 
             -- Move task to project 2
             let ProjectId {getProjectId = project2IdText} = project2Id
-            let moveTaskData = runBuilder newMoveTask (setProjectId project2IdText)
+            let moveTaskData = runBuilder emptyMoveTask (setProjectId project2IdText)
 
             movedTaskId <- liftTodoist config (moveTask moveTaskData taskId)
 
