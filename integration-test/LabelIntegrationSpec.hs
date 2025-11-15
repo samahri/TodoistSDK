@@ -79,7 +79,7 @@ labelLifecycleSpec config =
                 liftTodoist config (deleteLabel labelId)
 
                 -- Verify deletion by checking label is not in active labels list
-                let params = LabelParam {_cursor = Nothing, _limit = Nothing}
+                let params = LabelParam {cursor = Nothing, limit = Nothing}
                 labels <- liftTodoist config (getLabels params)
                 let labelIds = fmap (\(Label {_id = lid}) -> lid) labels
                 liftIO $ labelId `elem` labelIds `shouldBe` False
@@ -95,7 +95,7 @@ getLabelsSpec config =
 
             withMultipleTestLabels config [label1Name, label2Name, label3Name] $ \_ -> do
                 -- Get labels
-                let params = LabelParam {_cursor = Nothing, _limit = Nothing}
+                let params = LabelParam {cursor = Nothing, limit = Nothing}
                 labels <- liftTodoist config (getLabels params)
 
                 -- Verify count and names
@@ -133,7 +133,7 @@ sharedLabelsSpec :: TodoistConfig -> Spec
 sharedLabelsSpec config =
     describe "Shared labels operations" $ do
         it "gets shared labels" $ do
-            let params = SharedLabelParam {_omit_personal = Nothing, _cursor = Nothing, _limit = Just 10}
+            let params = SharedLabelParam {omit_personal = Nothing, cursor = Nothing, limit = Just 10}
             sharedLabels <- assertSucceeds $ liftTodoist config (getSharedLabels params)
             -- Just verify we can call the endpoint without errors
             -- Actual content depends on user's account

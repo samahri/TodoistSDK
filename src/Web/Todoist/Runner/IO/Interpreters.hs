@@ -297,7 +297,7 @@ instance TodoistProjectM TodoistIO where
         config <- ask
         let loop :: Maybe Text -> [Project] -> ReaderT TodoistConfig (ExceptT TodoistError IO) [Project]
             loop cursor acc = do
-                let params = PaginationParam {_cursor = cursor, _limit = Nothing}
+                let params = PaginationParam {cursor = cursor, limit = Nothing}
                     apiRequest = mkTodoistRequest @Void ["projects"] (Just $ toQueryParam params) Nothing
                 resp <- liftIO $ apiGet (Proxy @(TodoistReturn ProjectResponse)) config apiRequest
                 case resp of
@@ -315,7 +315,7 @@ instance TodoistProjectM TodoistIO where
         let loop ::
                 Maybe Text -> [Collaborator] -> ReaderT TodoistConfig (ExceptT TodoistError IO) [Collaborator]
             loop cursor acc = do
-                let params = PaginationParam {_cursor = cursor, _limit = Nothing}
+                let params = PaginationParam {cursor = cursor, limit = Nothing}
                     apiRequest =
                         mkTodoistRequest @Void
                             ["projects", projectIdText, "collaborators"]
@@ -414,7 +414,7 @@ instance TodoistProjectM TodoistIO where
     getAllProjectsWithLimit pageLimit = TodoistIO $ do
         let loop :: Maybe Text -> [Project] -> ReaderT TodoistConfig (ExceptT TodoistError IO) [Project]
             loop cursor acc = do
-                let params = PaginationParam {_cursor = cursor, _limit = Just pageLimit}
+                let params = PaginationParam {cursor = cursor, limit = Just pageLimit}
                 (projects, nextCursor) <- unTodoist $ getAllProjectsPaginated params
                 let newAcc = acc <> projects
                 case nextCursor of
@@ -427,7 +427,7 @@ instance TodoistProjectM TodoistIO where
         let loop ::
                 Maybe Text -> [Collaborator] -> ReaderT TodoistConfig (ExceptT TodoistError IO) [Collaborator]
             loop cursor acc = do
-                let params = PaginationParam {_cursor = cursor, _limit = Just pageLimit}
+                let params = PaginationParam {cursor = cursor, limit = Just pageLimit}
                 (collaborators, nextCursor) <- unTodoist $ getProjectCollaboratorsPaginated projectId params
                 let newAcc = acc <> collaborators
                 case nextCursor of
@@ -790,7 +790,7 @@ instance TodoistLabelM TodoistIO where
         config <- ask
         let loop :: Maybe Text -> [Label] -> ReaderT TodoistConfig (ExceptT TodoistError IO) [Label]
             loop cursorVal acc = do
-                let params = LabelParam {_cursor = cursorVal, _limit = Nothing}
+                let params = LabelParam {cursor = cursorVal, limit = Nothing}
                     apiRequest = mkTodoistRequest @Void ["labels"] (Just $ toQueryParam params) Nothing
                 resp <- liftIO $ apiGet (Proxy @(TodoistReturn LabelResponse)) config apiRequest
                 case resp of
@@ -853,7 +853,7 @@ instance TodoistLabelM TodoistIO where
         config <- ask
         let loop :: Maybe Text -> [Text] -> ReaderT TodoistConfig (ExceptT TodoistError IO) [Text]
             loop cursorVal acc = do
-                let params = SharedLabelParam {_omit_personal = initialOmit, _cursor = cursorVal, _limit = Nothing}
+                let params = SharedLabelParam {omit_personal = initialOmit, cursor = cursorVal, limit = Nothing}
                     apiRequest =
                         mkTodoistRequest @Void
                             ["labels", "shared"]

@@ -33,14 +33,8 @@ main = do
                       (setTaskId "task-id-456")
     result <- todoist config (addComment taskComment)
 
-    -- Get all comments for a project (automatic pagination)
-    let params = CommentParam
-            { project_id = Just "project-id-123"
-            , task_id = Nothing
-            , cursor = Nothing
-            , limit = Nothing
-            , public_key = Nothing
-            }
+    -- Get all comments for a project with builder pattern
+    let params = runBuilder newCommentParam (setProjectId "project-id-123" <> setLimit 50)
     comments <- todoist config (getComments params)
 
     -- Update a comment
@@ -63,21 +57,25 @@ module Web.Todoist.Domain.Comment
       -- * Constructors
     , newComment
     , newCommentUpdate
+    , newCommentParam
 
       -- * Type Class
     , TodoistCommentM (..)
     ) where
 
+import Web.Todoist.Internal.Types (FileAttachment, Params)
 import Web.Todoist.Util.Builder
     ( HasAttachment (..)
     , HasContent (..)
+    , HasCursor (..)
+    , HasLimit (..)
     , HasProjectId (..)
+    , HasPublicKey (..)
     , HasTaskId (..)
     , HasUidsToNotify (..)
     , Initial
     , seed
     )
-import Web.Todoist.Internal.Types (FileAttachment, Params)
 import Web.Todoist.Util.QueryParam (QueryParam (..))
 
 import Control.Applicative ((<$>))
@@ -215,6 +213,18 @@ newCommentUpdate content =
     let truncated = T.take 15000 content
      in seed $ CommentUpdate {_content = Just truncated}
 
+-- | Create new CommentParam for use with builder pattern
+newCommentParam :: Initial CommentParam
+newCommentParam =
+    seed $
+        CommentParam
+            { project_id = Nothing
+            , task_id = Nothing
+            , cursor = Nothing
+            , limit = Nothing
+            , public_key = Nothing
+            }
+
 -- | Type class for comment operations
 class (Monad m) => TodoistCommentM m where
     {- | Add a new comment to a project or task
@@ -257,3 +267,24 @@ instance HasAttachment CommentCreate where
 instance HasUidsToNotify CommentCreate where
     hasUidsToNotify :: [Int] -> CommentCreate -> CommentCreate
     hasUidsToNotify uids CommentCreate {..} = CommentCreate {_uids_to_notify = uids, ..}
+
+-- HasX instances for CommentParam
+instance HasProjectId CommentParam where
+    hasProjectId :: Text -> CommentParam -> CommentParam
+    hasProjectId pid CommentParam {..} = CommentParam {project_id = Just pid, ..}
+
+instance HasTaskId CommentParam where
+    hasTaskId :: Text -> CommentParam -> CommentParam
+    hasTaskId tid CommentParam {..} = CommentParam {task_id = Just tid, ..}
+
+instance HasCursor CommentParam where
+    hasCursor :: Text -> CommentParam -> CommentParam
+    hasCursor c CommentParam {..} = CommentParam {cursor = Just c, ..}
+
+instance HasLimit CommentParam where
+    hasLimit :: Int -> CommentParam -> CommentParam
+    hasLimit l CommentParam {..} = CommentParam {limit = Just l, ..}
+
+instance HasPublicKey CommentParam where
+    hasPublicKey :: Text -> CommentParam -> CommentParam
+    hasPublicKey pk CommentParam {..} = CommentParam {public_key = Just pk, ..}

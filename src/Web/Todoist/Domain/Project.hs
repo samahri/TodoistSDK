@@ -50,22 +50,12 @@ module Web.Todoist.Domain.Project
     , PaginationParam (..)
     , newProject
     , emptyProjectUpdate
-    , emptyPaginationParam
+    , newPaginationParam
     , IsShared (..)
     , IsArchived (..)
     , CanAssignTasks (..)
     ) where
 
-import Web.Todoist.Util.Builder
-    ( HasDescription (..)
-    , HasIsFavorite (..)
-    , HasName (..)
-    , HasParentId (..)
-    , HasViewStyle (..)
-    , HasWorkspaceId (..)
-    , Initial
-    , seed
-    )
 import Web.Todoist.Domain.Types
     ( Color (..)
     , Description (..)
@@ -77,6 +67,18 @@ import Web.Todoist.Domain.Types
     , ViewStyle (..)
     )
 import Web.Todoist.Internal.Types (Params, ProjectPermissions)
+import Web.Todoist.Util.Builder
+    ( HasCursor (..)
+    , HasDescription (..)
+    , HasIsFavorite (..)
+    , HasLimit (..)
+    , HasName (..)
+    , HasParentId (..)
+    , HasViewStyle (..)
+    , HasWorkspaceId (..)
+    , Initial
+    , seed
+    )
 import Web.Todoist.Util.QueryParam (QueryParam (..))
 
 import Control.Applicative ((<|>))
@@ -94,6 +96,7 @@ import Data.Aeson
 import Data.Aeson.Types (Parser)
 import Data.Bool (Bool (False, True))
 import Data.Eq (Eq)
+import Data.Function (($))
 import Data.Functor ((<$>))
 import Data.Int (Int)
 import qualified Data.List as L
@@ -251,20 +254,29 @@ instance FromJSON Collaborator where
 Used for projects and collaborators endpoints
 -}
 data PaginationParam = PaginationParam
-    { _cursor :: Maybe Text
-    , _limit :: Maybe Int
+    { cursor :: Maybe Text
+    , limit :: Maybe Int
     }
     deriving (Show, Eq)
 
 instance QueryParam PaginationParam where
     toQueryParam :: PaginationParam -> Params
     toQueryParam PaginationParam {..} =
-        maybe [] (\c -> [("cursor", c)]) _cursor
-            <> maybe [] (\l -> [("limit", Data.Text.show l)]) _limit
+        maybe [] (\c -> [("cursor", c)]) cursor
+            <> maybe [] (\l -> [("limit", Data.Text.show l)]) limit
 
--- | Create empty PaginationParam for first page fetch
-emptyPaginationParam :: PaginationParam
-emptyPaginationParam = PaginationParam {_cursor = Nothing, _limit = Nothing}
+-- | Create new PaginationParam for use with builder pattern
+newPaginationParam :: Initial PaginationParam
+newPaginationParam = seed $ PaginationParam {cursor = Nothing, limit = Nothing}
+
+-- HasX instances for builder pattern
+instance HasCursor PaginationParam where
+    hasCursor :: Text -> PaginationParam -> PaginationParam
+    hasCursor c PaginationParam {..} = PaginationParam {cursor = Just c, ..}
+
+instance HasLimit PaginationParam where
+    hasLimit :: Int -> PaginationParam -> PaginationParam
+    hasLimit l PaginationParam {..} = PaginationParam {limit = Just l, ..}
 
 data ParentId = ParentIdStr String | ParentIdInt Int deriving (Show, Generic)
 

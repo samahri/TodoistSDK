@@ -192,11 +192,11 @@ comments <- todoist config (getComments params)
 
 ```haskell
 -- Create a section
-let section = newSection "In Progress" "project-123"
+let section = runBuilder (newSection "In Progress" "project-123") mempty
 result <- todoist config (addSection section)
 
--- Get sections for a project
-let params = emptySectionParam {project_id = Just "project-123"}
+-- Get sections for a project with builder pattern
+let params = runBuilder newSectionParam (setProjectId "project-123" <> setLimit 50)
 sections <- todoist config (getSections params)
 ```
 
@@ -204,11 +204,12 @@ sections <- todoist config (getSections params)
 
 ```haskell
 -- Create a label
-let label = newLabel "urgent"
+let label = runBuilder (newLabel "urgent") mempty
 result <- todoist config (addLabel label)
 
 -- Get all labels
-labels <- todoist config (getLabels emptyLabelParam)
+let params = runBuilder newLabelParam (setLimit 50)
+labels <- todoist config (getLabels params)
 ```
 
 ## Error Handling

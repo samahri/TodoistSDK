@@ -18,17 +18,19 @@ Supports both personal and shared labels.
 @
 import Web.Todoist.Domain.Label
 import Web.Todoist.Runner
+import Web.Todoist.Util.Builder
 
 main :: IO ()
 main = do
     let config = newTodoistConfig "your-api-token"
 
     -- Create a label
-    let newLabel = newLabel "urgent"
-    label <- todoist config (addLabel newLabel)
+    let newLbl = runBuilder (newLabel "urgent") mempty
+    label <- todoist config (addLabel newLbl)
 
-    -- Get all labels
-    labels <- todoist config (getLabels emptyLabelParam)
+    -- Get all labels with builder pattern
+    let params = runBuilder newLabelParam (setLimit 50)
+    labels <- todoist config (getLabels params)
 @
 
 For more details, see: <https://developer.todoist.com/rest/v2/#labels>
@@ -50,8 +52,8 @@ module Web.Todoist.Domain.Label
       -- * Constructors
     , newLabel
     , emptyLabelUpdate
-    , emptyLabelParam
-    , emptySharedLabelParam
+    , newLabelParam
+    , newSharedLabelParam
     ) where
 
 import Control.Applicative ((<$>))
@@ -70,9 +72,19 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import GHC.Generics (Generic)
 import Text.Show (Show, show)
-import Web.Todoist.Util.Builder (HasColor (..), HasIsFavorite (..), HasName (..), HasOrder (..), Initial, seed)
 import Web.Todoist.Domain.Types (Color (..), IsFavorite (..), Name (..), Order (..))
 import Web.Todoist.Internal.Types (Params)
+import Web.Todoist.Util.Builder
+    ( HasColor (..)
+    , HasCursor (..)
+    , HasIsFavorite (..)
+    , HasLimit (..)
+    , HasName (..)
+    , HasOmitPersonal (..)
+    , HasOrder (..)
+    , Initial
+    , seed
+    )
 import Web.Todoist.Util.QueryParam (QueryParam (..))
 
 -- | Unique identifier for a Label
@@ -125,35 +137,35 @@ instance ToJSON LabelUpdate where
 
 -- | Query parameters for filtering and paginating labels
 data LabelParam = LabelParam
-    { _cursor :: Maybe Text
-    , _limit :: Maybe Int
+    { cursor :: Maybe Text
+    , limit :: Maybe Int
     }
     deriving (Show, Generic)
 
 instance QueryParam LabelParam where
     toQueryParam :: LabelParam -> Params
     toQueryParam LabelParam {..} =
-        maybe [] (\c -> [("cursor", c)]) _cursor
-            <> maybe [] (\l -> [("limit", T.pack $ show l)]) _limit
+        maybe [] (\c -> [("cursor", c)]) cursor
+            <> maybe [] (\l -> [("limit", T.pack $ show l)]) limit
 
 -- | Query parameters for shared labels
 data SharedLabelParam = SharedLabelParam
-    { _omit_personal :: Maybe Bool
-    , _cursor :: Maybe Text
-    , _limit :: Maybe Int
+    { omit_personal :: Maybe Bool
+    , cursor :: Maybe Text
+    , limit :: Maybe Int
     }
     deriving (Show, Generic)
 
 instance QueryParam SharedLabelParam where
     toQueryParam :: SharedLabelParam -> Params
     toQueryParam SharedLabelParam {..} =
-        let omitParam = case _omit_personal of
+        let omitParam = case omit_personal of
                 Just True -> [("omit_personal", "true")]
                 Just False -> [("omit_personal", "false")]
                 Nothing -> []
          in omitParam
-                <> maybe [] (\c -> [("cursor", c)]) _cursor
-                <> maybe [] (\l -> [("limit", T.pack $ show l)]) _limit
+                <> maybe [] (\c -> [("cursor", c)]) cursor
+                <> maybe [] (\l -> [("limit", T.pack $ show l)]) limit
 
 -- | Request body for removing a shared label
 newtype SharedLabelRemove = SharedLabelRemove
@@ -230,13 +242,13 @@ emptyLabelUpdate =
             , _is_favorite = Nothing
             }
 
--- | Create empty LabelParam for first page fetch
-emptyLabelParam :: LabelParam
-emptyLabelParam = LabelParam {_cursor = Nothing, _limit = Nothing}
+-- | Create new LabelParam for use with builder pattern
+newLabelParam :: Initial LabelParam
+newLabelParam = seed $ LabelParam {cursor = Nothing, limit = Nothing}
 
--- | Create empty SharedLabelParam for first page fetch
-emptySharedLabelParam :: SharedLabelParam
-emptySharedLabelParam = SharedLabelParam {_omit_personal = Nothing, _cursor = Nothing, _limit = Nothing}
+-- | Create new SharedLabelParam for use with builder pattern
+newSharedLabelParam :: Initial SharedLabelParam
+newSharedLabelParam = seed $ SharedLabelParam {omit_personal = Nothing, cursor = Nothing, limit = Nothing}
 
 -- Builder instances for ergonomic construction
 instance HasName LabelCreate where
@@ -270,3 +282,25 @@ instance HasColor LabelUpdate where
 instance HasIsFavorite LabelUpdate where
     hasIsFavorite :: Bool -> LabelUpdate -> LabelUpdate
     hasIsFavorite fav LabelUpdate {..} = LabelUpdate {_is_favorite = Just (IsFavorite fav), ..}
+
+-- HasX instances for LabelParam
+instance HasCursor LabelParam where
+    hasCursor :: Text -> LabelParam -> LabelParam
+    hasCursor c LabelParam {..} = LabelParam {cursor = Just c, ..}
+
+instance HasLimit LabelParam where
+    hasLimit :: Int -> LabelParam -> LabelParam
+    hasLimit l LabelParam {..} = LabelParam {limit = Just l, ..}
+
+-- HasX instances for SharedLabelParam
+instance HasOmitPersonal SharedLabelParam where
+    hasOmitPersonal :: Bool -> SharedLabelParam -> SharedLabelParam
+    hasOmitPersonal omit SharedLabelParam {..} = SharedLabelParam {omit_personal = Just omit, ..}
+
+instance HasCursor SharedLabelParam where
+    hasCursor :: Text -> SharedLabelParam -> SharedLabelParam
+    hasCursor c SharedLabelParam {..} = SharedLabelParam {cursor = Just c, ..}
+
+instance HasLimit SharedLabelParam where
+    hasLimit :: Int -> SharedLabelParam -> SharedLabelParam
+    hasLimit l SharedLabelParam {..} = SharedLabelParam {limit = Just l, ..}

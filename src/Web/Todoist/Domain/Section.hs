@@ -17,17 +17,18 @@ Sections are used to organize tasks within a project into logical groups.
 @
 import Web.Todoist.Domain.Section
 import Web.Todoist.Runner
+import Web.Todoist.Util.Builder
 
 main :: IO ()
 main = do
     let config = newTodoistConfig "your-api-token"
 
     -- Create a section in a project
-    let newSec = newSection "To Do" "project-id-123"
+    let newSec = runBuilder (newSection "To Do" "project-id-123") mempty
     section <- todoist config (addSection newSec)
 
-    -- Get all sections in a project
-    let params = emptySectionParam {project_id = Just "project-id-123"}
+    -- Get all sections in a project with builder pattern
+    let params = runBuilder newSectionParam (setProjectId "project-id-123" <> setLimit 50)
     sections <- todoist config (getSections params)
 @
 
@@ -47,7 +48,7 @@ module Web.Todoist.Domain.Section
       -- * Constructors
     , newSection
     , emptySectionUpdate
-    , emptySectionParam
+    , newSectionParam
     ) where
 
 import Data.Aeson
@@ -73,8 +74,16 @@ import Data.Int (Int)
 import Data.Maybe (Maybe (..))
 import Data.Monoid ((<>))
 import Text.Show (Show (..))
-import Web.Todoist.Util.Builder (HasName (..), HasOrder (..), Initial, seed)
 import Web.Todoist.Domain.Types (IsCollapsed, Name (..), Order (..), ProjectId (..), getProjectId)
+import Web.Todoist.Util.Builder
+    ( HasCursor (..)
+    , HasLimit (..)
+    , HasName (..)
+    , HasOrder (..)
+    , HasProjectId (..)
+    , Initial
+    , seed
+    )
 import Web.Todoist.Util.QueryParam (QueryParam (..))
 
 -- | Unique identifier for a Section
@@ -187,9 +196,9 @@ emptySectionUpdate =
             { _name = Nothing
             }
 
--- | Empty section parameters for builder pattern
-emptySectionParam :: Initial SectionParam
-emptySectionParam =
+-- | Create new SectionParam for use with builder pattern
+newSectionParam :: Initial SectionParam
+newSectionParam =
     seed
         SectionParam
             { project_id = Nothing
@@ -209,3 +218,16 @@ instance HasOrder SectionCreate where
 instance HasName SectionUpdate where
     hasName :: Text -> SectionUpdate -> SectionUpdate
     hasName name SectionUpdate {} = SectionUpdate {_name = Just (Name name), ..}
+
+-- HasX instances for SectionParam
+instance HasProjectId SectionParam where
+    hasProjectId :: Text -> SectionParam -> SectionParam
+    hasProjectId pid SectionParam {..} = SectionParam {project_id = Just (ProjectId pid), ..}
+
+instance HasCursor SectionParam where
+    hasCursor :: Text -> SectionParam -> SectionParam
+    hasCursor c SectionParam {..} = SectionParam {cursor = Just c, ..}
+
+instance HasLimit SectionParam where
+    hasLimit :: Int -> SectionParam -> SectionParam
+    hasLimit l SectionParam {..} = SectionParam {limit = Just l, ..}

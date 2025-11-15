@@ -1,6 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 
-{-|
+{- |
 Module      : Web.Todoist
 Description : Main entry point for the Todoist SDK
 Copyright   : (c) 2025 Sam S. Almahri
@@ -51,7 +51,7 @@ module Web.Todoist
     , PaginationParam (..)
     , newProject
     , emptyProjectUpdate
-    , emptyPaginationParam
+    , newPaginationParam
     , IsShared (..)
     , IsArchived (..)
     , CanAssignTasks (..)
@@ -71,6 +71,7 @@ module Web.Todoist
     , CommentParam (..)
     , newComment
     , newCommentUpdate
+    , newCommentParam
 
       -- * Section Types
     , Section (..)
@@ -80,7 +81,7 @@ module Web.Todoist
     , SectionParam (..)
     , newSection
     , emptySectionUpdate
-    , emptySectionParam
+    , newSectionParam
 
       -- * Label Types
     , Label (..)
@@ -93,8 +94,8 @@ module Web.Todoist
     , SharedLabelRemove
     , newLabel
     , emptyLabelUpdate
-    , emptyLabelParam
-    , emptySharedLabelParam
+    , newLabelParam
+    , newSharedLabelParam
 
       -- * Common Domain Types
     , ProjectId (..)
@@ -157,8 +158,8 @@ import Web.Todoist.Domain.Project
     , ProjectCreate
     , ProjectUpdate
     , TodoistProjectM (..)
-    , emptyPaginationParam
     , emptyProjectUpdate
+    , newPaginationParam
     , newProject
     )
 
@@ -179,6 +180,7 @@ import Web.Todoist.Domain.Comment
     , CommentUpdate
     , TodoistCommentM (..)
     , newComment
+    , newCommentParam
     , newCommentUpdate
     )
 
@@ -189,9 +191,9 @@ import Web.Todoist.Domain.Section
     , SectionParam (..)
     , SectionUpdate
     , TodoistSectionM (..)
-    , emptySectionParam
     , emptySectionUpdate
     , newSection
+    , newSectionParam
     )
 
 import Web.Todoist.Domain.Label
@@ -204,10 +206,10 @@ import Web.Todoist.Domain.Label
     , SharedLabelRemove
     , SharedLabelRename
     , TodoistLabelM (..)
-    , emptyLabelParam
     , emptyLabelUpdate
-    , emptySharedLabelParam
     , newLabel
+    , newLabelParam
+    , newSharedLabelParam
     )
 
 import Web.Todoist.Domain.Types

@@ -28,12 +28,13 @@ main = do
     let config = newTodoistConfig "your-api-token"
 
     -- Create a new task
-    let newTask = runBuilder (newTask "Buy groceries")
-                  (setDescription "Milk, eggs, bread" <> setPriority 2)
-    task <- todoist config (addTask newTask)
+    let task = runBuilder (newTask "Buy groceries")
+               (setDescription "Milk, eggs, bread" <> setPriority 2)
+    taskId <- todoist config (addTask task)
 
-    -- Get all tasks
-    tasks <- todoist config (getTasks emptyTaskParam)
+    -- Get all tasks with builder pattern
+    let params = runBuilder newTaskParam (setProjectId "project-123" <> setLimit 50)
+    tasks <- todoist config (getTasks params)
 
     -- Complete a task
     todoist config (closeTask taskId)
@@ -58,19 +59,21 @@ module Web.Todoist.Domain.Task
     , TaskCompletedItem (..)
     , TaskFilter (..)
     , CompletedTasksQueryParam (..)
-    , addTaskQuickWithQuery
     , TaskCreate
     , TaskPatch
     , newTask
     , newMoveTask
     , emptyTaskPatch
-    , setProjectId
-    , taskFilterWithQuery
+    , newTaskParam
+    , newTaskFilter
+    , newCompletedTasksQueryParam
     ) where
 
+import Web.Todoist.Internal.Types (Params)
 import Web.Todoist.Util.Builder
     ( HasAssigneeId (..)
     , HasContent (..)
+    , HasCursor (..)
     , HasDeadlineDate (..)
     , HasDescription (..)
     , HasDueDate (..)
@@ -79,16 +82,22 @@ import Web.Todoist.Util.Builder
     , HasDueString (..)
     , HasDuration (..)
     , HasDurationUnit (..)
+    , HasFilterLang (..)
+    , HasFilterQuery (..)
     , HasLabels (..)
+    , HasLang (..)
+    , HasLimit (..)
     , HasOrder (..)
     , HasParentId (..)
     , HasPriority (..)
     , HasProjectId (..)
     , HasSectionId (..)
+    -- , HasSince (..)
+    , HasTaskIds (..)
+    -- , HasUntil (..)
     , Initial
     , seed
     )
-import Web.Todoist.Internal.Types (Params)
 import Web.Todoist.Util.QueryParam (QueryParam (..))
 
 import Control.Monad (Monad)
@@ -632,14 +641,16 @@ instance QueryParam TaskFilter where
             <> maybe [] (\p -> [("cursor", p)]) cursor
             <> maybe [] (\p -> [("limit", Data.Text.show p)]) limit
 
-taskFilterWithQuery :: Text -> TaskFilter
-taskFilterWithQuery query =
-    TaskFilter
-        { query
-        , lang = Nothing
-        , cursor = Nothing
-        , limit = Nothing
-        }
+-- | Create new TaskFilter with required query parameter
+newTaskFilter :: Text -> Initial TaskFilter
+newTaskFilter query =
+    seed
+        TaskFilter
+            { query
+            , lang = Nothing
+            , cursor = Nothing
+            , limit = Nothing
+            }
 
 -- | Query parameters for getting completed tasks
 data CompletedTasksQueryParam = CompletedTasksQueryParam
@@ -670,20 +681,99 @@ instance QueryParam CompletedTasksQueryParam where
             <> maybe [] (\p -> [("cursor", p)]) cursor
             <> [("limit", Data.Text.show limit)]
 
-addTaskQuickWithQuery :: Text -> Text -> CompletedTasksQueryParam
-addTaskQuickWithQuery since until =
-    CompletedTasksQueryParam
-        { since
-        , until
-        , workspace_id = Nothing
-        , project_id = Nothing
-        , section_id = Nothing
-        , parent_id = Nothing
-        , filter_query = Nothing
-        , filter_lang = Nothing
-        , cursor = Nothing
-        , limit = 50
-        }
+-- | Create new CompletedTasksQueryParam with required since/until parameters
+newCompletedTasksQueryParam :: Text -> Text -> Initial CompletedTasksQueryParam
+newCompletedTasksQueryParam since until =
+    seed
+        CompletedTasksQueryParam
+            { since
+            , until
+            , workspace_id = Nothing
+            , project_id = Nothing
+            , section_id = Nothing
+            , parent_id = Nothing
+            , filter_query = Nothing
+            , filter_lang = Nothing
+            , cursor = Nothing
+            , limit = 50
+            }
 
-setProjectId :: Text -> TaskParam -> TaskParam
-setProjectId pid TaskParam {..} = TaskParam {project_id = Just pid, ..}
+-- | Create new TaskParam for use with builder pattern
+newTaskParam :: Initial TaskParam
+newTaskParam =
+    seed
+        TaskParam
+            { project_id = Nothing
+            , section_id = Nothing
+            , parent_id = Nothing
+            , task_ids = []
+            , cursor = Nothing
+            , limit = Nothing
+            }
+
+-- HasX instances for TaskParam
+instance HasProjectId TaskParam where
+    hasProjectId :: Text -> TaskParam -> TaskParam
+    hasProjectId pid TaskParam {..} = TaskParam {project_id = Just pid, ..}
+
+instance HasSectionId TaskParam where
+    hasSectionId :: Text -> TaskParam -> TaskParam
+    hasSectionId sid TaskParam {..} = TaskParam {section_id = Just sid, ..}
+
+instance HasParentId TaskParam where
+    hasParentId :: Text -> TaskParam -> TaskParam
+    hasParentId pid TaskParam {..} = TaskParam {parent_id = Just pid, ..}
+
+instance HasTaskIds TaskParam where
+    hasTaskIds :: [Text] -> TaskParam -> TaskParam
+    hasTaskIds tids TaskParam {..} = TaskParam {task_ids = tids, ..}
+
+instance HasCursor TaskParam where
+    hasCursor :: Text -> TaskParam -> TaskParam
+    hasCursor c TaskParam {..} = TaskParam {cursor = Just c, ..}
+
+instance HasLimit TaskParam where
+    hasLimit :: Int -> TaskParam -> TaskParam
+    hasLimit l TaskParam {..} = TaskParam {limit = Just l, ..}
+
+-- HasX instances for TaskFilter
+instance HasLang TaskFilter where
+    hasLang :: Text -> TaskFilter -> TaskFilter
+    hasLang lng TaskFilter {..} = TaskFilter {lang = Just lng, ..}
+
+instance HasCursor TaskFilter where
+    hasCursor :: Text -> TaskFilter -> TaskFilter
+    hasCursor c TaskFilter {..} = TaskFilter {cursor = Just c, ..}
+
+instance HasLimit TaskFilter where
+    hasLimit :: Int -> TaskFilter -> TaskFilter
+    hasLimit l TaskFilter {..} = TaskFilter {limit = Just l, ..}
+
+-- HasX instances for CompletedTasksQueryParam
+instance HasProjectId CompletedTasksQueryParam where
+    hasProjectId :: Text -> CompletedTasksQueryParam -> CompletedTasksQueryParam
+    hasProjectId pid CompletedTasksQueryParam {..} = CompletedTasksQueryParam {project_id = Just pid, ..}
+
+instance HasSectionId CompletedTasksQueryParam where
+    hasSectionId :: Text -> CompletedTasksQueryParam -> CompletedTasksQueryParam
+    hasSectionId sid CompletedTasksQueryParam {..} = CompletedTasksQueryParam {section_id = Just sid, ..}
+
+instance HasParentId CompletedTasksQueryParam where
+    hasParentId :: Text -> CompletedTasksQueryParam -> CompletedTasksQueryParam
+    hasParentId pid CompletedTasksQueryParam {..} = CompletedTasksQueryParam {parent_id = Just pid, ..}
+
+instance HasFilterQuery CompletedTasksQueryParam where
+    hasFilterQuery :: Text -> CompletedTasksQueryParam -> CompletedTasksQueryParam
+    hasFilterQuery fq CompletedTasksQueryParam {..} = CompletedTasksQueryParam {filter_query = Just fq, ..}
+
+instance HasFilterLang CompletedTasksQueryParam where
+    hasFilterLang :: Text -> CompletedTasksQueryParam -> CompletedTasksQueryParam
+    hasFilterLang fl CompletedTasksQueryParam {..} = CompletedTasksQueryParam {filter_lang = Just fl, ..}
+
+instance HasCursor CompletedTasksQueryParam where
+    hasCursor :: Text -> CompletedTasksQueryParam -> CompletedTasksQueryParam
+    hasCursor c CompletedTasksQueryParam {..} = CompletedTasksQueryParam {cursor = Just c, ..}
+
+instance HasLimit CompletedTasksQueryParam where
+    hasLimit :: Int -> CompletedTasksQueryParam -> CompletedTasksQueryParam
+    hasLimit l CompletedTasksQueryParam {..} = CompletedTasksQueryParam {limit = l, ..}

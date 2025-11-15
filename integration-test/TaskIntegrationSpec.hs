@@ -1,6 +1,5 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 
@@ -14,6 +13,24 @@ import Helpers
     , liftTodoist
     )
 
+import qualified Web.Todoist.Domain.Project as P
+import Web.Todoist.Domain.Task
+    ( CompletedTasksQueryParam (..)
+    , NewTask (..)
+    , Task (..)
+    , TaskParam (..)
+    , TodoistTaskM (..)
+    , emptyTaskPatch
+    , newCompletedTasksQueryParam
+    , newMoveTask
+    , newTaskFilter
+    , newTaskParam
+    )
+import qualified Web.Todoist.Domain.Task as T
+import Web.Todoist.Domain.Types (Content (..), Description (..), ProjectId (..), TaskId (..))
+import Web.Todoist.Internal.Config (TodoistConfig)
+import Web.Todoist.Internal.Error (TodoistError)
+import Web.Todoist.Runner (todoist)
 import Web.Todoist.Util.Builder
     ( runBuilder
     , setContent
@@ -22,23 +39,6 @@ import Web.Todoist.Util.Builder
     , setPriority
     , setProjectId
     )
-import qualified Web.Todoist.Domain.Project as P
-import Web.Todoist.Domain.Task
-    ( CompletedTasksQueryParam (..)
-    , NewTask (..)
-    , Task (..)
-    , TaskParam (..)
-    , TodoistTaskM (..)
-    , addTaskQuickWithQuery
-    , emptyTaskPatch
-    , newMoveTask
-    , taskFilterWithQuery
-    )
-import qualified Web.Todoist.Domain.Task as T
-import Web.Todoist.Domain.Types (Content (..), Description (..), ProjectId (..), TaskId (..))
-import Web.Todoist.Internal.Config (TodoistConfig)
-import Web.Todoist.Internal.Error (TodoistError)
-import Web.Todoist.Runner (todoist)
 
 import Control.Applicative (pure)
 import Control.Exception (bracket)
@@ -160,17 +160,7 @@ getTasksSpec config = describe "Get multiple tasks" $ do
         withTestTasks config projectName taskContents $ \projectId taskIds -> do
             -- Get all tasks for this project
             let ProjectId {getProjectId = projIdText} = projectId
-            let taskParam =
-                    T.setProjectId
-                        projIdText
-                        TaskParam
-                            { project_id = Nothing
-                            , section_id = Nothing
-                            , parent_id = Nothing
-                            , task_ids = []
-                            , cursor = Nothing
-                            , limit = Nothing
-                            }
+            let taskParam = runBuilder T.newTaskParam (setProjectId projIdText)
 
             tasks <- liftTodoist config (getTasks taskParam)
 
@@ -304,7 +294,7 @@ taskFilterSpec config = describe "Task filtering" $ do
         withTestTask config projectName taskContent $ \_ taskId -> do
             -- Search for tasks containing our unique term
             -- Use search: prefix for text search in Todoist filter syntax
-            let filter = taskFilterWithQuery (pack $ "search: " <> searchTerm)
+            let filter = runBuilder (newTaskFilter (pack $ "search: " <> searchTerm)) mempty
             taskIds <- liftTodoist config (getTasksByFilter filter)
 
             -- Verify our task is in the results
@@ -331,31 +321,11 @@ taskFilterSpec config = describe "Task filtering" $ do
 
             -- Query for completed tasks by due date
             -- Use a wide range to ensure we catch our task
-            let CompletedTasksQueryParam
-                    { since
-                    , until
-                    , workspace_id
-                    , section_id
-                    , parent_id
-                    , filter_query
-                    , filter_lang
-                    , cursor
-                    , limit
-                    } = addTaskQuickWithQuery "2025-11-01" "2025-11-30"
             let ProjectId {getProjectId = projIdText} = projectId
             let queryParamWithProject =
-                    CompletedTasksQueryParam
-                        { since = since
-                        , until = until
-                        , workspace_id = workspace_id
-                        , project_id = Just projIdText
-                        , section_id = section_id
-                        , parent_id = parent_id
-                        , filter_query = filter_query
-                        , filter_lang = filter_lang
-                        , cursor = cursor
-                        , limit = limit
-                        }
+                    runBuilder
+                        (newCompletedTasksQueryParam "2025-11-01" "2025-11-30")
+                        (setProjectId projIdText)
 
             completedTaskIds <- liftTodoist config (getCompletedTasksByDueDate queryParamWithProject)
 
@@ -378,31 +348,11 @@ taskFilterSpec config = describe "Task filtering" $ do
 
             -- Query for completed tasks by completion date (today)
             -- Use a wide range to ensure we catch our task
-            let CompletedTasksQueryParam
-                    { since
-                    , until
-                    , workspace_id
-                    , section_id
-                    , parent_id
-                    , filter_query
-                    , filter_lang
-                    , cursor
-                    , limit
-                    } = addTaskQuickWithQuery "2025-11-01" "2025-11-30"
             let ProjectId {getProjectId = projIdText} = projectId
             let queryParamWithProject =
-                    CompletedTasksQueryParam
-                        { since = since
-                        , until = until
-                        , workspace_id = workspace_id
-                        , project_id = Just projIdText
-                        , section_id = section_id
-                        , parent_id = parent_id
-                        , filter_query = filter_query
-                        , filter_lang = filter_lang
-                        , cursor = cursor
-                        , limit = limit
-                        }
+                    runBuilder
+                        (newCompletedTasksQueryParam "2025-11-01" "2025-11-30")
+                        (setProjectId projIdText)
 
             completedTaskIds <- liftTodoist config (getCompletedTasksByCompletionDate queryParamWithProject)
 
