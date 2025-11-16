@@ -87,12 +87,12 @@ main = do
     result <- todoist config $ do
         -- Create a new project
         let newProj = runBuilder (newProject "My Haskell Project")
-                      (setDescription "Learning Haskell SDK" <> setViewStyle Board)
+                      (withDescription "Learning Haskell SDK" <> withViewStyle Board)
         project <- addProject newProj
 
         -- Create a task in the project
         let newTask = runBuilder (newTask "Read documentation")
-                      (setProjectId (_id project) <> setPriority 2)
+                      (withProjectId (_id project) <> withPriority 2)
         task <- addTask newTask
 
         -- Get all tasks
@@ -129,11 +129,11 @@ result <- todoist config getAllProjects
 
 -- Create a project with optional fields
 let newProject = runBuilder (newProject "Shopping List")
-                 (setColor "blue" <> setViewStyle List <> setIsFavorite True)
+                 (withColor "blue" <> withViewStyle List <> withIsFavorite True)
 project <- todoist config (addProject newProject)
 
 -- Update a project
-let update = runBuilder emptyProjectUpdate (setName "Updated Name")
+let update = runBuilder emptyProjectUpdate (withName "Updated Name")
 updated <- todoist config (updateProject update projectId)
 
 -- Delete a project
@@ -145,10 +145,10 @@ todoist config (deleteProject projectId)
 ```haskell
 -- Create a task with due date
 let task = runBuilder (newTask "Buy milk")
-           (setProjectId "project-123"
-            <> setDueString "tomorrow"
-            <> setPriority 3
-            <> setLabelIds ["grocery", "urgent"])
+           (withProjectId "project-123"
+            <> withDueString "tomorrow"
+            <> withPriority 3
+            <> withLabels ["grocery", "urgent"])
 result <- todoist config (addTask task)
 
 -- Get tasks with filters
@@ -165,7 +165,7 @@ tasks <- todoist config (getTasks params)
 todoist config (closeTask taskId)
 
 -- Update a task
-let update = runBuilder emptyTaskPatch (setContent "Buy 2% milk")
+let update = runBuilder emptyTaskPatch (withContent "Buy 2% milk")
 updated <- todoist config (updateTask update taskId)
 ```
 
@@ -174,7 +174,7 @@ updated <- todoist config (updateTask update taskId)
 ```haskell
 -- Add a comment to a task
 let comment = runBuilder (newComment "Don't forget organic!")
-              (setTaskId "task-456")
+              (withTaskId "task-456")
 result <- todoist config (addComment comment)
 
 -- Get all comments for a project
@@ -196,7 +196,7 @@ let section = runBuilder (newSection "In Progress" "project-123") mempty
 result <- todoist config (addSection section)
 
 -- Get sections for a project with builder pattern
-let params = runBuilder newSectionParam (setProjectId "project-123" <> setLimit 50)
+let params = runBuilder newSectionParam (withProjectId "project-123" <> withLimit 50)
 sections <- todoist config (getSections params)
 ```
 
@@ -208,7 +208,7 @@ let label = runBuilder (newLabel "urgent") mempty
 result <- todoist config (addLabel label)
 
 -- Get all labels
-let params = runBuilder newLabelParam (setLimit 50)
+let params = runBuilder newLabelParam (withLimit 50)
 labels <- todoist config (getLabels params)
 ```
 

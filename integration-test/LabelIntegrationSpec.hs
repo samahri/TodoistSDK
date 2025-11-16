@@ -26,7 +26,6 @@ import Helpers
 import System.IO (IO, putStrLn)
 import Test.Hspec (Spec, describe, it, pendingWith, runIO, shouldBe, shouldSatisfy)
 import Text.Show (show)
-import Web.Todoist.Util.Builder (runBuilder)
 import Web.Todoist.Domain.Label
     ( Label (..)
     , LabelId (..)
@@ -49,6 +48,7 @@ import Web.Todoist.Domain.Types (Color (..), IsFavorite (..), Name (..))
 import Web.Todoist.Internal.Error (TodoistError)
 import Web.Todoist.Runner (todoist)
 import Web.Todoist.Runner.IO (TodoistConfig)
+import Web.Todoist.Util.Builder (runBuilder)
 
 spec :: Spec
 spec = do

@@ -25,16 +25,16 @@ main = do
 
     -- Create a comment on a project
     let projectComment = runBuilder (newComment "Great project!")
-                         (setProjectId "project-id-123")
+                         (withProjectId "project-id-123")
     result <- todoist config (addComment projectComment)
 
     -- Create a comment on a task
     let taskComment = runBuilder (newComment "Don't forget this!")
-                      (setTaskId "task-id-456")
+                      (withTaskId "task-id-456")
     result <- todoist config (addComment taskComment)
 
     -- Get all comments for a project with builder pattern
-    let params = runBuilder newCommentParam (setProjectId "project-id-123" <> setLimit 50)
+    let params = runBuilder newCommentParam (withProjectId "project-id-123" <> withLimit 50)
     comments <- todoist config (getComments params)
 
     -- Update a comment

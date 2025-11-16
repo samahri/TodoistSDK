@@ -28,7 +28,7 @@ main = do
     section <- todoist config (addSection newSec)
 
     -- Get all sections in a project with builder pattern
-    let params = runBuilder newSectionParam (setProjectId "project-id-123" <> setLimit 50)
+    let params = runBuilder newSectionParam (withProjectId "project-id-123" <> withLimit 50)
     sections <- todoist config (getSections params)
 @
 

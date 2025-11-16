@@ -18,9 +18,9 @@ import Web.Todoist.Domain.Task
     ( NewTask (..)
     , Task (..)
     , TodoistTaskM (..)
+    , emptyMoveTask
     , emptyTaskPatch
     , newCompletedTasksQueryParam
-    , emptyMoveTask
     , newTaskFilter
     )
 import qualified Web.Todoist.Domain.Task as T
@@ -30,11 +30,11 @@ import Web.Todoist.Internal.Error (TodoistError)
 import Web.Todoist.Runner (todoist)
 import Web.Todoist.Util.Builder
     ( runBuilder
-    , setContent
-    , setDescription
-    , setDueDate
-    , setPriority
-    , setProjectId
+    , withContent
+    , withDescription
+    , withDueDate
+    , withPriority
+    , withProjectId
     )
 
 import Control.Applicative (pure)
@@ -157,7 +157,7 @@ getTasksSpec config = describe "Get multiple tasks" $ do
         withTestTasks config projectName taskContents $ \projectId taskIds -> do
             -- Get all tasks for this project
             let ProjectId {getProjectId = projIdText} = projectId
-            let taskParam = runBuilder T.emptyTaskParam (setProjectId projIdText)
+            let taskParam = runBuilder T.emptyTaskParam (withProjectId projIdText)
 
             tasks <- liftTodoist config (getTasks taskParam)
 
@@ -212,9 +212,9 @@ updateTaskSpec config = describe "Update task" $ do
             let taskPatch =
                     runBuilder
                         emptyTaskPatch
-                        ( setContent updatedContent
-                            <> setDescription updatedDescription
-                            <> setPriority updatedPriority
+                        ( withContent updatedContent
+                            <> withDescription updatedDescription
+                            <> withPriority updatedPriority
                         )
 
             updatedNewTask <- liftTodoist config (updateTask taskPatch taskId)
@@ -263,7 +263,7 @@ updateTaskSpec config = describe "Update task" $ do
             let taskPatch =
                     runBuilder
                         emptyTaskPatch
-                        (setPriority 4)
+                        (withPriority 4)
 
             _ <- liftTodoist config (updateTask taskPatch taskId)
 
@@ -309,7 +309,7 @@ taskFilterSpec config = describe "Task filtering" $ do
             let taskPatch =
                     runBuilder
                         emptyTaskPatch
-                        (setDueDate "2025-11-03")
+                        (withDueDate "2025-11-03")
 
             _ <- liftTodoist config (updateTask taskPatch taskId)
 
@@ -322,7 +322,7 @@ taskFilterSpec config = describe "Task filtering" $ do
             let queryParamWithProject =
                     runBuilder
                         (newCompletedTasksQueryParam "2025-11-01" "2025-11-30")
-                        (setProjectId projIdText)
+                        (withProjectId projIdText)
 
             completedTaskIds <- liftTodoist config (getCompletedTasksByDueDate queryParamWithProject)
 
@@ -349,7 +349,7 @@ taskFilterSpec config = describe "Task filtering" $ do
             let queryParamWithProject =
                     runBuilder
                         (newCompletedTasksQueryParam "2025-11-01" "2025-11-30")
-                        (setProjectId projIdText)
+                        (withProjectId projIdText)
 
             completedTaskIds <- liftTodoist config (getCompletedTasksByCompletionDate queryParamWithProject)
 
@@ -381,7 +381,7 @@ moveTaskSpec config = describe "Move task between projects" $ do
 
             -- Move task to project 2
             let ProjectId {getProjectId = project2IdText} = project2Id
-            let moveTaskData = runBuilder emptyMoveTask (setProjectId project2IdText)
+            let moveTaskData = runBuilder emptyMoveTask (withProjectId project2IdText)
 
             movedTaskId <- liftTodoist config (moveTask moveTaskData taskId)
 

@@ -29,7 +29,7 @@ main = do
     label <- todoist config (addLabel newLbl)
 
     -- Get all labels with builder pattern
-    let params = runBuilder newLabelParam (setLimit 50)
+    let params = runBuilder newLabelParam (withLimit 50)
     labels <- todoist config (getLabels params)
 @
 

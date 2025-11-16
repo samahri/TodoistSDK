@@ -3,13 +3,13 @@
 module Web.Todoist.BuilderSpec (spec) where
 
 import Test.Hspec (Spec, describe, it, shouldBe, shouldSatisfy)
+import Web.Todoist.Domain.Project (ProjectCreate, newProject)
 import Web.Todoist.Util.Builder
     ( Builder
     , runBuilder
-    , setDescription
-    , setParentId
+    , withDescription
+    , withParentId
     )
-import Web.Todoist.Domain.Project (ProjectCreate, newProject)
 
 import Data.Aeson (encode)
 import Data.Bool (Bool (True))
@@ -21,19 +21,19 @@ spec :: Spec
 spec = do
     describe "Builder Monoid instance" $ do
         it "satisfies left identity: mempty <> x = x" $ do
-            let x = setDescription "test" <> setParentId "parent123"
+            let x = withDescription "test" <> withParentId "parent123"
             let seed = newProject "Project"
             encode (runBuilder seed (mempty <> x)) `shouldBe` encode (runBuilder seed x)
 
         it "satisfies right identity: x <> mempty = x" $ do
-            let x = setDescription "test" <> setParentId "parent123"
+            let x = withDescription "test" <> withParentId "parent123"
             let seed = newProject "Project"
             encode (runBuilder seed (x <> mempty)) `shouldBe` encode (runBuilder seed x)
 
         it "satisfies associativity: (x <> y) <> z = x <> (y <> z)" $ do
-            let x = setDescription "desc"
-            let y = setParentId "parent1"
-            let z = setParentId "parent2"
+            let x = withDescription "desc"
+            let y = withParentId "parent1"
+            let z = withParentId "parent2"
             let seed = newProject "Project"
             encode (runBuilder seed ((x <> y) <> z)) `shouldBe` encode (runBuilder seed (x <> (y <> z)))
 
@@ -49,6 +49,6 @@ spec = do
             result `shouldSatisfy` const True -- Just verify it compiles and runs
         it "can compose multiple modifications" $ do
             let seed = newProject "Project"
-            let mods = setDescription "desc" <> setParentId "parent123"
+            let mods = withDescription "desc" <> withParentId "parent123"
             let result = runBuilder seed mods
             result `shouldSatisfy` const True

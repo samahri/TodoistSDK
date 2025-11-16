@@ -61,7 +61,6 @@ module Web.Todoist.TestHelpers
     , sampleSharedLabelsJson
     ) where
 
-import Web.Todoist.Util.Builder (runBuilder, setDescription)
 import Web.Todoist.Domain.Comment
     ( Comment (..)
     , CommentCreate
@@ -132,6 +131,7 @@ import Web.Todoist.Internal.Types
     , UpdatedAt (..)
     )
 import qualified Web.Todoist.Internal.Types as Internal
+import Web.Todoist.Util.Builder (runBuilder, withDescription)
 
 import Data.Bool (Bool (..))
 import Data.ByteString.Lazy (ByteString)
@@ -282,7 +282,7 @@ sampleCollaboratorsJson =
 
 -- | Sample ProjectCreate
 sampleProjectCreate :: ProjectCreate
-sampleProjectCreate = runBuilder (newProject "New Project") (setDescription "A new project to be created")
+sampleProjectCreate = runBuilder (newProject "New Project") (withDescription "A new project to be created")
 
 -- | JSON representation of ProjectCreate (for serialization test)
 sampleProjectCreateJson :: ByteString

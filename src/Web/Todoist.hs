@@ -114,24 +114,25 @@ module Web.Todoist
     , Initial
     , runBuilder
     , seed
-    , setName
-    , setDescription
-    , setIsFavorite
-    , setViewStyle
-    , setParentId
-    , setProjectId
-    , setSectionId
-    , setContent
-    , setPriority
-    , setDueString
-    , setDueDate
-    , setDueDatetime
-    , setDueLang
-    , setAssigneeId
-    , setLabels
-    , setWorkspaceId
-    , setOrder
-    , setTaskId
+    , withName
+    , withDescription
+    , withIsFavorite
+    , withViewStyle
+    , withParentId
+    , withProjectId
+    , withSectionId
+    , withContent
+    , withColor
+    , withPriority
+    , withDueString
+    , withDueDate
+    , withDueDatetime
+    , withDueLang
+    , withAssigneeId
+    , withLabels
+    , withWorkspaceId
+    , withOrder
+    , withTaskId
     ) where
 
 import Web.Todoist.Runner
@@ -230,22 +231,23 @@ import Web.Todoist.Util.Builder
     , Initial
     , runBuilder
     , seed
-    , setAssigneeId
-    , setContent
-    , setDescription
-    , setDueDate
-    , setDueDatetime
-    , setDueLang
-    , setDueString
-    , setIsFavorite
-    , setLabels
-    , setName
-    , setOrder
-    , setParentId
-    , setPriority
-    , setProjectId
-    , setSectionId
-    , setTaskId
-    , setViewStyle
-    , setWorkspaceId
+    , withAssigneeId
+    , withColor
+    , withContent
+    , withDescription
+    , withDueDate
+    , withDueDatetime
+    , withDueLang
+    , withDueString
+    , withIsFavorite
+    , withLabels
+    , withName
+    , withOrder
+    , withParentId
+    , withPriority
+    , withProjectId
+    , withSectionId
+    , withTaskId
+    , withViewStyle
+    , withWorkspaceId
     )

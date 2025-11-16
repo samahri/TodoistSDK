@@ -11,7 +11,6 @@ import Helpers
     , getTestConfig
     , liftTodoist
     )
-import Web.Todoist.Util.Builder (runBuilder, setProjectId, setTaskId)
 import Web.Todoist.Domain.Comment
     ( Comment (..)
     , CommentCreate
@@ -28,6 +27,7 @@ import Web.Todoist.Domain.Types (ProjectId (..), TaskId (..))
 import Web.Todoist.Internal.Config (TodoistConfig)
 import Web.Todoist.Internal.Error (TodoistError)
 import Web.Todoist.Runner (todoist)
+import Web.Todoist.Util.Builder (runBuilder, withProjectId, withTaskId)
 
 import Control.Applicative (pure)
 import Control.Exception (bracket)
@@ -357,7 +357,7 @@ buildTestCommentForProject :: Text -> Text -> CommentCreate
 buildTestCommentForProject commentContent projectId =
     runBuilder
         (newComment commentContent)
-        (setProjectId projectId)
+        (withProjectId projectId)
 
 {- | Build a test comment for a task using the Builder pattern
 Creates a CommentCreate with content and task_id for testing
@@ -366,4 +366,4 @@ buildTestCommentForTask :: Text -> Text -> CommentCreate
 buildTestCommentForTask commentContent taskId =
     runBuilder
         (newComment commentContent)
-        (setTaskId taskId)
+        (withTaskId taskId)

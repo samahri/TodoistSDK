@@ -33,18 +33,18 @@ import System.IO (IO, putStrLn)
 import System.Random (randomRIO)
 import Test.Hspec (shouldBe)
 import Text.Show (Show, show)
-import Web.Todoist.Util.Builder
-    ( runBuilder
-    , setDescription
-    , setProjectId
-    , setViewStyle
-    )
 import Web.Todoist.Domain.Project (ProjectCreate, newProject)
 import Web.Todoist.Domain.Task (TaskCreate, newTask)
 import Web.Todoist.Domain.Types (ViewStyle (..))
 import Web.Todoist.Internal.Config (TodoistConfig)
 import Web.Todoist.Internal.Error (TodoistError)
 import Web.Todoist.Runner (MonadTodoist, newTodoistConfig, todoist)
+import Web.Todoist.Util.Builder
+    ( runBuilder
+    , withDescription
+    , withProjectId
+    , withViewStyle
+    )
 
 -- | Load .env file, ignoring errors if file doesn't exist
 loadEnvFile :: IO ()
@@ -104,7 +104,7 @@ buildTestProject :: Text -> ProjectCreate
 buildTestProject projectName =
     runBuilder
         (newProject projectName)
-        (setDescription "Test project description for integration testing" <> setViewStyle Board)
+        (withDescription "Test project description for integration testing" <> withViewStyle Board)
 
 {- | Build a test task with basic fields set using the Builder pattern
 Creates a TaskCreate with content, description, and project_id for testing
@@ -113,4 +113,4 @@ buildTestTask :: Text -> Text -> TaskCreate
 buildTestTask taskContent projectId =
     runBuilder
         (newTask taskContent)
-        (setDescription "Test task description for integration testing" <> setProjectId projectId)
+        (withDescription "Test task description for integration testing" <> withProjectId projectId)

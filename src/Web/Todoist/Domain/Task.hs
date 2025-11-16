@@ -29,11 +29,11 @@ main = do
 
     -- Create a new task
     let task = runBuilder (newTask "Buy groceries")
-               (setDescription "Milk, eggs, bread" <> setPriority 2)
+               (withDescription "Milk, eggs, bread" <> withPriority 2)
     taskId <- todoist config (addTask task)
 
     -- Get all tasks with builder pattern
-    let params = runBuilder emptyTaskParam (setProjectId "project-123" <> setLimit 50)
+    let params = runBuilder emptyTaskParam (withProjectId "project-123" <> withLimit 50)
     tasks <- todoist config (getTasks params)
 
     -- Complete a task

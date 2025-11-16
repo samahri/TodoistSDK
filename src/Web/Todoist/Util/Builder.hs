@@ -9,7 +9,7 @@ Example usage:
 
 @
 let project = runBuilder (newProject \"My Project\")
-              (setDescription \"A description\" <> setViewStyle Board)
+              (withDescription \"A description\" <> withViewStyle Board)
 @
 -}
 module Web.Todoist.Util.Builder
@@ -20,40 +20,41 @@ module Web.Todoist.Util.Builder
     , seed
 
       -- * Setter Functions
-    , setDescription
-    , setParentId
-    , setProjectId
-    , setTaskId
-    , setViewStyle
-    , setWorkspaceId
-    , setName
-    , setIsFavorite
-    , setContent
-    , setSectionId
-    , setOrder
-    , setLabels
-    , setPriority
-    , setAssigneeId
-    , setDueString
-    , setDueDate
-    , setDueDatetime
-    , setDueLang
-    , setDuration
-    , setDurationUnit
-    , setDeadlineDate
-    , setAttachment
-    , setUidsToNotify
-    , setCursor
-    , setLimit
-    , setQuery
-    , setLang
-    , setSince
-    , setUntil
-    , setTaskIds
-    , setPublicKey
-    , setOmitPersonal
-    , setFilterQuery
-    , setFilterLang
+    , withDescription
+    , withParentId
+    , withProjectId
+    , withTaskId
+    , withViewStyle
+    , withWorkspaceId
+    , withName
+    , withIsFavorite
+    , withContent
+    , withColor
+    , withSectionId
+    , withOrder
+    , withLabels
+    , withPriority
+    , withAssigneeId
+    , withDueString
+    , withDueDate
+    , withDueDatetime
+    , withDueLang
+    , withDuration
+    , withDurationUnit
+    , withDeadlineDate
+    , withAttachment
+    , withUidsToNotify
+    , withCursor
+    , withLimit
+    , withQuery
+    , withLang
+    , withSince
+    , withUntil
+    , withTaskIds
+    , withPublicKey
+    , withOmitPersonal
+    , withFilterQuery
+    , withFilterLang
 
       -- * Type Classes (for implementing Has* instances)
     , HasDescription (..)
@@ -247,137 +248,141 @@ modB f = Builder {bMods = Dual {getDual = Endo {appEndo = f}}}
 -- ============================================================================
 
 -- | Set the description field for projects or tasks
-setDescription :: (HasDescription s) => Text -> Builder s
-setDescription desc = modB (hasDescription desc)
+withDescription :: (HasDescription s) => Text -> Builder s
+withDescription desc = modB (hasDescription desc)
 
 -- | Set the parent project or task ID for hierarchical organization
-setParentId :: (HasParentId s) => Text -> Builder s
-setParentId pid = modB (hasParentId pid)
+withParentId :: (HasParentId s) => Text -> Builder s
+withParentId pid = modB (hasParentId pid)
 
 -- | Set the project ID to assign a task to a specific project
-setProjectId :: (HasProjectId s) => Text -> Builder s
-setProjectId pid = modB (hasProjectId pid)
+withProjectId :: (HasProjectId s) => Text -> Builder s
+withProjectId pid = modB (hasProjectId pid)
 
 -- | Set the view style for a project (List, Board, or Calendar)
-setViewStyle :: (HasViewStyle s) => ViewStyle -> Builder s
-setViewStyle style = modB (hasViewStyle style)
+withViewStyle :: (HasViewStyle s) => ViewStyle -> Builder s
+withViewStyle style = modB (hasViewStyle style)
 
 -- | Set the workspace ID for team/workspace assignment
-setWorkspaceId :: (HasWorkspaceId s) => Int -> Builder s
-setWorkspaceId wid = modB (hasWorkspaceId wid)
+withWorkspaceId :: (HasWorkspaceId s) => Int -> Builder s
+withWorkspaceId wid = modB (hasWorkspaceId wid)
 
 -- | Set the name field for projects, sections, or labels
-setName :: (HasName s) => Text -> Builder s
-setName name = modB (hasName name)
+withName :: (HasName s) => Text -> Builder s
+withName name = modB (hasName name)
 
 -- | Set whether an item is marked as favorite
-setIsFavorite :: (HasIsFavorite s) => Bool -> Builder s
-setIsFavorite fav = modB (hasIsFavorite fav)
+withIsFavorite :: (HasIsFavorite s) => Bool -> Builder s
+withIsFavorite fav = modB (hasIsFavorite fav)
 
 -- | Set the content (title/description) field for tasks
-setContent :: (HasContent s) => Text -> Builder s
-setContent content = modB (hasContent content)
+withContent :: (HasContent s) => Text -> Builder s
+withContent content = modB (hasContent content)
+
+-- | Set the color field for labels
+withColor :: (HasColor s) => Text -> Builder s
+withColor color = modB (hasColor color)
 
 -- | Set the section ID to organize a task within a project section
-setSectionId :: (HasSectionId s) => Text -> Builder s
-setSectionId sid = modB (hasSectionId sid)
+withSectionId :: (HasSectionId s) => Text -> Builder s
+withSectionId sid = modB (hasSectionId sid)
 
 -- | Set the sort order (lower numbers appear first)
-setOrder :: (HasOrder s) => Int -> Builder s
-setOrder order = modB (hasOrder order)
+withOrder :: (HasOrder s) => Int -> Builder s
+withOrder order = modB (hasOrder order)
 
 -- | Set the list of label names to tag a task
-setLabels :: (HasLabels s) => [Text] -> Builder s
-setLabels labels = modB (hasLabels labels)
+withLabels :: (HasLabels s) => [Text] -> Builder s
+withLabels labels = modB (hasLabels labels)
 
 -- | Set the priority level (1=urgent, 2=high, 3=normal, 4=low)
-setPriority :: (HasPriority s) => Int -> Builder s
-setPriority priority = modB (hasPriority priority)
+withPriority :: (HasPriority s) => Int -> Builder s
+withPriority priority = modB (hasPriority priority)
 
 -- | Set the assignee user ID for task assignment
-setAssigneeId :: (HasAssigneeId s) => Int -> Builder s
-setAssigneeId aid = modB (hasAssigneeId aid)
+withAssigneeId :: (HasAssigneeId s) => Int -> Builder s
+withAssigneeId aid = modB (hasAssigneeId aid)
 
 -- | Set a natural language due date string (e.g., \"tomorrow\", \"next Monday\")
-setDueString :: (HasDueString s) => Text -> Builder s
-setDueString dueStr = modB (hasDueString dueStr)
+withDueString :: (HasDueString s) => Text -> Builder s
+withDueString dueStr = modB (hasDueString dueStr)
 
 -- | Set the due date in YYYY-MM-DD format
-setDueDate :: (HasDueDate s) => Text -> Builder s
-setDueDate dueDate = modB (hasDueDate dueDate)
+withDueDate :: (HasDueDate s) => Text -> Builder s
+withDueDate dueDate = modB (hasDueDate dueDate)
 
 -- | Set the due datetime in RFC3339 format with timezone
-setDueDatetime :: (HasDueDatetime s) => Text -> Builder s
-setDueDatetime dueDatetime = modB (hasDueDatetime dueDatetime)
+withDueDatetime :: (HasDueDatetime s) => Text -> Builder s
+withDueDatetime dueDatetime = modB (hasDueDatetime dueDatetime)
 
 -- | Set the language code for parsing natural language due strings
-setDueLang :: (HasDueLang s) => Text -> Builder s
-setDueLang dueLang = modB (hasDueLang dueLang)
+withDueLang :: (HasDueLang s) => Text -> Builder s
+withDueLang dueLang = modB (hasDueLang dueLang)
 
 -- | Set the task duration amount (used with duration_unit)
-setDuration :: (HasDuration s) => Int -> Builder s
-setDuration duration = modB (hasDuration duration)
+withDuration :: (HasDuration s) => Int -> Builder s
+withDuration duration = modB (hasDuration duration)
 
 -- | Set the task duration unit (\"minute\" or \"day\")
-setDurationUnit :: (HasDurationUnit s) => Text -> Builder s
-setDurationUnit durationUnit = modB (hasDurationUnit durationUnit)
+withDurationUnit :: (HasDurationUnit s) => Text -> Builder s
+withDurationUnit durationUnit = modB (hasDurationUnit durationUnit)
 
 -- | Set the deadline date for a task
-setDeadlineDate :: (HasDeadlineDate s) => Text -> Builder s
-setDeadlineDate deadlineDate = modB (hasDeadlineDate deadlineDate)
+withDeadlineDate :: (HasDeadlineDate s) => Text -> Builder s
+withDeadlineDate deadlineDate = modB (hasDeadlineDate deadlineDate)
 
 -- | Set an attachment for a comment
-setAttachment :: (HasAttachment s) => Attachment -> Builder s
-setAttachment attachment = modB (hasAttachment attachment)
+withAttachment :: (HasAttachment s) => Attachment -> Builder s
+withAttachment attachment = modB (hasAttachment attachment)
 
 -- | Set the task ID for comments to associate a comment with a task
-setTaskId :: (HasTaskId s) => Text -> Builder s
-setTaskId tid = modB (hasTaskId tid)
+withTaskId :: (HasTaskId s) => Text -> Builder s
+withTaskId tid = modB (hasTaskId tid)
 
 -- | Set the list of user IDs to notify about a comment
-setUidsToNotify :: (HasUidsToNotify s) => [Int] -> Builder s
-setUidsToNotify uids = modB (hasUidsToNotify uids)
+withUidsToNotify :: (HasUidsToNotify s) => [Int] -> Builder s
+withUidsToNotify uids = modB (hasUidsToNotify uids)
 
 -- | Set the pagination cursor for fetching the next page of results
-setCursor :: (HasCursor s) => Text -> Builder s
-setCursor cursor = modB (hasCursor cursor)
+withCursor :: (HasCursor s) => Text -> Builder s
+withCursor cursor = modB (hasCursor cursor)
 
 -- | Set the maximum number of items to return per page
-setLimit :: (HasLimit s) => Int -> Builder s
-setLimit limit = modB (hasLimit limit)
+withLimit :: (HasLimit s) => Int -> Builder s
+withLimit limit = modB (hasLimit limit)
 
 -- | Set the search query text for filtering items
-setQuery :: (HasQuery s) => Text -> Builder s
-setQuery query = modB (hasQuery query)
+withQuery :: (HasQuery s) => Text -> Builder s
+withQuery query = modB (hasQuery query)
 
 -- | Set the language code for natural language processing
-setLang :: (HasLang s) => Text -> Builder s
-setLang lang = modB (hasLang lang)
+withLang :: (HasLang s) => Text -> Builder s
+withLang lang = modB (hasLang lang)
 
 -- | Set the start date for date range filtering
-setSince :: (HasSince s) => Text -> Builder s
-setSince since = modB (hasSince since)
+withSince :: (HasSince s) => Text -> Builder s
+withSince since = modB (hasSince since)
 
 -- | Set the end date for date range filtering
-setUntil :: (HasUntil s) => Text -> Builder s
-setUntil until = modB (hasUntil until)
+withUntil :: (HasUntil s) => Text -> Builder s
+withUntil until = modB (hasUntil until)
 
 -- | Set the list of task IDs for filtering by specific tasks
-setTaskIds :: (HasTaskIds s) => [Text] -> Builder s
-setTaskIds taskIds = modB (hasTaskIds taskIds)
+withTaskIds :: (HasTaskIds s) => [Text] -> Builder s
+withTaskIds taskIds = modB (hasTaskIds taskIds)
 
 -- | Set the public key for accessing shared comments
-setPublicKey :: (HasPublicKey s) => Text -> Builder s
-setPublicKey publicKey = modB (hasPublicKey publicKey)
+withPublicKey :: (HasPublicKey s) => Text -> Builder s
+withPublicKey publicKey = modB (hasPublicKey publicKey)
 
 -- | Set whether to omit personal labels from results
-setOmitPersonal :: (HasOmitPersonal s) => Bool -> Builder s
-setOmitPersonal omitPersonal = modB (hasOmitPersonal omitPersonal)
+withOmitPersonal :: (HasOmitPersonal s) => Bool -> Builder s
+withOmitPersonal omitPersonal = modB (hasOmitPersonal omitPersonal)
 
 -- | Set the filter query for completed tasks
-setFilterQuery :: (HasFilterQuery s) => Text -> Builder s
-setFilterQuery filterQuery = modB (hasFilterQuery filterQuery)
+withFilterQuery :: (HasFilterQuery s) => Text -> Builder s
+withFilterQuery filterQuery = modB (hasFilterQuery filterQuery)
 
 -- | Set the filter language for completed tasks
-setFilterLang :: (HasFilterLang s) => Text -> Builder s
-setFilterLang filterLang = modB (hasFilterLang filterLang)
+withFilterLang :: (HasFilterLang s) => Text -> Builder s
+withFilterLang filterLang = modB (hasFilterLang filterLang)

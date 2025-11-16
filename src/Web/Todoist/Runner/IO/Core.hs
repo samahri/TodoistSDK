@@ -26,9 +26,10 @@ import Control.Applicative (Applicative)
 import Control.Monad (Functor, Monad)
 import Control.Monad.Trans.Except (ExceptT)
 import Control.Monad.Trans.Reader (ReaderT)
+import Control.Monad.IO.Class (MonadIO)
 import System.IO (IO)
 
 -- | TodoistIO monad - provides IO-based execution for Todoist operations
 newtype TodoistIO a
     = TodoistIO {unTodoist :: ReaderT TodoistConfig (ExceptT TodoistError IO) a}
-    deriving newtype (Functor, Applicative, Monad)
+    deriving newtype (Functor, Applicative, Monad, MonadIO)

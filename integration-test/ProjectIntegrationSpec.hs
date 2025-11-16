@@ -6,7 +6,6 @@ module ProjectIntegrationSpec (spec) where
 
 import Helpers (assertSucceeds, buildTestProject, generateUniqueName, getTestConfig, liftTodoist)
 
-import Web.Todoist.Util.Builder (runBuilder, setDescription)
 import Web.Todoist.Domain.Project
     ( ProjectCreate
     , ProjectUpdate (..)
@@ -29,6 +28,7 @@ import Web.Todoist.Internal.Types
     , RoleActions (..)
     )
 import Web.Todoist.Runner (todoist)
+import Web.Todoist.Util.Builder (runBuilder, withDescription)
 
 import Control.Exception (bracket)
 import Control.Monad (forM_, mapM, mapM_, void)
@@ -287,7 +287,7 @@ updateProjectSpec config = describe "Update project" $ do
         let updatedDescription = "Updated description"
 
         -- Create initial project with specific properties
-        let initialProject = runBuilder (newProject originalName) (setDescription originalDescription)
+        let initialProject = runBuilder (newProject originalName) (withDescription originalDescription)
 
         withTestProjectCreate config initialProject $ \projectId -> do
             -- Verify initial state
@@ -346,7 +346,7 @@ updateProjectSpec config = describe "Update project" $ do
         let initialDescription = "Initial description"
 
         -- Create initial project
-        let initialProject = runBuilder (newProject projectName) (setDescription initialDescription)
+        let initialProject = runBuilder (newProject projectName) (withDescription initialDescription)
 
         withTestProjectCreate config initialProject $ \projectId -> do
             -- Get initial state

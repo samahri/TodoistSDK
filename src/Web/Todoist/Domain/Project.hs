@@ -28,14 +28,14 @@ main = do
 
     -- Create a new project
     let newProj = runBuilder (newProject "My Project")
-                  (setDescription "Project description" <> setViewStyle Board)
+                  (withDescription "Project description" <> withViewStyle Board)
     project <- todoist config (addProject newProj)
 
     -- Get all projects
     projects <- todoist config getAllProjects
 
     -- Update a project
-    let update = runBuilder emptyProjectUpdate (setName "Updated Name")
+    let update = runBuilder emptyProjectUpdate (withName "Updated Name")
     updated <- todoist config (updateProject update projectId)
 @
 
@@ -222,7 +222,7 @@ newProject name =
             }
 
 {- | Create an empty ProjectUpdate (for use with Builder combinators)
-Use with runBuilder: runBuilder emptyProjectUpdate (setName "New Name" <> setDescription "desc")
+Use with runBuilder: runBuilder emptyProjectUpdate (withName "New Name" <> withDescription "desc")
 -}
 emptyProjectUpdate :: Initial ProjectUpdate
 emptyProjectUpdate =
