@@ -39,7 +39,7 @@ module Web.Todoist.Domain.Section
       Section (..)
     , SectionId (..)
     , SectionCreate
-    , SectionUpdate (..)
+    , SectionUpdate
     , SectionParam (..)
 
       -- * Type Class

@@ -44,10 +44,10 @@ module Web.Todoist
     , TodoistLabelM (..)
 
       -- * Project Types
-    , Project (..)
+    , Project
     , ProjectCreate
     , ProjectUpdate
-    , Collaborator (..)
+    , Collaborator
     , PaginationParam (..)
     , createProjectBuilder
     , updateProjectBuilder
@@ -153,11 +153,11 @@ import Web.Todoist.Internal.Error (TodoistError (..))
 
 import Web.Todoist.Domain.Project
     ( CanAssignTasks (..)
-    , Collaborator (..)
+    , Collaborator
     , IsArchived (..)
     , IsShared (..)
     , PaginationParam (..)
-    , Project (..)
+    , Project
     , ProjectCreate
     , ProjectUpdate
     , TodoistProjectM (..)

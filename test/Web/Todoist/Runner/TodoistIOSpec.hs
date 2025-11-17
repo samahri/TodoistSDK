@@ -3,10 +3,18 @@
 module Web.Todoist.Runner.TodoistIOSpec (spec) where
 
 import Web.Todoist.Domain.Project
-    ( Collaborator (..)
-    , Project (..)
+    ( Collaborator
+    , Project
     , ProjectCreate
-    , ProjectUpdate (..)
+    , ProjectUpdate
+    , createdAt
+    , updatedAt
+    , viewStyle
+    , projectUpdateName
+    , projectUpdateDescription
+    , projectUpdateColor
+    , projectUpdateIsFavorite
+    , projectUpdateViewStyle
     )
 import Web.Todoist.Domain.Types
     ( Description (..)
@@ -40,6 +48,7 @@ import Web.Todoist.TestHelpers
     , sampleProjectUpdateJson
     , sampleProjectsJson
     )
+import Web.Todoist.Lens ((^.))
 
 import Data.Aeson (decode, eitherDecode, encode)
 import Data.Bool (Bool (..))
@@ -116,13 +125,15 @@ conversionSpec = describe "projectResponseToProject" $ do
         project `shouldBe` sampleProject
 
     it "converts view_style string to ViewStyle type" $ do
-        let Project {_view_style = viewStyle} = projectResponseToProject sampleProjectResponse
-        viewStyle `shouldBe` List
+        let projectViewStyle = projectResponseToProject sampleProjectResponse ^. viewStyle
+        projectViewStyle `shouldBe` List
 
     it "preserves timestamp fields" $ do
-        let Project {_created_at = createdAt, _updated_at = updatedAt} = projectResponseToProject sampleProjectResponse
-        createdAt `shouldBe` Just "2023-06-15T10:30:00Z"
-        updatedAt `shouldBe` Just "2023-06-20T14:45:00Z"
+        let projectResponse = projectResponseToProject sampleProjectResponse
+            projectCreateAt = projectResponse ^. createdAt
+            projectUpdatedAt = projectResponse ^. updatedAt
+        projectCreateAt `shouldBe` Just "2023-06-15T10:30:00Z"
+        projectUpdatedAt `shouldBe` Just "2023-06-20T14:45:00Z"
 
 viewStyleSpec :: Spec
 viewStyleSpec = describe "parseViewStyle" $ do
@@ -305,7 +316,10 @@ jsonParsingUpdateSpec = describe "ProjectUpdate JSON parsing" $ do
     it "correctly parses all fields from JSON" $ do
         let decoded = decode sampleProjectUpdateJson :: Maybe ProjectUpdate
         decoded `shouldSatisfy` isJust
-        let ProjectUpdate {_name = name, _description = desc, _is_favorite = isFav} = fromJust decoded
+        let projectUpdate = fromJust decoded
+            name = projectUpdate ^. projectUpdateName
+            desc = projectUpdate ^. projectUpdateDescription
+            isFav = projectUpdate ^. projectUpdateIsFavorite
         name `shouldBe` Just (Name "Updated Project Name")
         desc `shouldBe` Just (Description "Updated description")
         isFav `shouldBe` Just (IsFavorite True)
@@ -319,13 +333,12 @@ jsonPartialUpdateSpec = describe "Partial ProjectUpdate" $ do
     it "handles missing fields as Nothing" $ do
         let decoded = decode samplePartialProjectUpdateJson :: Maybe ProjectUpdate
         decoded `shouldSatisfy` isJust
-        let ProjectUpdate
-                { _name = name
-                , _description = desc
-                , _color = color
-                , _is_favorite = isFav
-                , _view_style = viewStyle
-                } = fromJust decoded
+        let projectUpdate = fromJust decoded
+            name = projectUpdate ^. projectUpdateName
+            desc = projectUpdate ^. projectUpdateDescription
+            color = projectUpdate ^. projectUpdateColor
+            isFav = projectUpdate ^. projectUpdateIsFavorite
+            viewStyle = projectUpdate ^. projectUpdateViewStyle
         name `shouldBe` Just (Name "New Name")
         desc `shouldBe` Nothing
         color `shouldBe` Nothing

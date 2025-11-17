@@ -87,7 +87,7 @@ import Web.Todoist.Domain.Section
     ( Section (..)
     , SectionCreate
     , SectionId (..)
-    , SectionUpdate (..)
+    , SectionUpdate
     , newSectionBuilder
     , updateSectionBuilder
     )

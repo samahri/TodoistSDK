@@ -7,7 +7,7 @@ module ProjectIntegrationSpec (spec) where
 import Helpers (assertSucceeds, buildTestProject, generateUniqueName, getTestConfig, liftTodoist)
 
 import Web.Todoist.Domain.Project
-    ( ProjectCreate (..)
+    ( ProjectCreate
     , TodoistProjectM (..)
     , createProjectBuilder
     , updateProjectBuilder
@@ -27,6 +27,7 @@ import Web.Todoist.Internal.Types
     , ProjectPermissions (..)
     , RoleActions (..)
     )
+import Web.Todoist.Lens ((^.))
 import Web.Todoist.Runner (todoist)
 import Web.Todoist.Util.Builder (runBuilder, withDescription, withName, withIsFavorite)
 
@@ -76,25 +77,20 @@ projectLifecycleSpec config = describe "Project lifecycle (create, get, delete)"
         let testProject = buildTestProject createProjectBuilderName
 
         -- Extract expected values from testProject for verification
-        let P.ProjectCreate
-                { _name = expectedName
-                , _description = expectedDescription
-                , _view_style = expectedViewStyle
-                , _is_favorite = expectedIsFavorite
-                } = testProject
+        let expectedName = testProject ^. P.projectCreateName
+            expectedDescription = testProject ^. P.projectCreateDescription
+            expectedViewStyle = testProject ^. P.projectCreateViewStyle
+            expectedIsFavorite = testProject ^. P.projectCreateIsFavorite
 
         -- Use withTestProjectCreate to handle creation and cleanup
         withTestProjectCreate config testProject $ \projectId -> do
             -- Get the project by ID and verify all fields
             project <- liftTodoist config (getProject projectId)
-
-            let P.Project
-                    { _id = projId
-                    , _name = projName
-                    , _description = projDescription
-                    , _view_style = projViewStyle
-                    , _is_favorite = projIsFavorite
-                    } = project
+            let projId = project ^. P.projectId
+                projName = project ^. P.name
+                projDescription = project ^. P.description
+                projViewStyle = project ^. P.viewStyle
+                projIsFavorite = project ^. P.isFavorite
 
             -- Verify the project details match expected values
             liftIO $ projId `shouldBe` projectId

@@ -45,7 +45,7 @@ module Web.Todoist.Domain.Project
     ( TodoistProjectM (..)
     , Project (..)
     , Collaborator (..)
-    , ProjectCreate (..)
+    , ProjectCreate
     , ProjectUpdate (..)
     , PaginationParam (..)
     , createProjectBuilder
@@ -71,6 +71,20 @@ module Web.Todoist.Domain.Project
     , collaboratorId
     , collaboratorName
     , collaboratorEmail
+      -- * ProjectCreate Lenses
+    , projectCreateName
+    , projectCreateDescription
+    , projectCreateParentId
+    , projectCreateColor
+    , projectCreateIsFavorite
+    , projectCreateViewStyle
+    , projectCreateWorkspaceId
+      -- * ProjectUpdate Lenses
+    , projectUpdateName
+    , projectUpdateDescription
+    , projectUpdateColor
+    , projectUpdateIsFavorite
+    , projectUpdateViewStyle
     ) where
 
 import Web.Todoist.Domain.Types
@@ -244,6 +258,35 @@ instance HasWorkspaceId ProjectCreate where
     hasWorkspaceId :: Int -> ProjectCreate -> ProjectCreate
     hasWorkspaceId wid ProjectCreate {..} = ProjectCreate {_workspace_id = Just wid, ..}
 
+-- | Lenses for ProjectCreate
+projectCreateName :: Getter ProjectCreate Name
+projectCreateName = to (\(ProjectCreate {_name = x}) -> x)
+{-# INLINE projectCreateName #-}
+
+projectCreateDescription :: Getter ProjectCreate (Maybe Description)
+projectCreateDescription = to (\(ProjectCreate {_description = x}) -> x)
+{-# INLINE projectCreateDescription #-}
+
+projectCreateParentId :: Getter ProjectCreate (Maybe ParentId)
+projectCreateParentId = to (\(ProjectCreate {_parent_id = x}) -> x)
+{-# INLINE projectCreateParentId #-}
+
+projectCreateColor :: Getter ProjectCreate (Maybe Color)
+projectCreateColor = to (\(ProjectCreate {_color = x}) -> x)
+{-# INLINE projectCreateColor #-}
+
+projectCreateIsFavorite :: Getter ProjectCreate IsFavorite
+projectCreateIsFavorite = to (\(ProjectCreate {_is_favorite = x}) -> x)
+{-# INLINE projectCreateIsFavorite #-}
+
+projectCreateViewStyle :: Getter ProjectCreate (Maybe ViewStyle)
+projectCreateViewStyle = to (\(ProjectCreate {_view_style = x}) -> x)
+{-# INLINE projectCreateViewStyle #-}
+
+projectCreateWorkspaceId :: Getter ProjectCreate (Maybe Int)
+projectCreateWorkspaceId = to (\(ProjectCreate {_workspace_id = x}) -> x)
+{-# INLINE projectCreateWorkspaceId #-}
+
 {- | Request body type for updating an existing project
 All fields are optional to support partial updates
 -}
@@ -283,6 +326,27 @@ instance HasIsFavorite ProjectUpdate where
 instance HasColor ProjectUpdate where
     hasColor :: Text -> ProjectUpdate -> ProjectUpdate
     hasColor col ProjectUpdate {..} = ProjectUpdate {_color = Just (Color col), ..}
+
+-- | Lenses for ProjectUpdate
+projectUpdateName :: Getter ProjectUpdate (Maybe Name)
+projectUpdateName = to (\(ProjectUpdate {_name = x}) -> x)
+{-# INLINE projectUpdateName #-}
+
+projectUpdateDescription :: Getter ProjectUpdate (Maybe Description)
+projectUpdateDescription = to (\(ProjectUpdate {_description = x}) -> x)
+{-# INLINE projectUpdateDescription #-}
+
+projectUpdateColor :: Getter ProjectUpdate (Maybe Color)
+projectUpdateColor = to (\(ProjectUpdate {_color = x}) -> x)
+{-# INLINE projectUpdateColor #-}
+
+projectUpdateIsFavorite :: Getter ProjectUpdate (Maybe IsFavorite)
+projectUpdateIsFavorite = to (\(ProjectUpdate {_is_favorite = x}) -> x)
+{-# INLINE projectUpdateIsFavorite #-}
+
+projectUpdateViewStyle :: Getter ProjectUpdate (Maybe ViewStyle)
+projectUpdateViewStyle = to (\(ProjectUpdate {_view_style = x}) -> x)
+{-# INLINE projectUpdateViewStyle #-}
 
 -- projects
 createProjectBuilder :: Text -> Initial ProjectCreate

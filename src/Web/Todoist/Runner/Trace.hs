@@ -32,7 +32,7 @@ import Web.Todoist.Domain.Project
     , IsArchived (..)
     , IsShared (..)
     , PaginationParam
-    , Project (..)
+    , Project (Project)
     , ProjectCreate
     , ProjectUpdate
     , TodoistProjectM (..)
