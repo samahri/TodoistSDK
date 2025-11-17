@@ -30,25 +30,25 @@ import Web.Todoist.Domain.Label
     ( Label (..)
     , LabelId (..)
     , LabelParam (..)
-    , LabelUpdate (..)
     , SharedLabelParam (..)
-    , SharedLabelRemove (..)
-    , SharedLabelRename (..)
+    , mkSharedLabelRemove
+    , mkSharedLabelRename
     , addLabel
     , deleteLabel
     , getLabel
     , getLabels
     , getSharedLabels
-    , newLabelBuilder
+    , createLabelBuilder
     , removeSharedLabels
     , renameSharedLabels
     , updateLabel
+    , updateLabelBuilder
     )
 import Web.Todoist.Domain.Types (Color (..), IsFavorite (..), Name (..))
 import Web.Todoist.Internal.Error (TodoistError)
 import Web.Todoist.Runner (todoist)
 import Web.Todoist.Runner.IO (TodoistConfig)
-import Web.Todoist.Util.Builder (runBuilder)
+import Web.Todoist.Util.Builder (runBuilder, withName, withColor, withIsFavorite)
 
 spec :: Spec
 spec = do
@@ -113,13 +113,7 @@ updateLabelSpec config =
             withTestLabel config labelName $ \labelId -> do
                 -- Update label name and favorite status
                 let newName = labelName <> "-Updated"
-                    update =
-                        LabelUpdate
-                            { _name = Just (Name newName)
-                            , _order = Nothing
-                            , _color = Just (Color "berry_red")
-                            , _is_favorite = Just (IsFavorite True)
-                            }
+                    update = runBuilder updateLabelBuilder (withName newName <> withColor "berry_red" <> withIsFavorite True)
                 updatedLabel <- liftTodoist config (updateLabel update labelId)
 
                 -- Verify update
@@ -145,11 +139,11 @@ sharedLabelsSpec config =
 
             withTestLabel config labelName $ \_ -> do
                 -- Rename shared label
-                let renameReq = SharedLabelRename {_name = Name labelName, _new_name = Name (labelName <> "-Renamed")}
+                let renameReq = mkSharedLabelRename labelName (labelName <> "-Renamed")
                 liftTodoist config (renameSharedLabels renameReq)
 
                 -- Remove shared label
-                let removeReq = SharedLabelRemove {_name = Name (labelName <> "-Renamed")}
+                let removeReq = mkSharedLabelRemove (labelName <> "-Renamed")
                 liftTodoist config (removeSharedLabels removeReq)
 
                 -- If we got here without errors, operations succeeded
@@ -160,7 +154,7 @@ withTestLabel :: TodoistConfig -> Text -> (LabelId -> ExceptT TodoistError IO a)
 withTestLabel config labelName action = do
     let createLabel = do
             liftIO $ putStrLn $ "Creating test label: " <> show labelName
-            liftTodoist config (addLabel $ runBuilder (newLabelBuilder labelName) mempty)
+            liftTodoist config (addLabel $ runBuilder (createLabelBuilder labelName) mempty)
 
     let deleteLabel' labelId = do
             liftIO $ putStrLn $ "Cleaning up test label: " <> show labelName
@@ -176,7 +170,7 @@ withMultipleTestLabels ::
 withMultipleTestLabels config labelNames action = do
     let createLabels = do
             liftIO $ putStrLn $ "Creating test labels: " <> show labelNames
-            liftTodoist config $ traverse (\name -> addLabel $ runBuilder (newLabelBuilder name) mempty) labelNames
+            liftTodoist config $ traverse (\name -> addLabel $ runBuilder (createLabelBuilder name) mempty) labelNames
 
     let deleteLabels' labelIds = do
             liftIO $ putStrLn $ "Cleaning up test labels: " <> show labelNames

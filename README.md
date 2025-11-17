@@ -204,7 +204,7 @@ sections <- todoist config (getSections params)
 
 ```haskell
 -- Create a label
-let label = runBuilder (newLabelBuilder "urgent") mempty
+let label = runBuilder (createLabelBuilder "urgent") mempty
 result <- todoist config (addLabel label)
 
 -- Get all labels

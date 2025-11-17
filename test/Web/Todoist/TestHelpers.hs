@@ -79,8 +79,9 @@ import Web.Todoist.Domain.Project
     , IsShared (..)
     , Project (..)
     , ProjectCreate
-    , ProjectUpdate (..)
+    , ProjectUpdate
     , createProjectBuilder
+    , updateProjectBuilder
     )
 import Web.Todoist.Domain.Section
     ( Section (..)
@@ -88,6 +89,7 @@ import Web.Todoist.Domain.Section
     , SectionId (..)
     , SectionUpdate (..)
     , newSectionBuilder
+    , updateSectionBuilder
     )
 import Web.Todoist.Domain.Task
     ( Deadline (..)
@@ -131,14 +133,14 @@ import Web.Todoist.Internal.Types
     , UpdatedAt (..)
     )
 import qualified Web.Todoist.Internal.Types as Internal
-import Web.Todoist.Util.Builder (runBuilder, withDescription)
+import Web.Todoist.Util.Builder (runBuilder, withColor, withDescription, withName, withIsFavorite, withViewStyle)
 
 import Data.Bool (Bool (..))
 import Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import Data.Function (($))
 import Data.Maybe (Maybe (..))
-import Data.Monoid (mempty)
+import Data.Monoid (mempty, (<>))
 
 -- | Sample ProjectId for testing
 sampleProjectId :: ProjectId
@@ -295,14 +297,7 @@ sampleProjectCreateJson =
 
 -- | Sample ProjectUpdate for testing
 sampleProjectUpdate :: ProjectUpdate
-sampleProjectUpdate =
-    ProjectUpdate
-        { _name = Just (Name "Updated Project Name")
-        , _description = Just (Description "Updated description")
-        , _color = Just (Color "red")
-        , _is_favorite = Just (IsFavorite True)
-        , _view_style = Just List
-        }
+sampleProjectUpdate = runBuilder updateProjectBuilder (withName "Updated Project Name" <> withDescription "Updated description" <> withColor "red" <> withIsFavorite True <> withViewStyle List)
 
 -- | JSON representation of ProjectUpdate
 sampleProjectUpdateJson :: ByteString
@@ -318,14 +313,7 @@ sampleProjectUpdateJson =
 
 -- | Sample ProjectUpdate with only some fields (partial update)
 samplePartialProjectUpdate :: ProjectUpdate
-samplePartialProjectUpdate =
-    ProjectUpdate
-        { _name = Just (Name "New Name")
-        , _description = Nothing
-        , _color = Nothing
-        , _is_favorite = Just (IsFavorite True)
-        , _view_style = Nothing
-        }
+samplePartialProjectUpdate = runBuilder updateProjectBuilder (withName "New Name" <> withIsFavorite True)
 
 -- | JSON representation of partial ProjectUpdate
 samplePartialProjectUpdateJson :: ByteString
@@ -781,10 +769,7 @@ sampleSectionCreate = runBuilder (newSectionBuilder "New Section" "project789") 
 
 -- | Sample SectionUpdate
 sampleSectionUpdate :: SectionUpdate
-sampleSectionUpdate =
-    SectionUpdate
-        { _name = Just (Name "Updated Section")
-        }
+sampleSectionUpdate = runBuilder updateSectionBuilder (withName "Updated Section")
 
 -- | JSON for TodoistReturn [SectionResponse] (getSections response)
 sampleSectionsJson :: ByteString

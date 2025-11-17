@@ -92,10 +92,12 @@ module Web.Todoist
     , SharedLabelParam (..)
     , SharedLabelRename
     , SharedLabelRemove
-    , newLabelBuilder
+    , createLabelBuilder
     , updateLabelBuilder
     , labelParamBuilder
     , sharedLabelParamBuilder
+    , mkSharedLabelRename
+    , mkSharedLabelRemove
 
       -- * Common Domain Types
     , ProjectId (..)
@@ -208,9 +210,11 @@ import Web.Todoist.Domain.Label
     , SharedLabelRename
     , TodoistLabelM (..)
     , updateLabelBuilder
-    , newLabelBuilder
+    , createLabelBuilder
     , labelParamBuilder
     , sharedLabelParamBuilder
+    , mkSharedLabelRename
+    , mkSharedLabelRemove
     )
 
 import Web.Todoist.Domain.Types

@@ -69,6 +69,7 @@ import Web.Todoist.Domain.Types
 import Web.Todoist.Internal.Types (Params, ProjectPermissions)
 import Web.Todoist.Util.Builder
     ( HasCursor (..)
+    , HasColor (..)
     , HasDescription (..)
     , HasIsFavorite (..)
     , HasLimit (..)
@@ -206,6 +207,10 @@ instance HasViewStyle ProjectUpdate where
 instance HasIsFavorite ProjectUpdate where
     hasIsFavorite :: Bool -> ProjectUpdate -> ProjectUpdate
     hasIsFavorite fav ProjectUpdate {..} = ProjectUpdate {_is_favorite = Just (IsFavorite fav), ..}
+
+instance HasColor ProjectUpdate where
+    hasColor :: Text -> ProjectUpdate -> ProjectUpdate
+    hasColor col ProjectUpdate {..} = ProjectUpdate {_color = Just (Color col), ..}
 
 -- projects
 createProjectBuilder :: Text -> Initial ProjectCreate

@@ -25,7 +25,7 @@ main = do
     let config = newTodoistConfig "your-api-token"
 
     -- Create a label
-    let newLbl = runBuilder (newLabelBuilder "urgent") mempty
+    let newLbl = runBuilder (createLabelBuilder "urgent") mempty
     label <- todoist config (addLabel newLbl)
 
     -- Get all labels with builder pattern
@@ -39,21 +39,23 @@ module Web.Todoist.Domain.Label
     ( -- * Types
       Label (..)
     , LabelId (..)
-    , LabelCreate (..)
-    , LabelUpdate (..)
+    , LabelCreate
+    , LabelUpdate
     , LabelParam (..)
     , SharedLabelParam (..)
-    , SharedLabelRemove (..)
-    , SharedLabelRename (..)
+    , SharedLabelRemove
+    , SharedLabelRename
 
       -- * Type Class
     , TodoistLabelM (..)
 
       -- * Constructors
-    , newLabelBuilder
+    , createLabelBuilder
     , updateLabelBuilder
     , labelParamBuilder
     , sharedLabelParamBuilder
+    , mkSharedLabelRename
+    , mkSharedLabelRemove
     ) where
 
 import Control.Applicative ((<$>))
@@ -221,8 +223,8 @@ class (Monad m) => TodoistLabelM m where
     renameSharedLabels :: SharedLabelRename -> m ()
 
 -- | Smart constructor for creating a new label
-newLabelBuilder :: Text -> Initial LabelCreate
-newLabelBuilder name =
+createLabelBuilder :: Text -> Initial LabelCreate
+createLabelBuilder name =
     seed
         LabelCreate
             { _name = Name name
@@ -245,6 +247,14 @@ updateLabelBuilder =
 -- | Create new LabelParam for use with builder pattern
 labelParamBuilder :: Initial LabelParam
 labelParamBuilder = seed $ LabelParam {cursor = Nothing, limit = Nothing}
+
+-- | Create new SharedLabelRemove for use with builder pattern
+mkSharedLabelRename :: Text -> Text -> SharedLabelRename
+mkSharedLabelRename name newName= SharedLabelRename {_name = Name name, _new_name = Name newName}
+
+-- | Create new SharedLabelRemove
+mkSharedLabelRemove :: Text -> SharedLabelRemove
+mkSharedLabelRemove name = SharedLabelRemove {_name = Name name}
 
 -- | Create new SharedLabelParam for use with builder pattern
 sharedLabelParamBuilder :: Initial SharedLabelParam

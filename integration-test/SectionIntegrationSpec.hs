@@ -28,19 +28,19 @@ import Web.Todoist.Domain.Section
     ( Section (..)
     , SectionId (..)
     , SectionParam (..)
-    , SectionUpdate (..)
     , addSection
     , deleteSection
     , getSection
     , getSections
     , newSectionBuilder
     , updateSection
+    , updateSectionBuilder
     )
 import Web.Todoist.Domain.Types (Name (..), ProjectId (..))
 import Web.Todoist.Internal.Error (TodoistError)
 import Web.Todoist.Runner (todoist)
 import Web.Todoist.Runner.IO (TodoistConfig)
-import Web.Todoist.Util.Builder (runBuilder)
+import Web.Todoist.Util.Builder (runBuilder, withName)
 
 spec :: Spec
 spec = do
@@ -120,7 +120,7 @@ updateSectionSpec config =
             withTestProjectAndSection config projectName sectionName $ \_ sectionId -> do
                 -- Update section name
                 let newName = sectionName <> "-Updated"
-                    update = SectionUpdate {_name = Just (Name newName)}
+                    update = runBuilder updateSectionBuilder (withName newName)
                 updatedSection <- liftTodoist config (updateSection update sectionId)
 
                 -- Verify update

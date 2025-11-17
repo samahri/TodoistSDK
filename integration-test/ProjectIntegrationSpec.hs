@@ -7,10 +7,10 @@ module ProjectIntegrationSpec (spec) where
 import Helpers (assertSucceeds, buildTestProject, generateUniqueName, getTestConfig, liftTodoist)
 
 import Web.Todoist.Domain.Project
-    ( ProjectCreate
-    , ProjectUpdate (..)
+    ( ProjectCreate (..)
     , TodoistProjectM (..)
     , createProjectBuilder
+    , updateProjectBuilder
     )
 import qualified Web.Todoist.Domain.Project as P
 import Web.Todoist.Domain.Types
@@ -28,7 +28,7 @@ import Web.Todoist.Internal.Types
     , RoleActions (..)
     )
 import Web.Todoist.Runner (todoist)
-import Web.Todoist.Util.Builder (runBuilder, withDescription)
+import Web.Todoist.Util.Builder (runBuilder, withDescription, withName, withIsFavorite)
 
 import Control.Exception (bracket)
 import Control.Monad (forM_, mapM, mapM_, void)
@@ -300,14 +300,7 @@ updateProjectSpec config = describe "Update project" $ do
 
             -- Update the project (change name, description, and favorite status)
             let updatedName = originalName <> "-Updated"
-            let projectUpdate =
-                    ProjectUpdate
-                        { _name = Just (Name updatedName)
-                        , _description = Just (Description updatedDescription)
-                        , _color = Nothing -- don't change color
-                        , _is_favorite = Just (IsFavorite True)
-                        , _view_style = Nothing -- don't change view style
-                        }
+            let projectUpdate = runBuilder updateProjectBuilder (withName updatedName <> withDescription updatedDescription <> withIsFavorite True)
 
             updatedProject <- liftTodoist config (updateProject projectUpdate projectId)
 
@@ -354,14 +347,7 @@ updateProjectSpec config = describe "Update project" $ do
             let P.Project {P._description = originalDescription} = project1
 
             -- Partial update: only change is_favorite
-            let partialUpdate =
-                    ProjectUpdate
-                        { _name = Nothing
-                        , _description = Nothing
-                        , _color = Nothing
-                        , _is_favorite = Just (IsFavorite True)
-                        , _view_style = Nothing
-                        }
+            let partialUpdate = runBuilder updateProjectBuilder (withIsFavorite True)
 
             updatedProject <- liftTodoist config (updateProject partialUpdate projectId)
 
