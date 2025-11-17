@@ -8,7 +8,7 @@ and this project adheres to the
 
 ## Unreleased
 
-## 0.1.1.1 - 2025-11-06
+## 0.2.1.1 - 2025-11-17
 
 ### Added
 - Initial release of TodoistSDK
