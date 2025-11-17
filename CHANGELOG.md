@@ -6,9 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to the
 [Haskell Package Versioning Policy](https://pvp.haskell.org/).
 
-## Unreleased
+## Released
 
-## 0.2.1.1 - 2025-11-17
+## 0.1.2.1 - 2025-11-17
 
 ### Added
 - Initial release of TodoistSDK

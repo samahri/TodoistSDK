@@ -22,7 +22,7 @@ Add to your `stack.yaml`:
 
 ```yaml
 extra-deps:
-  - todoist-sdk-0.2.1.1
+  - todoist-sdk-0.1.2.1
 ```
 
 Add to your `package.yaml` or `.cabal` file:
