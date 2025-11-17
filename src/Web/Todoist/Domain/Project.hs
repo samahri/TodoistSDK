@@ -54,6 +54,23 @@ module Web.Todoist.Domain.Project
     , IsShared (..)
     , IsArchived (..)
     , CanAssignTasks (..)
+      -- * Lenses
+    , projectId
+    , name
+    , description
+    , order
+    , color
+    , isCollapsed
+    , isShared
+    , isFavorite
+    , isArchived
+    , canAssignTasks
+    , viewStyle
+    , createdAt
+    , updatedAt
+    , collaboratorId
+    , collaboratorName
+    , collaboratorEmail
     ) where
 
 import Web.Todoist.Domain.Types
@@ -107,7 +124,9 @@ import Data.String (String)
 import Data.Text (Text)
 import qualified Data.Text
 import GHC.Generics (Generic)
+import Lens.Micro (to)
 import Text.Show (Show)
+import Web.Todoist.Lens (Getter)
 
 {- | Project domain type representing a Todoist project
 
@@ -131,6 +150,59 @@ data Project = Project
     , _updated_at :: Maybe Text
     }
     deriving (Show, Eq)
+
+-- | Lenses for Project
+projectId :: Getter Project ProjectId
+projectId = to (\(Project {_id = x}) -> x)
+{-# INLINE projectId #-}
+
+name :: Getter Project Name
+name = to (\(Project {_name = x}) -> x)
+{-# INLINE name #-}
+
+description :: Getter Project Description
+description = to (\(Project {_description = x}) -> x)
+{-# INLINE description #-}
+
+order :: Getter Project Order
+order = to (\(Project {_order = x}) -> x)
+{-# INLINE order #-}
+
+color :: Getter Project Color
+color = to (\(Project {_color = x}) -> x)
+{-# INLINE color #-}
+
+isCollapsed :: Getter Project IsCollapsed
+isCollapsed = to (\(Project {_is_collapsed = x}) -> x)
+{-# INLINE isCollapsed #-}
+
+isShared :: Getter Project IsShared
+isShared = to (\(Project {_is_shared = x}) -> x)
+{-# INLINE isShared #-}
+
+isFavorite :: Getter Project IsFavorite
+isFavorite = to (\(Project {_is_favorite = x}) -> x)
+{-# INLINE isFavorite #-}
+
+isArchived :: Getter Project IsArchived
+isArchived = to (\(Project {_is_archived = x}) -> x)
+{-# INLINE isArchived #-}
+
+canAssignTasks :: Getter Project CanAssignTasks
+canAssignTasks = to (\(Project {_can_assign_tasks = x}) -> x)
+{-# INLINE canAssignTasks #-}
+
+viewStyle :: Getter Project ViewStyle
+viewStyle = to (\(Project {_view_style = x}) -> x)
+{-# INLINE viewStyle #-}
+
+createdAt :: Getter Project (Maybe Text)
+createdAt = to (\(Project {_created_at = x}) -> x)
+{-# INLINE createdAt #-}
+
+updatedAt :: Getter Project (Maybe Text)
+updatedAt = to (\(Project {_updated_at = x}) -> x)
+{-# INLINE updatedAt #-}
 
 {- | Request body for creating a new project
 
@@ -254,6 +326,19 @@ instance ToJSON Collaborator where
 instance FromJSON Collaborator where
     parseJSON :: Value -> Parser Collaborator
     parseJSON = genericParseJSON defaultOptions {fieldLabelModifier = L.drop 1}
+
+-- | Lenses for Collaborator
+collaboratorId :: Getter Collaborator Text
+collaboratorId = to (\(Collaborator {_id = x}) -> x)
+{-# INLINE collaboratorId #-}
+
+collaboratorName :: Getter Collaborator Name
+collaboratorName = to (\(Collaborator {_name = x}) -> x)
+{-# INLINE collaboratorName #-}
+
+collaboratorEmail :: Getter Collaborator Text
+collaboratorEmail = to (\(Collaborator {_email = x}) -> x)
+{-# INLINE collaboratorEmail #-}
 
 {- | Query parameters for paginated requests
 Used for projects and collaborators endpoints

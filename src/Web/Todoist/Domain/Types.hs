@@ -29,6 +29,11 @@ module Web.Todoist.Domain.Types
     , Content (..)
     , ParentId (..)
     , parseViewStyle
+      -- * Lenses
+    , fileName
+    , fileType
+    , fileUrl
+    , resourceType
     ) where
 
 import Control.Monad (return)
@@ -54,7 +59,9 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import GHC.Base (undefined)
 import GHC.Generics (Generic)
+import Lens.Micro (to)
 import Text.Show (Show)
+import Web.Todoist.Lens (Getter)
 
 {- | Visual display style for projects
 
@@ -98,6 +105,23 @@ instance ToJSON Attachment where
 instance FromJSON Attachment where
     parseJSON :: Value -> Parser Attachment
     parseJSON = genericParseJSON defaultOptions {fieldLabelModifier = L.drop 1}
+
+-- | Lenses for Attachment
+fileName :: Getter Attachment Text
+fileName = to _file_name
+{-# INLINE fileName #-}
+
+fileType :: Getter Attachment Text
+fileType = to _file_type
+{-# INLINE fileType #-}
+
+fileUrl :: Getter Attachment Text
+fileUrl = to _file_url
+{-# INLINE fileUrl #-}
+
+resourceType :: Getter Attachment Text
+resourceType = to _resource_type
+{-# INLINE resourceType #-}
 
 -- | Unique identifier for a Todoist project
 newtype ProjectId = ProjectId

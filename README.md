@@ -8,6 +8,7 @@ An unofficial Haskell SDK for the [Todoist REST API](https://developer.todoist.c
 
 - **Complete API Coverage**: Projects, Tasks, Comments, Sections, and Labels
 - **Type-Safe**: Leverages Haskell's type system to prevent common errors
+- **Getter-Only Lenses**: Read-only lenses for convenient field access and composition
 - **Ergonomic Builder Pattern**: Easily construct API requests with optional fields
 - **Automatic Pagination**: Transparently fetches all pages for list operations
 - **Flexible Error Handling**: Operations return `Either TodoistError a` for explicit error handling
@@ -210,6 +211,80 @@ result <- todoist config (addLabel label)
 -- Get all labels
 let params = runBuilder labelParamBuilder (withLimit 50)
 labels <- todoist config (getLabels params)
+```
+
+## Working with Lenses
+
+TodoistSDK provides **getter-only lenses** for all domain types, enabling convenient field access and composition. All lenses are read-only; for mutations, use the builder pattern.
+
+### Basic Usage
+
+```haskell
+import Web.Todoist
+import Web.Todoist.Lens ((^.))  -- Import the getter operator
+
+-- Get all projects
+Right projects <- todoist config getAllProjects
+
+-- Extract fields using lenses
+let firstProject = head projects
+let projectName = firstProject ^. name
+let projectColor = firstProject ^. color
+let isShared = firstProject ^. isShared
+
+print projectName  -- Prints: Name "My Project"
+```
+
+### Composing Lenses
+
+Lenses can be composed to access nested fields:
+
+```haskell
+-- Get tasks
+Right tasks <- todoist config (getTasks taskParamBuilder)
+
+-- Access nested fields
+let task = head tasks
+let maybeDueDate = task ^. taskDue >>= (^. dueDate)
+let taskContent = task ^. taskContent
+
+-- Check if task has a deadline
+case task ^. taskDeadline of
+    Just deadline -> putStrLn $ "Deadline: " ++ show (deadline ^. deadlineDate)
+    Nothing -> putStrLn "No deadline set"
+```
+
+### Available Lenses
+
+All domain types provide lenses for their fields:
+
+**Project**: `projectId`, `name`, `description`, `order`, `color`, `isCollapsed`, `isShared`, `isFavorite`, `isArchived`, `canAssignTasks`, `viewStyle`, `createdAt`, `updatedAt`
+
+**Task**: `taskId`, `taskContent`, `taskDescription`, `taskProjectId`, `taskSectionId`, `taskParentId`, `taskLabels`, `taskPriority`, `taskDue`, `taskDeadline`, `taskDuration`, `taskIsCollapsed`, `taskOrder`, `taskAssigneeId`, `taskAssignerId`, `taskCompletedAt`, `taskCreatorId`, `taskCreatedAt`, `taskUpdatedAt`
+
+**Comment**: `commentId`, `commentContent`, `commentPosterId`, `commentPostedAt`, `commentTaskId`, `commentProjectId`, `commentAttachment`
+
+**Section**: `sectionId`, `sectionName`, `sectionProjectId`, `sectionIsCollapsed`, `sectionOrder`
+
+**Label**: `labelId`, `labelName`, `labelColor`, `labelOrder`, `labelIsFavorite`
+
+**Due**: `dueDate`, `dueString`, `dueLang`, `dueIsRecurring`, `dueTimezone`
+
+**Deadline**: `deadlineDate`, `deadlineLang`
+
+**Duration**: `amount`, `unit`
+
+### Mutation with Builders
+
+Lenses are **read-only**. For field mutations, use the builder pattern:
+
+```haskell
+-- Reading with lenses
+let oldName = project ^. name
+
+-- Updating with builders (not lenses)
+let update = runBuilder updateProjectBuilder (withName "New Name")
+Right updatedProject <- todoist config (updateProject update projectId)
 ```
 
 ## Error Handling

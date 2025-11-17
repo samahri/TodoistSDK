@@ -7,12 +7,12 @@ module Web.Todoist.Runner.TodoistIO.TaskSpec (spec) where
 
 import Web.Todoist.Domain.Section (SectionId (..))
 import Web.Todoist.Domain.Task
-    ( Deadline (..)
+    ( Deadline
     , Due (..)
     , Duration (..)
     , DurationUnit (..)
     , NewTask (..)
-    , Task (..)
+    , Task
     )
 import Web.Todoist.Domain.Types
     ( Content (..)

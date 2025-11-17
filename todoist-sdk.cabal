@@ -73,6 +73,7 @@ library
     Web.Todoist.Domain.Section
     Web.Todoist.Domain.Label
     Web.Todoist.Domain.Types
+    Web.Todoist.Lens
     Web.Todoist.Util.Builder
     Web.Todoist.Util.QueryParam
     Web.Todoist.Runner
@@ -91,6 +92,7 @@ library
     , aeson                >=2.2.3.0   && <2.3
     , base                 >=4.7       && <5
     , bytestring           >=0.12.2.0  && <0.12.3
+    , microlens            >=0.4.13    && <0.5
     , req                  >=3.13.4    && <3.14
     , text                 >=2.1.2     && <2.2
     , todoist-sdk-internal

@@ -49,6 +49,13 @@ module Web.Todoist.Domain.Section
     , newSectionBuilder
     , updateSectionBuilder
     , sectionParamBuilder
+
+      -- * Lenses
+    , sectionId
+    , sectionName
+    , sectionProjectId
+    , sectionIsCollapsed
+    , sectionOrder
     ) where
 
 import Data.Aeson
@@ -63,6 +70,8 @@ import Data.Bool (Bool (True))
 import Data.Text (Text)
 import qualified Data.Text as T
 import GHC.Generics (Generic)
+import Lens.Micro (to)
+import Web.Todoist.Lens (Getter)
 
 import qualified Data.Aeson as A
 import qualified Data.List as L
@@ -109,6 +118,27 @@ data Section = Section
     , _order :: Order -- Maps from section_order in API
     }
     deriving (Show, Generic)
+
+-- | Lenses for Section
+sectionId :: Getter Section SectionId
+sectionId = to (\(Section {_id = x}) -> x)
+{-# INLINE sectionId #-}
+
+sectionName :: Getter Section Name
+sectionName = to (\(Section {_name = x}) -> x)
+{-# INLINE sectionName #-}
+
+sectionProjectId :: Getter Section ProjectId
+sectionProjectId = to (\(Section {_project_id = x}) -> x)
+{-# INLINE sectionProjectId #-}
+
+sectionIsCollapsed :: Getter Section IsCollapsed
+sectionIsCollapsed = to (\(Section {_is_collapsed = x}) -> x)
+{-# INLINE sectionIsCollapsed #-}
+
+sectionOrder :: Getter Section Order
+sectionOrder = to (\(Section {_order = x}) -> x)
+{-# INLINE sectionOrder #-}
 
 -- | Request body for creating a new Section
 data SectionCreate = SectionCreate

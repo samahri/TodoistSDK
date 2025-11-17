@@ -12,8 +12,7 @@ import Helpers
     , liftTodoist
     )
 import Web.Todoist.Domain.Comment
-    ( Comment (..)
-    , CommentCreate
+    ( CommentCreate
     , CommentId (..)
     , CommentParam (..)
     , Content (..)
@@ -21,11 +20,13 @@ import Web.Todoist.Domain.Comment
     , newCommentBuilder
     , updateCommentBuilder
     )
+import qualified Web.Todoist.Domain.Comment as C
 import qualified Web.Todoist.Domain.Project as P
 import Web.Todoist.Domain.Task (NewTask (..), TodoistTaskM (..))
 import Web.Todoist.Domain.Types (ProjectId (..), TaskId (..))
 import Web.Todoist.Internal.Config (TodoistConfig)
 import Web.Todoist.Internal.Error (TodoistError)
+import Web.Todoist.Lens ((^.))
 import Web.Todoist.Runner (todoist)
 import Web.Todoist.Util.Builder (runBuilder, withProjectId, withTaskId)
 
@@ -74,13 +75,11 @@ commentOnProjectLifecycleSpec config = describe "Comment on project lifecycle (c
             -- Verify we can retrieve the comment
             comment <- liftTodoist config (getComment commentId)
 
-            -- Extract comment fields for verification
-            let Comment
-                    { _id = retrievedId
-                    , _content = retrievedContent
-                    , _project_id = retrievedProjectId
-                    , _task_id = retrievedTaskId
-                    } = comment
+            -- Extract comment fields for verification using lenses
+            let retrievedId = comment ^. C.commentId
+                retrievedContent = comment ^. C.commentContent
+                retrievedProjectId = comment ^. C.commentProjectId
+                retrievedTaskId = comment ^. C.commentTaskId
 
             -- Verify comment ID matches
             liftIO $ retrievedId `shouldBe` commentId
@@ -108,13 +107,11 @@ commentOnTaskLifecycleSpec config = describe "Comment on task lifecycle (create,
             -- Verify we can retrieve the comment
             comment <- liftTodoist config (getComment commentId)
 
-            -- Extract comment fields for verification
-            let Comment
-                    { _id = retrievedId
-                    , _content = retrievedContent
-                    , _task_id = retrievedTaskId
-                    , _project_id = retrievedProjectId
-                    } = comment
+            -- Extract comment fields for verification using lenses
+            let retrievedId = comment ^. C.commentId
+                retrievedContent = comment ^. C.commentContent
+                retrievedProjectId = comment ^. C.commentProjectId
+                retrievedTaskId = comment ^. C.commentTaskId
 
             -- Verify comment ID matches
             liftIO $ retrievedId `shouldBe` commentId
@@ -139,7 +136,7 @@ updateCommentSpec config = describe "Update comment" $ do
         withTestProjectComment config projectName originalContent $ \_ commentId -> do
             -- Verify initial state
             comment1 <- liftTodoist config (getComment commentId)
-            let Comment {_content = initialContent} = comment1
+            let initialContent = comment1 ^. C.commentContent
             liftIO $ initialContent `shouldBe` Content originalContent
 
             -- Update the comment
@@ -149,12 +146,12 @@ updateCommentSpec config = describe "Update comment" $ do
             updatedComment <- liftTodoist config (updateComment commentUpdate commentId)
 
             -- Verify the response contains updated value
-            let Comment {_content = responseContent} = updatedComment
+            let responseContent = updatedComment ^. C.commentContent
             liftIO $ responseContent `shouldBe` Content updatedContent
 
             -- Fetch the comment again to verify persistence
             comment2 <- liftTodoist config (getComment commentId)
-            let Comment {_content = persistedContent} = comment2
+            let persistedContent = comment2 ^. C.commentContent
             liftIO $ persistedContent `shouldBe` Content updatedContent
 
 getCommentsSpec :: TodoistConfig -> Spec
@@ -188,8 +185,8 @@ getCommentsSpec config = describe "Get multiple comments" $ do
             liftIO $ commentCount `shouldSatisfy` (\n -> n >= (3 :: Int))
 
             -- Extract comment IDs and contents from results
-            let commentIdsResult = L.map (\(Comment {_id = cid}) -> cid) comments
-            let commentContentsResult = L.map (\(Comment {_content = content}) -> content) comments
+            let commentIdsResult = L.map (^. C.commentId) comments
+            let commentContentsResult = L.map (^. C.commentContent) comments
 
             -- Verify all 3 comment IDs are present
             let [expectedId1, expectedId2, expectedId3] = commentIds
@@ -203,7 +200,9 @@ getCommentsSpec config = describe "Get multiple comments" $ do
             liftIO $ (Content commentContent3 `L.elem` commentContentsResult) `shouldBe` True
 
             -- Verify each comment has the correct project_id
-            forM_ comments $ \(Comment {_project_id = commentProjId, _task_id = commentTaskId}) -> do
+            forM_ comments $ \comment -> do
+                let commentProjId = comment ^. C.commentProjectId
+                    commentTaskId = comment ^. C.commentTaskId
                 case (commentProjId, commentTaskId) of
                     (Just pid, Nothing) -> liftIO $ pid `shouldBe` ProjectId projIdText
                     _ -> pure () -- Skip comments that don't match our filter
@@ -220,11 +219,10 @@ getSingleCommentSpec config = describe "Get single comment by ID" $ do
             comment <- liftTodoist config (getComment commentId)
 
             -- Verify the comment
-            let Comment
-                    { _id = retrievedId
-                    , _content = retrievedContent
-                    , _project_id = retrievedProjectId
-                    } = comment
+            -- Extract comment fields for verification using lenses
+            let retrievedId = comment ^. C.commentId
+                retrievedContent = comment ^. C.commentContent
+                retrievedProjectId = comment ^. C.commentProjectId
 
             liftIO $ retrievedId `shouldBe` commentId
             liftIO $ retrievedContent `shouldBe` Content commentContent
@@ -250,7 +248,7 @@ withTestProjectComment config projectName commentContent action = do
             let ProjectId {getProjectId = projIdText} = projectId
             let commentCreate = buildTestCommentForProject commentContent projIdText
             createdComment <- liftTodoist config (addComment commentCreate)
-            let Comment {_id = commentId} = createdComment
+            let commentId = createdComment ^. C.commentId
 
             pure (projectId, commentId)
 
@@ -292,7 +290,7 @@ withTestTaskComment config projectName taskContent commentContent action = do
             liftIO $ putStrLn $ "Creating test comment: " <> show commentContent
             let commentCreate = buildTestCommentForTask commentContent taskIdText
             createdComment <- liftTodoist config (addComment commentCreate)
-            let Comment {_id = commentId} = createdComment
+            let commentId = createdComment ^. C.commentId
 
             pure (projectId, taskId, commentId)
 
@@ -331,8 +329,7 @@ withTestProjectComments config projectName commentContents action = do
                     ( \content -> do
                         let commentCreate = buildTestCommentForProject content projIdText
                         createdComment <- liftTodoist config (addComment commentCreate)
-                        let Comment {_id = commentId} = createdComment
-                        pure commentId
+                        pure $ createdComment ^. C.commentId
                     )
                     commentContents
 

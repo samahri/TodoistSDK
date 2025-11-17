@@ -66,6 +66,71 @@ module Web.Todoist.Domain.Task
     , taskParamBuilder
     , filterTaskBuilder
     , completedTasksQueryParamBuilder
+      -- * Lenses
+      -- ** Duration
+    , amount
+    , unit
+      -- ** Deadline
+    , deadlineDate
+    , deadlineLang
+      -- ** Due
+    , dueDate
+    , dueString
+    , dueLang
+    , dueIsRecurring
+    , dueTimezone
+      -- ** Task
+    , taskId
+    , taskContent
+    , taskDescription
+    , taskProjectId
+    , taskSectionId
+    , taskParentId
+    , taskLabels
+    , taskPriority
+    , taskDue
+    , taskDeadline
+    , taskDuration
+    , taskIsCollapsed
+    , taskOrder
+    , taskAssigneeId
+    , taskAssignerId
+    , taskCompletedAt
+    , taskCreatorId
+    , taskCreatedAt
+    , taskUpdatedAt
+      -- ** NewTask
+    , newTaskUserId
+    , newTaskId
+    , newTaskProjectId
+    , newTaskSectionId
+    , newTaskParentId
+    , newTaskAddedByUid
+    , newTaskAssignedByUid
+    , newTaskResponsibleUid
+    , newTaskLabels
+    , newTaskChecked
+    , newTaskIsDeleted
+    , newTaskAddedAt
+    , newTaskCompletedAt
+    , newTaskUpdatedAt
+    , newTaskPriority
+    , newTaskChildOrder
+    , newTaskContent
+    , newTaskDescription
+    , newTaskNoteCount
+    , newTaskDayOrder
+    , newTaskIsCollapsed
+      -- ** MoveTask
+    , moveTaskProjectId
+    , moveTaskSectionId
+    , moveTaskParentId
+      -- ** AddTaskQuick
+    , addTaskQuickTextLens
+    , addTaskQuickNote
+    , addTaskQuickReminder
+    , addTaskQuickAutoReminder
+    , addTaskQuickMeta
     ) where
 
 import Web.Todoist.Internal.Types (Params)
@@ -118,7 +183,9 @@ import Data.Monoid ((<>))
 import Data.Text (Text)
 import qualified Data.Text
 import GHC.Generics (Generic)
+import Lens.Micro (to)
 import Text.Show (Show)
+import Web.Todoist.Lens (Getter)
 import Web.Todoist.Domain.Section (SectionId (..))
 import Web.Todoist.Domain.Types
     ( Content (..)
@@ -159,6 +226,15 @@ instance ToJSON Duration where
     toJSON :: Duration -> Value
     toJSON = genericToJSON defaultOptions {fieldLabelModifier = L.drop 1}
 
+-- | Lenses for Duration
+amount :: Getter Duration Int
+amount = to _amount
+{-# INLINE amount #-}
+
+unit :: Getter Duration DurationUnit
+unit = to _unit
+{-# INLINE unit #-}
+
 -- | Deadline information for a task
 data Deadline = Deadline
     { _date :: Text
@@ -173,6 +249,15 @@ instance FromJSON Deadline where
 instance ToJSON Deadline where
     toJSON :: Deadline -> Value
     toJSON = genericToJSON defaultOptions {fieldLabelModifier = L.drop 1}
+
+-- | Lenses for Deadline
+deadlineDate :: Getter Deadline Text
+deadlineDate = to (\(Deadline {_date = x}) -> x)
+{-# INLINE deadlineDate #-}
+
+deadlineLang :: Getter Deadline Text
+deadlineLang = to (\(Deadline {_lang = x}) -> x)
+{-# INLINE deadlineLang #-}
 
 -- | Due date information for a task
 data Due = Due
@@ -191,6 +276,27 @@ instance FromJSON Due where
 instance ToJSON Due where
     toJSON :: Due -> Value
     toJSON = genericToJSON defaultOptions {fieldLabelModifier = L.drop 1}
+
+-- | Lenses for Due
+dueDate :: Getter Due Text
+dueDate = to (\(Due {_date = x}) -> x)
+{-# INLINE dueDate #-}
+
+dueString :: Getter Due Text
+dueString = to (\(Due {_string = x}) -> x)
+{-# INLINE dueString #-}
+
+dueLang :: Getter Due Text
+dueLang = to (\(Due {_lang = x}) -> x)
+{-# INLINE dueLang #-}
+
+dueIsRecurring :: Getter Due Bool
+dueIsRecurring = to (\(Due {_is_recurring = x}) -> x)
+{-# INLINE dueIsRecurring #-}
+
+dueTimezone :: Getter Due (Maybe Text)
+dueTimezone = to (\(Due {_timezone = x}) -> x)
+{-# INLINE dueTimezone #-}
 
 {- | Task domain type representing a Todoist task
 
@@ -229,6 +335,83 @@ instance ToJSON Task where
     toJSON :: Task -> Value
     toJSON = genericToJSON defaultOptions {fieldLabelModifier = L.drop 1}
 
+-- | Lenses for Task
+taskId :: Getter Task TaskId
+taskId = to (\(Task {_id = x}) -> x)
+{-# INLINE taskId #-}
+
+taskContent :: Getter Task Content
+taskContent = to (\(Task {_content = x}) -> x)
+{-# INLINE taskContent #-}
+
+taskDescription :: Getter Task Description
+taskDescription = to (\(Task {_description = x}) -> x)
+{-# INLINE taskDescription #-}
+
+taskProjectId :: Getter Task ProjectId
+taskProjectId = to (\(Task {_project_id = x}) -> x)
+{-# INLINE taskProjectId #-}
+
+taskSectionId :: Getter Task (Maybe SectionId)
+taskSectionId = to (\(Task {_section_id = x}) -> x)
+{-# INLINE taskSectionId #-}
+
+taskParentId :: Getter Task (Maybe ParentId)
+taskParentId = to (\(Task {_parent_id = x}) -> x)
+{-# INLINE taskParentId #-}
+
+taskLabels :: Getter Task [Text]
+taskLabels = to (\(Task {_labels = x}) -> x)
+{-# INLINE taskLabels #-}
+
+taskPriority :: Getter Task Int
+taskPriority = to (\(Task {_priority = x}) -> x)
+{-# INLINE taskPriority #-}
+
+taskDue :: Getter Task (Maybe Due)
+taskDue = to (\(Task {_due = x}) -> x)
+{-# INLINE taskDue #-}
+
+taskDeadline :: Getter Task (Maybe Deadline)
+taskDeadline = to (\(Task {_deadline = x}) -> x)
+{-# INLINE taskDeadline #-}
+
+taskDuration :: Getter Task (Maybe Duration)
+taskDuration = to (\(Task {_duration = x}) -> x)
+{-# INLINE taskDuration #-}
+
+taskIsCollapsed :: Getter Task IsCollapsed
+taskIsCollapsed = to (\(Task {_is_collapsed = x}) -> x)
+{-# INLINE taskIsCollapsed #-}
+
+taskOrder :: Getter Task Order
+taskOrder = to (\(Task {_order = x}) -> x)
+{-# INLINE taskOrder #-}
+
+taskAssigneeId :: Getter Task (Maybe Uid)
+taskAssigneeId = to (\(Task {_assignee_id = x}) -> x)
+{-# INLINE taskAssigneeId #-}
+
+taskAssignerId :: Getter Task (Maybe Uid)
+taskAssignerId = to (\(Task {_assigner_id = x}) -> x)
+{-# INLINE taskAssignerId #-}
+
+taskCompletedAt :: Getter Task (Maybe Text)
+taskCompletedAt = to (\(Task {_completed_at = x}) -> x)
+{-# INLINE taskCompletedAt #-}
+
+taskCreatorId :: Getter Task Uid
+taskCreatorId = to (\(Task {_creator_id = x}) -> x)
+{-# INLINE taskCreatorId #-}
+
+taskCreatedAt :: Getter Task Text
+taskCreatedAt = to (\(Task {_created_at = x}) -> x)
+{-# INLINE taskCreatedAt #-}
+
+taskUpdatedAt :: Getter Task Text
+taskUpdatedAt = to (\(Task {_updated_at = x}) -> x)
+{-# INLINE taskUpdatedAt #-}
+
 data NewTask = NewTask
     { _user_id :: Text
     , _id :: TaskId
@@ -262,6 +445,91 @@ instance ToJSON NewTask where
     toJSON :: NewTask -> Value
     toJSON = genericToJSON defaultOptions {fieldLabelModifier = L.drop 1}
 
+-- | Lenses for NewTask
+newTaskUserId :: Getter NewTask Text
+newTaskUserId = to (\(NewTask {_user_id = x}) -> x)
+{-# INLINE newTaskUserId #-}
+
+newTaskId :: Getter NewTask TaskId
+newTaskId = to (\(NewTask {_id = x}) -> x)
+{-# INLINE newTaskId #-}
+
+newTaskProjectId :: Getter NewTask ProjectId
+newTaskProjectId = to (\(NewTask {_project_id = x}) -> x)
+{-# INLINE newTaskProjectId #-}
+
+newTaskSectionId :: Getter NewTask (Maybe SectionId)
+newTaskSectionId = to (\(NewTask {_section_id = x}) -> x)
+{-# INLINE newTaskSectionId #-}
+
+newTaskParentId :: Getter NewTask (Maybe ParentId)
+newTaskParentId = to (\(NewTask {_parent_id = x}) -> x)
+{-# INLINE newTaskParentId #-}
+
+newTaskAddedByUid :: Getter NewTask (Maybe Uid)
+newTaskAddedByUid = to (\(NewTask {_added_by_uid = x}) -> x)
+{-# INLINE newTaskAddedByUid #-}
+
+newTaskAssignedByUid :: Getter NewTask (Maybe Uid)
+newTaskAssignedByUid = to (\(NewTask {_assigned_by_uid = x}) -> x)
+{-# INLINE newTaskAssignedByUid #-}
+
+newTaskResponsibleUid :: Getter NewTask (Maybe Uid)
+newTaskResponsibleUid = to (\(NewTask {_responsible_uid = x}) -> x)
+{-# INLINE newTaskResponsibleUid #-}
+
+newTaskLabels :: Getter NewTask [Text]
+newTaskLabels = to (\(NewTask {_labels = x}) -> x)
+{-# INLINE newTaskLabels #-}
+
+newTaskChecked :: Getter NewTask Bool
+newTaskChecked = to (\(NewTask {_checked = x}) -> x)
+{-# INLINE newTaskChecked #-}
+
+newTaskIsDeleted :: Getter NewTask Bool
+newTaskIsDeleted = to (\(NewTask {_is_deleted = x}) -> x)
+{-# INLINE newTaskIsDeleted #-}
+
+newTaskAddedAt :: Getter NewTask (Maybe Text)
+newTaskAddedAt = to (\(NewTask {_added_at = x}) -> x)
+{-# INLINE newTaskAddedAt #-}
+
+newTaskCompletedAt :: Getter NewTask (Maybe Text)
+newTaskCompletedAt = to (\(NewTask {_completed_at = x}) -> x)
+{-# INLINE newTaskCompletedAt #-}
+
+newTaskUpdatedAt :: Getter NewTask (Maybe Text)
+newTaskUpdatedAt = to (\(NewTask {_updated_at = x}) -> x)
+{-# INLINE newTaskUpdatedAt #-}
+
+newTaskPriority :: Getter NewTask Int
+newTaskPriority = to (\(NewTask {_priority = x}) -> x)
+{-# INLINE newTaskPriority #-}
+
+newTaskChildOrder :: Getter NewTask Order
+newTaskChildOrder = to (\(NewTask {_child_order = x}) -> x)
+{-# INLINE newTaskChildOrder #-}
+
+newTaskContent :: Getter NewTask Content
+newTaskContent = to (\(NewTask {_content = x}) -> x)
+{-# INLINE newTaskContent #-}
+
+newTaskDescription :: Getter NewTask Description
+newTaskDescription = to (\(NewTask {_description = x}) -> x)
+{-# INLINE newTaskDescription #-}
+
+newTaskNoteCount :: Getter NewTask Int
+newTaskNoteCount = to (\(NewTask {_note_count = x}) -> x)
+{-# INLINE newTaskNoteCount #-}
+
+newTaskDayOrder :: Getter NewTask Order
+newTaskDayOrder = to (\(NewTask {_day_order = x}) -> x)
+{-# INLINE newTaskDayOrder #-}
+
+newTaskIsCollapsed :: Getter NewTask IsCollapsed
+newTaskIsCollapsed = to (\(NewTask {_is_collapsed = x}) -> x)
+{-# INLINE newTaskIsCollapsed #-}
+
 data MoveTask = MoveTask
     { _project_id :: Maybe ProjectId
     , _section_id :: Maybe SectionId
@@ -276,6 +544,19 @@ instance ToJSON MoveTask where
 instance FromJSON MoveTask where
     parseJSON :: Value -> Parser MoveTask
     parseJSON = genericParseJSON defaultOptions {fieldLabelModifier = L.drop 1}
+
+-- | Lenses for MoveTask
+moveTaskProjectId :: Getter MoveTask (Maybe ProjectId)
+moveTaskProjectId = to (\(MoveTask {_project_id = x}) -> x)
+{-# INLINE moveTaskProjectId #-}
+
+moveTaskSectionId :: Getter MoveTask (Maybe SectionId)
+moveTaskSectionId = to (\(MoveTask {_section_id = x}) -> x)
+{-# INLINE moveTaskSectionId #-}
+
+moveTaskParentId :: Getter MoveTask (Maybe ParentId)
+moveTaskParentId = to (\(MoveTask {_parent_id = x}) -> x)
+{-# INLINE moveTaskParentId #-}
 
 -- | Create empty MoveTask for use with builder pattern
 moveTaskBuilder :: Initial MoveTask
@@ -307,6 +588,27 @@ data AddTaskQuick = AddTaskQuick
     , _meta :: Bool
     }
     deriving (Show, Generic, FromJSON, ToJSON)
+
+-- | Lenses for AddTaskQuick
+addTaskQuickTextLens :: Getter AddTaskQuick Text
+addTaskQuickTextLens = to (\(AddTaskQuick {_text = x}) -> x)
+{-# INLINE addTaskQuickTextLens #-}
+
+addTaskQuickNote :: Getter AddTaskQuick (Maybe Text)
+addTaskQuickNote = to (\(AddTaskQuick {_note = x}) -> x)
+{-# INLINE addTaskQuickNote #-}
+
+addTaskQuickReminder :: Getter AddTaskQuick (Maybe Text)
+addTaskQuickReminder = to (\(AddTaskQuick {_reminder = x}) -> x)
+{-# INLINE addTaskQuickReminder #-}
+
+addTaskQuickAutoReminder :: Getter AddTaskQuick Bool
+addTaskQuickAutoReminder = to (\(AddTaskQuick {_auto_reminder = x}) -> x)
+{-# INLINE addTaskQuickAutoReminder #-}
+
+addTaskQuickMeta :: Getter AddTaskQuick Bool
+addTaskQuickMeta = to (\(AddTaskQuick {_meta = x}) -> x)
+{-# INLINE addTaskQuickMeta #-}
 
 addTaskQuickText :: Text -> AddTaskQuick
 addTaskQuickText text =

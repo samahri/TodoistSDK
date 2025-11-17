@@ -56,6 +56,13 @@ module Web.Todoist.Domain.Label
     , sharedLabelParamBuilder
     , mkSharedLabelRename
     , mkSharedLabelRemove
+
+      -- * Lenses
+    , labelId
+    , labelName
+    , labelColor
+    , labelOrder
+    , labelIsFavorite
     ) where
 
 import Control.Applicative ((<$>))
@@ -73,8 +80,10 @@ import Data.Monoid ((<>))
 import Data.Text (Text)
 import qualified Data.Text as T
 import GHC.Generics (Generic)
+import Lens.Micro (to)
 import Text.Show (Show, show)
 import Web.Todoist.Domain.Types (Color (..), IsFavorite (..), Name (..), Order (..))
+import Web.Todoist.Lens (Getter)
 import Web.Todoist.Internal.Types (Params)
 import Web.Todoist.Util.Builder
     ( HasColor (..)
@@ -110,6 +119,27 @@ data Label = Label
     , _is_favorite :: IsFavorite
     }
     deriving (Show, Generic)
+
+-- | Lenses for Label
+labelId :: Getter Label LabelId
+labelId = to (\(Label {_id = x}) -> x)
+{-# INLINE labelId #-}
+
+labelName :: Getter Label Name
+labelName = to (\(Label {_name = x}) -> x)
+{-# INLINE labelName #-}
+
+labelColor :: Getter Label Color
+labelColor = to (\(Label {_color = x}) -> x)
+{-# INLINE labelColor #-}
+
+labelOrder :: Getter Label (Maybe Order)
+labelOrder = to (\(Label {_order = x}) -> x)
+{-# INLINE labelOrder #-}
+
+labelIsFavorite :: Getter Label IsFavorite
+labelIsFavorite = to (\(Label {_is_favorite = x}) -> x)
+{-# INLINE labelIsFavorite #-}
 
 -- | Request body for creating a new Label
 data LabelCreate = LabelCreate

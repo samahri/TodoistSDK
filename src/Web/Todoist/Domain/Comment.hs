@@ -61,6 +61,15 @@ module Web.Todoist.Domain.Comment
 
       -- * Type Class
     , TodoistCommentM (..)
+
+      -- * Lenses
+    , commentId
+    , commentContent
+    , commentPosterId
+    , commentPostedAt
+    , commentTaskId
+    , commentProjectId
+    , commentAttachment
     ) where
 
 import Web.Todoist.Internal.Types (FileAttachment, Params)
@@ -102,8 +111,10 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Tuple as L
 import GHC.Generics (Generic)
+import Lens.Micro (to)
 import Text.Show (Show (..))
 import Web.Todoist.Domain.Types (Attachment, Content (..), ProjectId (..), TaskId (..), Uid)
+import Web.Todoist.Lens (Getter)
 
 -- | Newtype wrapper for Comment ID
 newtype CommentId = CommentId {getCommentId :: Text}
@@ -128,6 +139,35 @@ data Comment = Comment
     , _attachment :: Maybe FileAttachment
     }
     deriving (Show, Eq, Generic)
+
+-- | Lenses for Comment
+commentId :: Getter Comment CommentId
+commentId = to (\(Comment {_id = x}) -> x)
+{-# INLINE commentId #-}
+
+commentContent :: Getter Comment Content
+commentContent = to (\(Comment {_content = x}) -> x)
+{-# INLINE commentContent #-}
+
+commentPosterId :: Getter Comment (Maybe Uid)
+commentPosterId = to (\(Comment {_poster_id = x}) -> x)
+{-# INLINE commentPosterId #-}
+
+commentPostedAt :: Getter Comment (Maybe Uid)
+commentPostedAt = to (\(Comment {_posted_at = x}) -> x)
+{-# INLINE commentPostedAt #-}
+
+commentTaskId :: Getter Comment (Maybe TaskId)
+commentTaskId = to (\(Comment {_task_id = x}) -> x)
+{-# INLINE commentTaskId #-}
+
+commentProjectId :: Getter Comment (Maybe ProjectId)
+commentProjectId = to (\(Comment {_project_id = x}) -> x)
+{-# INLINE commentProjectId #-}
+
+commentAttachment :: Getter Comment (Maybe FileAttachment)
+commentAttachment = to (\(Comment {_attachment = x}) -> x)
+{-# INLINE commentAttachment #-}
 
 -- | Request body for creating a comment
 data CommentCreate = CommentCreate
