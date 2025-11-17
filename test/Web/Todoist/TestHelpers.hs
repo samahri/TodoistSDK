@@ -66,7 +66,7 @@ import Web.Todoist.Domain.Comment
     , CommentCreate
     , CommentId (..)
     , Content (..)
-    , newComment
+    , newCommentBuilder
     )
 import Web.Todoist.Domain.Label
     ( Label (..)
@@ -80,14 +80,14 @@ import Web.Todoist.Domain.Project
     , Project (..)
     , ProjectCreate
     , ProjectUpdate (..)
-    , newProject
+    , createProjectBuilder
     )
 import Web.Todoist.Domain.Section
     ( Section (..)
     , SectionCreate
     , SectionId (..)
     , SectionUpdate (..)
-    , newSection
+    , newSectionBuilder
     )
 import Web.Todoist.Domain.Task
     ( Deadline (..)
@@ -282,7 +282,7 @@ sampleCollaboratorsJson =
 
 -- | Sample ProjectCreate
 sampleProjectCreate :: ProjectCreate
-sampleProjectCreate = runBuilder (newProject "New Project") (withDescription "A new project to be created")
+sampleProjectCreate = runBuilder (createProjectBuilder "New Project") (withDescription "A new project to be created")
 
 -- | JSON representation of ProjectCreate (for serialization test)
 sampleProjectCreateJson :: ByteString
@@ -720,7 +720,7 @@ sampleCommentResponseWithAttachmentJson =
 sampleCommentCreate :: CommentCreate
 sampleCommentCreate =
     runBuilder
-        (newComment "New comment")
+        (newCommentBuilder "New comment")
         mempty
 
 -- ===== Section Fixtures =====
@@ -777,7 +777,7 @@ sampleSection =
 
 -- | Sample SectionCreate
 sampleSectionCreate :: SectionCreate
-sampleSectionCreate = runBuilder (newSection "New Section" "project789") mempty
+sampleSectionCreate = runBuilder (newSectionBuilder "New Section" "project789") mempty
 
 -- | Sample SectionUpdate
 sampleSectionUpdate :: SectionUpdate

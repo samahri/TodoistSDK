@@ -8,7 +8,7 @@ This module provides a type-safe builder pattern for creating domain request typ
 Example usage:
 
 @
-let project = runBuilder (newProject \"My Project\")
+let project = runBuilder (createProjectBuilder \"My Project\")
               (withDescription \"A description\" <> withViewStyle Board)
 @
 -}

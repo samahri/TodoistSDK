@@ -24,11 +24,11 @@ main = do
     let config = newTodoistConfig "your-api-token"
 
     -- Create a section in a project
-    let newSec = runBuilder (newSection "To Do" "project-id-123") mempty
+    let newSec = runBuilder (newSectionBuilder "To Do" "project-id-123") mempty
     section <- todoist config (addSection newSec)
 
     -- Get all sections in a project with builder pattern
-    let params = runBuilder newSectionParam (withProjectId "project-id-123" <> withLimit 50)
+    let params = runBuilder sectionParamBuilder (withProjectId "project-id-123" <> withLimit 50)
     sections <- todoist config (getSections params)
 @
 
@@ -46,9 +46,9 @@ module Web.Todoist.Domain.Section
     , TodoistSectionM (..)
 
       -- * Constructors
-    , newSection
-    , emptySectionUpdate
-    , newSectionParam
+    , newSectionBuilder
+    , updateSectionBuilder
+    , sectionParamBuilder
     ) where
 
 import Data.Aeson
@@ -179,8 +179,8 @@ class (Monad m) => TodoistSectionM m where
     getSectionsPaginated :: SectionParam -> m ([Section], Maybe Text)
 
 -- | Smart constructor for creating a new section
-newSection :: Text -> Text -> Initial SectionCreate
-newSection name projectId =
+newSectionBuilder :: Text -> Text -> Initial SectionCreate
+newSectionBuilder name projectId =
     seed
         SectionCreate
             { _name = Name name
@@ -189,16 +189,16 @@ newSection name projectId =
             }
 
 -- | Empty section update for builder pattern
-emptySectionUpdate :: Initial SectionUpdate
-emptySectionUpdate =
+updateSectionBuilder :: Initial SectionUpdate
+updateSectionBuilder =
     seed
         SectionUpdate
             { _name = Nothing
             }
 
 -- | Create new SectionParam for use with builder pattern
-newSectionParam :: Initial SectionParam
-newSectionParam =
+sectionParamBuilder :: Initial SectionParam
+sectionParamBuilder =
     seed
         SectionParam
             { project_id = Nothing

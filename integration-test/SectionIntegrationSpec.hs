@@ -33,7 +33,7 @@ import Web.Todoist.Domain.Section
     , deleteSection
     , getSection
     , getSections
-    , newSection
+    , newSectionBuilder
     , updateSection
     )
 import Web.Todoist.Domain.Types (Name (..), ProjectId (..))
@@ -91,9 +91,9 @@ getSectionsSpec config =
                 section2Name <- pack <$> liftIO (generateUniqueName "Section2")
                 section3Name <- pack <$> liftIO (generateUniqueName "Section3")
 
-                sectionId1 <- liftTodoist config (addSection $ runBuilder (newSection section1Name projId) mempty)
-                sectionId2 <- liftTodoist config (addSection $ runBuilder (newSection section2Name projId) mempty)
-                sectionId3 <- liftTodoist config (addSection $ runBuilder (newSection section3Name projId) mempty)
+                sectionId1 <- liftTodoist config (addSection $ runBuilder (newSectionBuilder section1Name projId) mempty)
+                sectionId2 <- liftTodoist config (addSection $ runBuilder (newSectionBuilder section2Name projId) mempty)
+                sectionId3 <- liftTodoist config (addSection $ runBuilder (newSectionBuilder section3Name projId) mempty)
 
                 -- Get sections for project
                 let params = SectionParam {project_id = Just projectId, cursor = Nothing, limit = Nothing}
@@ -133,7 +133,7 @@ withTestProject :: TodoistConfig -> Text -> (ProjectId -> ExceptT TodoistError I
 withTestProject config projectName action = do
     let createProject = do
             liftIO $ putStrLn $ "Creating test project: " <> show projectName
-            liftTodoist config (P.addProject $ runBuilder (P.newProject projectName) mempty)
+            liftTodoist config (P.addProject $ runBuilder (P.createProjectBuilder projectName) mempty)
 
     let deleteProject' projectId = do
             liftIO $ putStrLn $ "Cleaning up test project: " <> show projectName
@@ -155,9 +155,9 @@ withTestProjectAndSection config projectName sectionName action = do
             liftIO $
                 putStrLn $
                     "Creating test project and section: " <> show projectName <> " / " <> show sectionName
-            projectId <- liftTodoist config (P.addProject $ runBuilder (P.newProject projectName) mempty)
+            projectId <- liftTodoist config (P.addProject $ runBuilder (P.createProjectBuilder projectName) mempty)
             let ProjectId {getProjectId = projId} = projectId
-                sectionCreate = runBuilder (newSection sectionName projId) mempty
+                sectionCreate = runBuilder (newSectionBuilder sectionName projId) mempty
             sectionId <- liftTodoist config (addSection sectionCreate)
             pure (projectId, sectionId)
 

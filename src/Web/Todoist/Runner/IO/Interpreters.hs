@@ -84,7 +84,7 @@ import Web.Todoist.Domain.Task
     , TaskCreate
     , TaskFilter (..)
     , TaskParam (..)
-    , TaskPatch
+    , TaskUpdate
     , TodoistTaskM (..)
     )
 import Web.Todoist.Domain.Types
@@ -467,8 +467,8 @@ instance TodoistTaskM TodoistIO where
             Right res -> pure (taskResponseToTask res)
             Left err -> lift $ except (Left err)
 
-    addTask :: TaskCreate -> TodoistIO NewTask
-    addTask taskCreate = TodoistIO $ do
+    createTask :: TaskCreate -> TodoistIO NewTask
+    createTask taskCreate = TodoistIO $ do
         config <- ask
         let apiRequest = mkTodoistRequest @TaskCreate ["tasks"] Nothing Nothing
         resp <- liftIO $ apiPost (Just taskCreate) (JsonResponse (Proxy @NewTaskResponse)) config apiRequest
@@ -476,10 +476,10 @@ instance TodoistTaskM TodoistIO where
             Right res -> pure (newTaskResponseToNewTask res)
             Left err -> lift $ except (Left err)
 
-    updateTask :: TaskPatch -> TaskId -> TodoistIO NewTask
+    updateTask :: TaskUpdate -> TaskId -> TodoistIO NewTask
     updateTask taskPatch TaskId {getTaskId = taskIdText} = TodoistIO $ do
         config <- ask
-        let apiRequest = mkTodoistRequest @TaskPatch ["tasks", taskIdText] Nothing Nothing
+        let apiRequest = mkTodoistRequest @TaskUpdate ["tasks", taskIdText] Nothing Nothing
         resp <- liftIO $ apiPost (Just taskPatch) (JsonResponse (Proxy @NewTaskResponse)) config apiRequest
         case resp of
             Right res -> pure (newTaskResponseToNewTask res)

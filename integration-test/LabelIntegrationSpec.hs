@@ -39,7 +39,7 @@ import Web.Todoist.Domain.Label
     , getLabel
     , getLabels
     , getSharedLabels
-    , newLabel
+    , newLabelBuilder
     , removeSharedLabels
     , renameSharedLabels
     , updateLabel
@@ -160,7 +160,7 @@ withTestLabel :: TodoistConfig -> Text -> (LabelId -> ExceptT TodoistError IO a)
 withTestLabel config labelName action = do
     let createLabel = do
             liftIO $ putStrLn $ "Creating test label: " <> show labelName
-            liftTodoist config (addLabel $ runBuilder (newLabel labelName) mempty)
+            liftTodoist config (addLabel $ runBuilder (newLabelBuilder labelName) mempty)
 
     let deleteLabel' labelId = do
             liftIO $ putStrLn $ "Cleaning up test label: " <> show labelName
@@ -176,7 +176,7 @@ withMultipleTestLabels ::
 withMultipleTestLabels config labelNames action = do
     let createLabels = do
             liftIO $ putStrLn $ "Creating test labels: " <> show labelNames
-            liftTodoist config $ traverse (\name -> addLabel $ runBuilder (newLabel name) mempty) labelNames
+            liftTodoist config $ traverse (\name -> addLabel $ runBuilder (newLabelBuilder name) mempty) labelNames
 
     let deleteLabels' labelIds = do
             liftIO $ putStrLn $ "Cleaning up test labels: " <> show labelNames

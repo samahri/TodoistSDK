@@ -28,12 +28,12 @@ main = do
     let config = newTodoistConfig "your-api-token"
 
     -- Create a new task
-    let task = runBuilder (newTask "Buy groceries")
+    let task = runBuilder (newTaskBuilder "Buy groceries")
                (withDescription "Milk, eggs, bread" <> withPriority 2)
-    taskId <- todoist config (addTask task)
+    taskId <- todoist config (createTask task)
 
     -- Get all tasks with builder pattern
-    let params = runBuilder emptyTaskParam (withProjectId "project-123" <> withLimit 50)
+    let params = runBuilder taskParamBuilder (withProjectId "project-123" <> withLimit 50)
     tasks <- todoist config (getTasks params)
 
     -- Complete a task
@@ -59,13 +59,13 @@ module Web.Todoist.Domain.Task
     , TaskFilter (..)
     , CompletedTasksQueryParam (..)
     , TaskCreate
-    , TaskPatch
-    , newTask
-    , emptyMoveTask
-    , emptyTaskPatch
-    , emptyTaskParam
-    , newTaskFilter
-    , newCompletedTasksQueryParam
+    , TaskUpdate
+    , newTaskBuilder
+    , moveTaskBuilder
+    , updateTaskBuilder
+    , taskParamBuilder
+    , filterTaskBuilder
+    , completedTasksQueryParamBuilder
     ) where
 
 import Web.Todoist.Internal.Types (Params)
@@ -278,8 +278,8 @@ instance FromJSON MoveTask where
     parseJSON = genericParseJSON defaultOptions {fieldLabelModifier = L.drop 1}
 
 -- | Create empty MoveTask for use with builder pattern
-emptyMoveTask :: Initial MoveTask
-emptyMoveTask =
+moveTaskBuilder :: Initial MoveTask
+moveTaskBuilder =
     seed
         MoveTask
             { _project_id = Nothing
@@ -320,7 +320,7 @@ addTaskQuickText text =
 
 {- | Request body for creating a new task
 
-Only content is required. Use 'newTask' with the builder pattern for
+Only content is required. Use 'newTaskBuilder' with the builder pattern for
 ergonomic construction of tasks with optional fields.
 -}
 data TaskCreate = TaskCreate
@@ -348,8 +348,8 @@ instance ToJSON TaskCreate where
     toJSON = genericToJSON defaultOptions {fieldLabelModifier = L.drop 1, omitNothingFields = True}
 
 -- | Create new TaskCreate with required content parameter
-newTask :: Text -> Initial TaskCreate
-newTask content =
+newTaskBuilder :: Text -> Initial TaskCreate
+newTaskBuilder content =
     seed
         TaskCreate
             { _content = Content content
@@ -437,9 +437,9 @@ instance HasProjectId TaskCreate where
 {- | Request body for updating an existing task (partial updates)
 
 All fields are optional (using Maybe). Only provided fields will be updated.
-Use 'emptyTaskPatch' with the builder pattern for updates.
+Use 'updateTaskBuilder' with the builder pattern for updates.
 -}
-data TaskPatch = TaskPatch
+data TaskUpdate = TaskUpdate
     { _content :: Maybe Content
     , _description :: Maybe Description
     , _labels :: Maybe [Text]
@@ -456,10 +456,10 @@ data TaskPatch = TaskPatch
     }
     deriving (Show, Generic)
 
-emptyTaskPatch :: Initial TaskPatch
-emptyTaskPatch =
+updateTaskBuilder :: Initial TaskUpdate
+updateTaskBuilder =
     seed
-        TaskPatch
+        TaskUpdate
             { _content = Nothing
             , _description = Nothing
             , _labels = Nothing
@@ -475,57 +475,57 @@ emptyTaskPatch =
             , _deadline_lang = Nothing
             }
 
-instance ToJSON TaskPatch where
-    toJSON :: TaskPatch -> Value
+instance ToJSON TaskUpdate where
+    toJSON :: TaskUpdate -> Value
     toJSON = genericToJSON defaultOptions {fieldLabelModifier = L.drop 1, omitNothingFields = True}
 
-instance HasDescription TaskPatch where
-    hasDescription :: Text -> TaskPatch -> TaskPatch
-    hasDescription desc TaskPatch {..} = TaskPatch {_description = Just (Description desc), ..}
+instance HasDescription TaskUpdate where
+    hasDescription :: Text -> TaskUpdate -> TaskUpdate
+    hasDescription desc TaskUpdate {..} = TaskUpdate {_description = Just (Description desc), ..}
 
-instance HasContent TaskPatch where
-    hasContent :: Text -> TaskPatch -> TaskPatch
-    hasContent content TaskPatch {..} = TaskPatch {_content = Just (Content content), ..}
+instance HasContent TaskUpdate where
+    hasContent :: Text -> TaskUpdate -> TaskUpdate
+    hasContent content TaskUpdate {..} = TaskUpdate {_content = Just (Content content), ..}
 
-instance HasLabels TaskPatch where
-    hasLabels :: [Text] -> TaskPatch -> TaskPatch
-    hasLabels labels TaskPatch {..} = TaskPatch {_labels = Just labels, ..}
+instance HasLabels TaskUpdate where
+    hasLabels :: [Text] -> TaskUpdate -> TaskUpdate
+    hasLabels labels TaskUpdate {..} = TaskUpdate {_labels = Just labels, ..}
 
-instance HasPriority TaskPatch where
-    hasPriority :: Int -> TaskPatch -> TaskPatch
-    hasPriority priority TaskPatch {..} = TaskPatch {_priority = Just priority, ..}
+instance HasPriority TaskUpdate where
+    hasPriority :: Int -> TaskUpdate -> TaskUpdate
+    hasPriority priority TaskUpdate {..} = TaskUpdate {_priority = Just priority, ..}
 
-instance HasDueString TaskPatch where
-    hasDueString :: Text -> TaskPatch -> TaskPatch
-    hasDueString dueStr TaskPatch {..} = TaskPatch {_due_string = Just dueStr, ..}
+instance HasDueString TaskUpdate where
+    hasDueString :: Text -> TaskUpdate -> TaskUpdate
+    hasDueString dueStr TaskUpdate {..} = TaskUpdate {_due_string = Just dueStr, ..}
 
-instance HasDueDate TaskPatch where
-    hasDueDate :: Text -> TaskPatch -> TaskPatch
-    hasDueDate dueDate TaskPatch {..} = TaskPatch {_due_date = Just dueDate, ..}
+instance HasDueDate TaskUpdate where
+    hasDueDate :: Text -> TaskUpdate -> TaskUpdate
+    hasDueDate dueDate TaskUpdate {..} = TaskUpdate {_due_date = Just dueDate, ..}
 
-instance HasDueDatetime TaskPatch where
-    hasDueDatetime :: Text -> TaskPatch -> TaskPatch
-    hasDueDatetime dueDatetime TaskPatch {..} = TaskPatch {_due_datetime = Just dueDatetime, ..}
+instance HasDueDatetime TaskUpdate where
+    hasDueDatetime :: Text -> TaskUpdate -> TaskUpdate
+    hasDueDatetime dueDatetime TaskUpdate {..} = TaskUpdate {_due_datetime = Just dueDatetime, ..}
 
-instance HasDueLang TaskPatch where
-    hasDueLang :: Text -> TaskPatch -> TaskPatch
-    hasDueLang dueLang TaskPatch {..} = TaskPatch {_due_lang = Just dueLang, ..}
+instance HasDueLang TaskUpdate where
+    hasDueLang :: Text -> TaskUpdate -> TaskUpdate
+    hasDueLang dueLang TaskUpdate {..} = TaskUpdate {_due_lang = Just dueLang, ..}
 
-instance HasAssigneeId TaskPatch where
-    hasAssigneeId :: Int -> TaskPatch -> TaskPatch
-    hasAssigneeId aid TaskPatch {..} = TaskPatch {_assignee_id = Just aid, ..}
+instance HasAssigneeId TaskUpdate where
+    hasAssigneeId :: Int -> TaskUpdate -> TaskUpdate
+    hasAssigneeId aid TaskUpdate {..} = TaskUpdate {_assignee_id = Just aid, ..}
 
-instance HasDuration TaskPatch where
-    hasDuration :: Int -> TaskPatch -> TaskPatch
-    hasDuration duration TaskPatch {..} = TaskPatch {_duration = Just duration, ..}
+instance HasDuration TaskUpdate where
+    hasDuration :: Int -> TaskUpdate -> TaskUpdate
+    hasDuration duration TaskUpdate {..} = TaskUpdate {_duration = Just duration, ..}
 
-instance HasDurationUnit TaskPatch where
-    hasDurationUnit :: Text -> TaskPatch -> TaskPatch
-    hasDurationUnit durationUnit TaskPatch {..} = TaskPatch {_duration_unit = Just durationUnit, ..}
+instance HasDurationUnit TaskUpdate where
+    hasDurationUnit :: Text -> TaskUpdate -> TaskUpdate
+    hasDurationUnit durationUnit TaskUpdate {..} = TaskUpdate {_duration_unit = Just durationUnit, ..}
 
-instance HasDeadlineDate TaskPatch where
-    hasDeadlineDate :: Text -> TaskPatch -> TaskPatch
-    hasDeadlineDate deadlineDate TaskPatch {..} = TaskPatch {_deadline_date = Just deadlineDate, ..}
+instance HasDeadlineDate TaskUpdate where
+    hasDeadlineDate :: Text -> TaskUpdate -> TaskUpdate
+    hasDeadlineDate deadlineDate TaskUpdate {..} = TaskUpdate {_deadline_date = Just deadlineDate, ..}
 
 {- | Internal type for parsing completed tasks API response
 The API returns full task objects, not just IDs
@@ -551,10 +551,10 @@ class (Monad m) => TodoistTaskM m where
     getTask :: TaskId -> m Task
 
     -- | Create a new task
-    addTask :: TaskCreate -> m NewTask -- todo: should return Task; TaskCreate should be named NewTask
+    createTask :: TaskCreate -> m NewTask -- todo: should return Task; TaskCreate should be named NewTask
 
     -- | Update an existing task with partial changes
-    updateTask :: TaskPatch -> TaskId -> m NewTask -- todo: should return Task
+    updateTask :: TaskUpdate -> TaskId -> m NewTask -- todo: should return Task
 
     -- | Mark a task as completed
     closeTask :: TaskId -> m ()
@@ -633,8 +633,8 @@ instance QueryParam TaskFilter where
             <> maybe [] (\p -> [("limit", Data.Text.show p)]) limit
 
 -- | Create new TaskFilter with required query parameter
-newTaskFilter :: Text -> Initial TaskFilter
-newTaskFilter query =
+filterTaskBuilder :: Text -> Initial TaskFilter
+filterTaskBuilder query =
     seed
         TaskFilter
             { query
@@ -673,8 +673,8 @@ instance QueryParam CompletedTasksQueryParam where
             <> [("limit", Data.Text.show limit)]
 
 -- | Create new CompletedTasksQueryParam with required since/until parameters
-newCompletedTasksQueryParam :: Text -> Text -> Initial CompletedTasksQueryParam
-newCompletedTasksQueryParam since until =
+completedTasksQueryParamBuilder :: Text -> Text -> Initial CompletedTasksQueryParam
+completedTasksQueryParamBuilder since until =
     seed
         CompletedTasksQueryParam
             { since
@@ -690,8 +690,8 @@ newCompletedTasksQueryParam since until =
             }
 
 -- | Create empty TaskParam for use with builder pattern
-emptyTaskParam :: Initial TaskParam
-emptyTaskParam =
+taskParamBuilder :: Initial TaskParam
+taskParamBuilder =
     seed
         TaskParam
             { project_id = Nothing

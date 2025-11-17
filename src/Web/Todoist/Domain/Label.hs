@@ -25,11 +25,11 @@ main = do
     let config = newTodoistConfig "your-api-token"
 
     -- Create a label
-    let newLbl = runBuilder (newLabel "urgent") mempty
+    let newLbl = runBuilder (newLabelBuilder "urgent") mempty
     label <- todoist config (addLabel newLbl)
 
     -- Get all labels with builder pattern
-    let params = runBuilder newLabelParam (withLimit 50)
+    let params = runBuilder labelParamBuilder (withLimit 50)
     labels <- todoist config (getLabels params)
 @
 
@@ -50,10 +50,10 @@ module Web.Todoist.Domain.Label
     , TodoistLabelM (..)
 
       -- * Constructors
-    , newLabel
-    , emptyLabelUpdate
-    , newLabelParam
-    , newSharedLabelParam
+    , newLabelBuilder
+    , updateLabelBuilder
+    , labelParamBuilder
+    , sharedLabelParamBuilder
     ) where
 
 import Control.Applicative ((<$>))
@@ -221,8 +221,8 @@ class (Monad m) => TodoistLabelM m where
     renameSharedLabels :: SharedLabelRename -> m ()
 
 -- | Smart constructor for creating a new label
-newLabel :: Text -> Initial LabelCreate
-newLabel name =
+newLabelBuilder :: Text -> Initial LabelCreate
+newLabelBuilder name =
     seed
         LabelCreate
             { _name = Name name
@@ -232,8 +232,8 @@ newLabel name =
             }
 
 -- | Empty label update for builder pattern
-emptyLabelUpdate :: Initial LabelUpdate
-emptyLabelUpdate =
+updateLabelBuilder :: Initial LabelUpdate
+updateLabelBuilder =
     seed
         LabelUpdate
             { _name = Nothing
@@ -243,12 +243,12 @@ emptyLabelUpdate =
             }
 
 -- | Create new LabelParam for use with builder pattern
-newLabelParam :: Initial LabelParam
-newLabelParam = seed $ LabelParam {cursor = Nothing, limit = Nothing}
+labelParamBuilder :: Initial LabelParam
+labelParamBuilder = seed $ LabelParam {cursor = Nothing, limit = Nothing}
 
 -- | Create new SharedLabelParam for use with builder pattern
-newSharedLabelParam :: Initial SharedLabelParam
-newSharedLabelParam = seed $ SharedLabelParam {omit_personal = Nothing, cursor = Nothing, limit = Nothing}
+sharedLabelParamBuilder :: Initial SharedLabelParam
+sharedLabelParamBuilder = seed $ SharedLabelParam {omit_personal = Nothing, cursor = Nothing, limit = Nothing}
 
 -- Builder instances for ergonomic construction
 instance HasName LabelCreate where

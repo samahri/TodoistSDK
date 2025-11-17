@@ -49,9 +49,9 @@ module Web.Todoist
     , ProjectUpdate
     , Collaborator (..)
     , PaginationParam (..)
-    , newProject
-    , emptyProjectUpdate
-    , newPaginationParam
+    , createProjectBuilder
+    , updateProjectBuilder
+    , paginationParamBuilder
     , IsShared (..)
     , IsArchived (..)
     , CanAssignTasks (..)
@@ -61,7 +61,7 @@ module Web.Todoist
     , TaskParam (..)
     , NewTask (..)
     , MoveTask
-    , emptyTaskParam
+    , taskParamBuilder
 
       -- * Comment Types
     , Comment (..)
@@ -69,9 +69,9 @@ module Web.Todoist
     , CommentCreate
     , CommentUpdate
     , CommentParam (..)
-    , newComment
-    , newCommentUpdate
-    , newCommentParam
+    , newCommentBuilder
+    , updateCommentBuilder
+    , commentParamBuilder
 
       -- * Section Types
     , Section (..)
@@ -79,9 +79,9 @@ module Web.Todoist
     , SectionCreate
     , SectionUpdate
     , SectionParam (..)
-    , newSection
-    , emptySectionUpdate
-    , newSectionParam
+    , newSectionBuilder
+    , updateSectionBuilder
+    , sectionParamBuilder
 
       -- * Label Types
     , Label (..)
@@ -92,10 +92,10 @@ module Web.Todoist
     , SharedLabelParam (..)
     , SharedLabelRename
     , SharedLabelRemove
-    , newLabel
-    , emptyLabelUpdate
-    , newLabelParam
-    , newSharedLabelParam
+    , newLabelBuilder
+    , updateLabelBuilder
+    , labelParamBuilder
+    , sharedLabelParamBuilder
 
       -- * Common Domain Types
     , ProjectId (..)
@@ -159,9 +159,9 @@ import Web.Todoist.Domain.Project
     , ProjectCreate
     , ProjectUpdate
     , TodoistProjectM (..)
-    , emptyProjectUpdate
-    , newPaginationParam
-    , newProject
+    , updateProjectBuilder
+    , paginationParamBuilder
+    , createProjectBuilder
     )
 
 import Web.Todoist.Domain.Task
@@ -170,7 +170,7 @@ import Web.Todoist.Domain.Task
     , Task (..)
     , TaskParam (..)
     , TodoistTaskM (..)
-    , emptyTaskParam
+    , taskParamBuilder
     )
 
 import Web.Todoist.Domain.Comment
@@ -180,9 +180,9 @@ import Web.Todoist.Domain.Comment
     , CommentParam (..)
     , CommentUpdate
     , TodoistCommentM (..)
-    , newComment
-    , newCommentParam
-    , newCommentUpdate
+    , newCommentBuilder
+    , commentParamBuilder
+    , updateCommentBuilder
     )
 
 import Web.Todoist.Domain.Section
@@ -192,9 +192,9 @@ import Web.Todoist.Domain.Section
     , SectionParam (..)
     , SectionUpdate
     , TodoistSectionM (..)
-    , emptySectionUpdate
-    , newSection
-    , newSectionParam
+    , updateSectionBuilder
+    , newSectionBuilder
+    , sectionParamBuilder
     )
 
 import Web.Todoist.Domain.Label
@@ -207,10 +207,10 @@ import Web.Todoist.Domain.Label
     , SharedLabelRemove
     , SharedLabelRename
     , TodoistLabelM (..)
-    , emptyLabelUpdate
-    , newLabel
-    , newLabelParam
-    , newSharedLabelParam
+    , updateLabelBuilder
+    , newLabelBuilder
+    , labelParamBuilder
+    , sharedLabelParamBuilder
     )
 
 import Web.Todoist.Domain.Types

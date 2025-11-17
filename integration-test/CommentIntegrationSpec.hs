@@ -18,8 +18,8 @@ import Web.Todoist.Domain.Comment
     , CommentParam (..)
     , Content (..)
     , TodoistCommentM (..)
-    , newComment
-    , newCommentUpdate
+    , newCommentBuilder
+    , updateCommentBuilder
     )
 import qualified Web.Todoist.Domain.Project as P
 import Web.Todoist.Domain.Task (NewTask (..), TodoistTaskM (..))
@@ -144,7 +144,7 @@ updateCommentSpec config = describe "Update comment" $ do
 
             -- Update the comment
             let updatedContent = originalContent <> "-Updated"
-            let commentUpdate = runBuilder (newCommentUpdate updatedContent) mempty
+            let commentUpdate = runBuilder (updateCommentBuilder updatedContent) mempty
 
             updatedComment <- liftTodoist config (updateComment commentUpdate commentId)
 
@@ -244,7 +244,7 @@ withTestProjectComment ::
 withTestProjectComment config projectName commentContent action = do
     let createResources = do
             liftIO $ putStrLn $ "Creating test project: " <> show projectName
-            projectId <- liftTodoist config (P.addProject $ runBuilder (P.newProject projectName) mempty)
+            projectId <- liftTodoist config (P.addProject $ runBuilder (P.createProjectBuilder projectName) mempty)
 
             liftIO $ putStrLn $ "Creating test comment: " <> show commentContent
             let ProjectId {getProjectId = projIdText} = projectId
@@ -279,12 +279,12 @@ withTestTaskComment ::
 withTestTaskComment config projectName taskContent commentContent action = do
     let createResources = do
             liftIO $ putStrLn $ "Creating test project: " <> show projectName
-            projectId <- liftTodoist config (P.addProject $ runBuilder (P.newProject projectName) mempty)
+            projectId <- liftTodoist config (P.addProject $ runBuilder (P.createProjectBuilder projectName) mempty)
 
             liftIO $ putStrLn $ "Creating test task: " <> show taskContent
             let ProjectId {getProjectId = projIdText} = projectId
             let taskCreate = buildTestTask taskContent projIdText
-            newTaskResult <- liftTodoist config (addTask taskCreate)
+            newTaskResult <- liftTodoist config (createTask taskCreate)
             let NewTask {_id = newTaskIdText} = newTaskResult
             let taskId = newTaskIdText
                 TaskId {getTaskId = taskIdText} = taskId
@@ -322,7 +322,7 @@ withTestProjectComments ::
 withTestProjectComments config projectName commentContents action = do
     let createResources = do
             liftIO $ putStrLn $ "Creating test project: " <> show projectName
-            projectId <- liftTodoist config (P.addProject $ runBuilder (P.newProject projectName) mempty)
+            projectId <- liftTodoist config (P.addProject $ runBuilder (P.createProjectBuilder projectName) mempty)
 
             liftIO $ putStrLn $ "Creating " <> show (L.length commentContents) <> " test comments"
             let ProjectId {getProjectId = projIdText} = projectId
@@ -356,7 +356,7 @@ Creates a CommentCreate with content and project_id for testing
 buildTestCommentForProject :: Text -> Text -> CommentCreate
 buildTestCommentForProject commentContent projectId =
     runBuilder
-        (newComment commentContent)
+        (newCommentBuilder commentContent)
         (withProjectId projectId)
 
 {- | Build a test comment for a task using the Builder pattern
@@ -365,5 +365,5 @@ Creates a CommentCreate with content and task_id for testing
 buildTestCommentForTask :: Text -> Text -> CommentCreate
 buildTestCommentForTask commentContent taskId =
     runBuilder
-        (newComment commentContent)
+        (newCommentBuilder commentContent)
         (withTaskId taskId)

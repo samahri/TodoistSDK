@@ -24,21 +24,21 @@ main = do
     let config = newTodoistConfig "your-api-token"
 
     -- Create a comment on a project
-    let projectComment = runBuilder (newComment "Great project!")
+    let projectComment = runBuilder (newCommentBuilder "Great project!")
                          (withProjectId "project-id-123")
     result <- todoist config (addComment projectComment)
 
     -- Create a comment on a task
-    let taskComment = runBuilder (newComment "Don't forget this!")
+    let taskComment = runBuilder (newCommentBuilder "Don't forget this!")
                       (withTaskId "task-id-456")
     result <- todoist config (addComment taskComment)
 
     -- Get all comments for a project with builder pattern
-    let params = runBuilder newCommentParam (withProjectId "project-id-123" <> withLimit 50)
+    let params = runBuilder commentParamBuilder (withProjectId "project-id-123" <> withLimit 50)
     comments <- todoist config (getComments params)
 
     -- Update a comment
-    let update = runBuilder (newCommentUpdate "Updated text!") mempty
+    let update = runBuilder (updateCommentBuilder "Updated text!") mempty
     updatedComment <- todoist config (updateComment update commentId)
 @
 
@@ -55,9 +55,9 @@ module Web.Todoist.Domain.Comment
     , CommentParam (..)
 
       -- * Constructors
-    , newComment
-    , newCommentUpdate
-    , newCommentParam
+    , newCommentBuilder
+    , updateCommentBuilder
+    , commentParamBuilder
 
       -- * Type Class
     , TodoistCommentM (..)
@@ -193,8 +193,8 @@ instance QueryParam CommentParam where
 {- | Constructor for CommentCreate
 Truncates content to 15000 characters (Todoist API limit)
 -}
-newComment :: Text -> Initial CommentCreate
-newComment content =
+newCommentBuilder :: Text -> Initial CommentCreate
+newCommentBuilder content =
     let truncated = T.take 15000 content
      in seed $
             CommentCreate
@@ -208,14 +208,14 @@ newComment content =
 {- | Constructor for CommentUpdate
 Truncates content to 15000 characters (Todoist API limit)
 -}
-newCommentUpdate :: Text -> Initial CommentUpdate
-newCommentUpdate content =
+updateCommentBuilder :: Text -> Initial CommentUpdate
+updateCommentBuilder content =
     let truncated = T.take 15000 content
      in seed $ CommentUpdate {_content = Just truncated}
 
 -- | Create new CommentParam for use with builder pattern
-newCommentParam :: Initial CommentParam
-newCommentParam =
+commentParamBuilder :: Initial CommentParam
+commentParamBuilder =
     seed $
         CommentParam
             { project_id = Nothing

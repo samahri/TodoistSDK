@@ -55,7 +55,7 @@ import Web.Todoist.Domain.Task
     , TaskCreate
     , TaskFilter
     , TaskParam
-    , TaskPatch
+    , TaskUpdate
     , TodoistTaskM (..)
     )
 import Web.Todoist.Domain.Types
@@ -216,12 +216,12 @@ instance TodoistTaskM Trace where
         tell [TaskOp GetTask]
         pure $ Task tid (Content "") (Description "") (ProjectId "") Nothing Nothing [] 0 Nothing Nothing Nothing (IsCollapsed False) (Order 0) Nothing Nothing Nothing (Uid "") "" ""
 
-    addTask :: TaskCreate -> Trace NewTask
-    addTask _ = Trace $ do
+    createTask :: TaskCreate -> Trace NewTask
+    createTask _ = Trace $ do
         tell [TaskOp AddTask]
         pure $ NewTask "" (TaskId "") (ProjectId "") Nothing Nothing Nothing Nothing Nothing [] False False Nothing Nothing Nothing 0 (Order 0) (Content "") (Description "") 0 (Order 0) (IsCollapsed False)
 
-    updateTask :: TaskPatch -> TaskId -> Trace NewTask
+    updateTask :: TaskUpdate -> TaskId -> Trace NewTask
     updateTask _ _ = Trace $ do
         tell [TaskOp UpdateTask]
         pure $ NewTask "" (TaskId "") (ProjectId "") Nothing Nothing Nothing Nothing Nothing [] False False Nothing Nothing Nothing 0 (Order 0) (Content "") (Description "") 0 (Order 0) (IsCollapsed False)

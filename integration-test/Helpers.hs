@@ -33,8 +33,8 @@ import System.IO (IO, putStrLn)
 import System.Random (randomRIO)
 import Test.Hspec (shouldBe)
 import Text.Show (Show, show)
-import Web.Todoist.Domain.Project (ProjectCreate, newProject)
-import Web.Todoist.Domain.Task (TaskCreate, newTask)
+import Web.Todoist.Domain.Project (ProjectCreate, createProjectBuilder)
+import Web.Todoist.Domain.Task (TaskCreate, newTaskBuilder)
 import Web.Todoist.Domain.Types (ViewStyle (..))
 import Web.Todoist.Internal.Config (TodoistConfig)
 import Web.Todoist.Internal.Error (TodoistError)
@@ -103,7 +103,7 @@ Creates a ProjectCreate with all possible fields populated for testing
 buildTestProject :: Text -> ProjectCreate
 buildTestProject projectName =
     runBuilder
-        (newProject projectName)
+        (createProjectBuilder projectName)
         (withDescription "Test project description for integration testing" <> withViewStyle Board)
 
 {- | Build a test task with basic fields set using the Builder pattern
@@ -112,5 +112,5 @@ Creates a TaskCreate with content, description, and project_id for testing
 buildTestTask :: Text -> Text -> TaskCreate
 buildTestTask taskContent projectId =
     runBuilder
-        (newTask taskContent)
+        (newTaskBuilder taskContent)
         (withDescription "Test task description for integration testing" <> withProjectId projectId)

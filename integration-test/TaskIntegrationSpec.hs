@@ -18,10 +18,10 @@ import Web.Todoist.Domain.Task
     ( NewTask (..)
     , Task (..)
     , TodoistTaskM (..)
-    , emptyMoveTask
-    , emptyTaskPatch
-    , newCompletedTasksQueryParam
-    , newTaskFilter
+    , moveTaskBuilder
+    , updateTaskBuilder
+    , completedTasksQueryParamBuilder
+    , filterTaskBuilder
     )
 import qualified Web.Todoist.Domain.Task as T
 import Web.Todoist.Domain.Types (Content (..), Description (..), ProjectId (..), TaskId (..))
@@ -157,7 +157,7 @@ getTasksSpec config = describe "Get multiple tasks" $ do
         withTestTasks config projectName taskContents $ \projectId taskIds -> do
             -- Get all tasks for this project
             let ProjectId {getProjectId = projIdText} = projectId
-            let taskParam = runBuilder T.emptyTaskParam (withProjectId projIdText)
+            let taskParam = runBuilder T.taskParamBuilder (withProjectId projIdText)
 
             tasks <- liftTodoist config (getTasks taskParam)
 
@@ -211,7 +211,7 @@ updateTaskSpec config = describe "Update task" $ do
 
             let taskPatch =
                     runBuilder
-                        emptyTaskPatch
+                        updateTaskBuilder
                         ( withContent updatedContent
                             <> withDescription updatedDescription
                             <> withPriority updatedPriority
@@ -262,7 +262,7 @@ updateTaskSpec config = describe "Update task" $ do
             -- Partial update: only change priority
             let taskPatch =
                     runBuilder
-                        emptyTaskPatch
+                        updateTaskBuilder
                         (withPriority 4)
 
             _ <- liftTodoist config (updateTask taskPatch taskId)
@@ -291,7 +291,7 @@ taskFilterSpec config = describe "Task filtering" $ do
         withTestTask config projectName taskContent $ \_ taskId -> do
             -- Search for tasks containing our unique term
             -- Use search: prefix for text search in Todoist filter syntax
-            let filter = runBuilder (newTaskFilter (pack $ "search: " <> searchTerm)) mempty
+            let filter = runBuilder (filterTaskBuilder (pack $ "search: " <> searchTerm)) mempty
             taskIds <- liftTodoist config (getTasksByFilter filter)
 
             -- Verify our task is in the results
@@ -308,7 +308,7 @@ taskFilterSpec config = describe "Task filtering" $ do
             -- Set a due date on the task first
             let taskPatch =
                     runBuilder
-                        emptyTaskPatch
+                        updateTaskBuilder
                         (withDueDate "2025-11-03")
 
             _ <- liftTodoist config (updateTask taskPatch taskId)
@@ -321,7 +321,7 @@ taskFilterSpec config = describe "Task filtering" $ do
             let ProjectId {getProjectId = projIdText} = projectId
             let queryParamWithProject =
                     runBuilder
-                        (newCompletedTasksQueryParam "2025-11-01" "2025-11-30")
+                        (completedTasksQueryParamBuilder "2025-11-01" "2025-11-30")
                         (withProjectId projIdText)
 
             completedTaskIds <- liftTodoist config (getCompletedTasksByDueDate queryParamWithProject)
@@ -348,7 +348,7 @@ taskFilterSpec config = describe "Task filtering" $ do
             let ProjectId {getProjectId = projIdText} = projectId
             let queryParamWithProject =
                     runBuilder
-                        (newCompletedTasksQueryParam "2025-11-01" "2025-11-30")
+                        (completedTasksQueryParamBuilder "2025-11-01" "2025-11-30")
                         (withProjectId projIdText)
 
             completedTaskIds <- liftTodoist config (getCompletedTasksByCompletionDate queryParamWithProject)
@@ -372,7 +372,7 @@ moveTaskSpec config = describe "Move task between projects" $ do
         -- Create project 1 with task
         withTestTask config project1Name taskContent $ \project1Id taskId -> do
             -- Create project 2
-            project2Id <- liftTodoist config (P.addProject $ runBuilder (P.newProject project2Name) mempty)
+            project2Id <- liftTodoist config (P.addProject $ runBuilder (P.createProjectBuilder project2Name) mempty)
 
             -- Verify task is in project 1
             task1 <- liftTodoist config (getTask taskId)
@@ -381,7 +381,7 @@ moveTaskSpec config = describe "Move task between projects" $ do
 
             -- Move task to project 2
             let ProjectId {getProjectId = project2IdText} = project2Id
-            let moveTaskData = runBuilder emptyMoveTask (withProjectId project2IdText)
+            let moveTaskData = runBuilder moveTaskBuilder (withProjectId project2IdText)
 
             movedTaskId <- liftTodoist config (moveTask moveTaskData taskId)
 
@@ -392,8 +392,8 @@ moveTaskSpec config = describe "Move task between projects" $ do
 
             -- Verify task is now in project 2
             task2 <- liftTodoist config (getTask taskId)
-            let Task {_project_id = newProjectId} = task2
-            liftIO $ newProjectId `shouldBe` project2Id
+            let Task {_project_id = createProjectBuilderId} = task2
+            liftIO $ createProjectBuilderId `shouldBe` project2Id
 
             -- Clean up project 2 (task will be deleted by withTestTask cleanup)
             liftTodoist config (P.deleteProject project2Id)
@@ -411,12 +411,12 @@ withTestTask ::
 withTestTask config projectName taskContent action = do
     let createResources = do
             liftIO $ putStrLn $ "Creating test project: " <> show projectName
-            projectId <- liftTodoist config (P.addProject $ runBuilder (P.newProject projectName) mempty)
+            projectId <- liftTodoist config (P.addProject $ runBuilder (P.createProjectBuilder projectName) mempty)
 
             liftIO $ putStrLn $ "Creating test task: " <> show taskContent
             let ProjectId {getProjectId = projIdText} = projectId
             let taskCreate = buildTestTask taskContent projIdText
-            newTaskResult <- liftTodoist config (addTask taskCreate)
+            newTaskResult <- liftTodoist config (createTask taskCreate)
             let NewTask {_id = newTaskIdText} = newTaskResult
             let taskId = newTaskIdText
 
@@ -445,7 +445,7 @@ withTestTasks ::
 withTestTasks config projectName taskContents action = do
     let createResources = do
             liftIO $ putStrLn $ "Creating test project: " <> show projectName
-            projectId <- liftTodoist config (P.addProject $ runBuilder (P.newProject projectName) mempty)
+            projectId <- liftTodoist config (P.addProject $ runBuilder (P.createProjectBuilder projectName) mempty)
 
             liftIO $ putStrLn $ "Creating " <> show (L.length taskContents) <> " test tasks"
             let ProjectId {getProjectId = projIdText} = projectId
@@ -453,7 +453,7 @@ withTestTasks config projectName taskContents action = do
                 mapM
                     ( \content -> do
                         let taskCreate = buildTestTask content projIdText
-                        newTaskResult <- liftTodoist config (addTask taskCreate)
+                        newTaskResult <- liftTodoist config (createTask taskCreate)
                         let NewTask {_id = newTaskIdText} = newTaskResult
                         pure newTaskIdText
                     )

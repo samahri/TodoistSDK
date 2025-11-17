@@ -10,7 +10,7 @@ import Web.Todoist.Domain.Project
     ( ProjectCreate
     , ProjectUpdate (..)
     , TodoistProjectM (..)
-    , newProject
+    , createProjectBuilder
     )
 import qualified Web.Todoist.Domain.Project as P
 import Web.Todoist.Domain.Types
@@ -70,10 +70,10 @@ projectLifecycleSpec :: TodoistConfig -> Spec
 projectLifecycleSpec config = describe "Project lifecycle (create, get, delete)" $ do
     it "creates, retrieves, and deletes a project with all fields set" $ do
         -- Generate unique project name
-        newProjectName <- pack <$> generateUniqueName "IntegTest-ProjectLifecycle"
+        createProjectBuilderName <- pack <$> generateUniqueName "IntegTest-ProjectLifecycle"
 
         -- Build a complete project with all fields using the Builder pattern
-        let testProject = buildTestProject newProjectName
+        let testProject = buildTestProject createProjectBuilderName
 
         -- Extract expected values from testProject for verification
         let P.ProjectCreate
@@ -287,7 +287,7 @@ updateProjectSpec config = describe "Update project" $ do
         let updatedDescription = "Updated description"
 
         -- Create initial project with specific properties
-        let initialProject = runBuilder (newProject originalName) (withDescription originalDescription)
+        let initialProject = runBuilder (createProjectBuilder originalName) (withDescription originalDescription)
 
         withTestProjectCreate config initialProject $ \projectId -> do
             -- Verify initial state
@@ -296,7 +296,7 @@ updateProjectSpec config = describe "Update project" $ do
                 let P.Project {P._name = proj1Name, P._description = proj1Desc, P._is_favorite = proj1Fav} = project1
                 proj1Name `shouldBe` Name originalName
                 proj1Desc `shouldBe` Description originalDescription
-                proj1Fav `shouldBe` IsFavorite False -- default from newProject
+                proj1Fav `shouldBe` IsFavorite False -- default from createProjectBuilder
 
             -- Update the project (change name, description, and favorite status)
             let updatedName = originalName <> "-Updated"
@@ -346,7 +346,7 @@ updateProjectSpec config = describe "Update project" $ do
         let initialDescription = "Initial description"
 
         -- Create initial project
-        let initialProject = runBuilder (newProject projectName) (withDescription initialDescription)
+        let initialProject = runBuilder (createProjectBuilder projectName) (withDescription initialDescription)
 
         withTestProjectCreate config initialProject $ \projectId -> do
             -- Get initial state
@@ -398,7 +398,7 @@ withTestProject :: TodoistConfig -> Text -> (ProjectId -> ExceptT TodoistError I
 withTestProject config projectName action = do
     let createProject = do
             liftIO $ putStrLn $ "Creating test project: " <> show projectName
-            liftTodoist config (addProject $ runBuilder (newProject projectName) mempty)
+            liftTodoist config (addProject $ runBuilder (createProjectBuilder projectName) mempty)
 
     let deleteProject' projectId = do
             liftIO $ putStrLn $ "Cleaning up test project: " <> show projectName
@@ -416,7 +416,7 @@ withTestProjects :: TodoistConfig -> [Text] -> ([ProjectId] -> ExceptT TodoistEr
 withTestProjects config projectNames action = do
     let createProjects = do
             liftIO $ putStrLn $ "Creating " <> show (L.length projectNames) <> " test projects"
-            mapM (\name -> liftTodoist config (addProject $ runBuilder (newProject name) mempty)) projectNames
+            mapM (\name -> liftTodoist config (addProject $ runBuilder (createProjectBuilder name) mempty)) projectNames
 
     let deleteProjects projectIds = do
             liftIO $ putStrLn $ "Cleaning up " <> show (L.length projectIds) <> " test projects"

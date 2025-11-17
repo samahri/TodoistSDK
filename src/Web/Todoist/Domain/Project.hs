@@ -27,7 +27,7 @@ main = do
     let config = newTodoistConfig "your-api-token"
 
     -- Create a new project
-    let newProj = runBuilder (newProject "My Project")
+    let newProj = runBuilder (createProjectBuilder "My Project")
                   (withDescription "Project description" <> withViewStyle Board)
     project <- todoist config (addProject newProj)
 
@@ -35,7 +35,7 @@ main = do
     projects <- todoist config getAllProjects
 
     -- Update a project
-    let update = runBuilder emptyProjectUpdate (withName "Updated Name")
+    let update = runBuilder updateProjectBuilder (withName "Updated Name")
     updated <- todoist config (updateProject update projectId)
 @
 
@@ -48,9 +48,9 @@ module Web.Todoist.Domain.Project
     , ProjectCreate (..)
     , ProjectUpdate (..)
     , PaginationParam (..)
-    , newProject
-    , emptyProjectUpdate
-    , newPaginationParam
+    , createProjectBuilder
+    , updateProjectBuilder
+    , paginationParamBuilder
     , IsShared (..)
     , IsArchived (..)
     , CanAssignTasks (..)
@@ -133,7 +133,7 @@ data Project = Project
 
 {- | Request body for creating a new project
 
-All fields except name are optional. Use the builder pattern with 'newProject'
+All fields except name are optional. Use the builder pattern with 'createProjectBuilder'
 for ergonomic construction.
 -}
 data ProjectCreate = ProjectCreate
@@ -208,8 +208,8 @@ instance HasIsFavorite ProjectUpdate where
     hasIsFavorite fav ProjectUpdate {..} = ProjectUpdate {_is_favorite = Just (IsFavorite fav), ..}
 
 -- projects
-newProject :: Text -> Initial ProjectCreate
-newProject name =
+createProjectBuilder :: Text -> Initial ProjectCreate
+createProjectBuilder name =
     seed
         ProjectCreate
             { _name = Name name
@@ -222,10 +222,10 @@ newProject name =
             }
 
 {- | Create an empty ProjectUpdate (for use with Builder combinators)
-Use with runBuilder: runBuilder emptyProjectUpdate (withName "New Name" <> withDescription "desc")
+Use with runBuilder: runBuilder updateProjectBuilder (withName "New Name" <> withDescription "desc")
 -}
-emptyProjectUpdate :: Initial ProjectUpdate
-emptyProjectUpdate =
+updateProjectBuilder :: Initial ProjectUpdate
+updateProjectBuilder =
     seed
         ProjectUpdate
             { _name = Nothing
@@ -266,8 +266,8 @@ instance QueryParam PaginationParam where
             <> maybe [] (\l -> [("limit", Data.Text.show l)]) limit
 
 -- | Create new PaginationParam for use with builder pattern
-newPaginationParam :: Initial PaginationParam
-newPaginationParam = seed $ PaginationParam {cursor = Nothing, limit = Nothing}
+paginationParamBuilder :: Initial PaginationParam
+paginationParamBuilder = seed $ PaginationParam {cursor = Nothing, limit = Nothing}
 
 -- HasX instances for builder pattern
 instance HasCursor PaginationParam where
